@@ -5,9 +5,12 @@ use pixels::{Pixels, SurfaceTexture};
 use rand::random;
 use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
-use winit::event::{Event, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::{dpi::LogicalSize, window::WindowBuilder};
+use winit::{
+    dpi::LogicalSize,
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoop},
+    window::WindowBuilder,
+};
 
 #[derive(StructOpt)]
 struct Cli {
