@@ -1,4 +1,16 @@
 use serde::{Deserialize, Serialize};
+use structopt::StructOpt;
+
+#[derive(StructOpt)]
+struct Cli {
+    /// Set a custom int
+    #[structopt(short = "i", long = "integer")]
+    num: i32,
+
+    /// Set a custom boolean
+    #[structopt(short = "b", long = "boolean")]
+    flag: bool,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Parameters {
@@ -6,7 +18,8 @@ struct Parameters {
 }
 
 fn main() {
-    println!("Hello, world!");
+    let args = Cli::from_args();
+    println!("num: {}, flag: {}", args.num, args.flag);
 
     let json_str = r#"
         {
