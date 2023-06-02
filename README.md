@@ -1,6 +1,10 @@
 # Photo
 
-Render scenes with a photon simulation
+<p align="center">
+    <img src="./resources/images/icon.svg" alt="Photo Icon" width="200" height="200">
+</p>
+
+Render scenes with simulations.
 
 ## Quickstart
 
