@@ -3,7 +3,9 @@ use num_traits::cast::FromPrimitive;
 use palette::{LinSrgba, Srgba};
 use pixels::{Pixels, SurfaceTexture};
 use rand::random;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::fs::{create_dir_all, read_to_string};
 use structopt::StructOpt;
 use winit::{
     dpi::LogicalSize,
@@ -14,18 +16,28 @@ use winit::{
 
 #[derive(StructOpt)]
 struct Cli {
-    /// Set a custom int
-    #[structopt(short = "i", long = "integer")]
-    num: i32,
+    /// Number of samples per frame.
+    #[structopt(short = "n", long = "num")]
+    samples_per_frame: u32,
 
-    /// Set a custom boolean
-    #[structopt(short = "b", long = "boolean")]
-    flag: bool,
+    /// Image resolution.
+    #[structopt(short = "r", long = "resolution")]
+    resolution: String,
+
+    /// Parameters file path.
+    /// The file should be a JSON file
+    /// representation of a `Parameters` object.
+    #[structopt(short = "p", long = "parameters")]
+    parameters_file_path: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Parameters {
-    resolution: (u32, u32),
+    /// Output image directory.
+    pub output_image_directory: String,
+
+    /// Output image filename.
+    pub output_image_filename: String,
 }
 
 struct Image {
@@ -46,26 +58,34 @@ impl Image {
 
     /// Process the image.
     pub fn process(&mut self) {
-        let x = random::<usize>() % self.resolution().0;
-        let y = random::<usize>() % self.resolution().1;
+        let (width, height) = self.resolution();
+        let x = random::<usize>() % width;
+        let y = random::<usize>() % height;
         self.data[[x, y]] = LinSrgba::new(1.0, 1.0, 1.0, 1.0);
     }
 }
 
 fn main() {
+    // Command line arguments.
     let args = Cli::from_args();
-    println!("num: {}, flag: {}", args.num, args.flag);
 
-    let json_str = r#"
-        {
-            "resolution": [192, 108]
-        }
-    "#;
+    // Load parameters from file.
+    let json_str = read_to_string(args.parameters_file_path).unwrap();
+    let p: Parameters = serde_json::from_str(&json_str).unwrap();
 
-    let p: Parameters = serde_json::from_str(json_str).unwrap();
-    let width = p.resolution.0 as usize;
-    let height = p.resolution.1 as usize;
+    // Create output directory.
+    create_dir_all(&p.output_image_directory).unwrap();
 
+    // Image resolution.
+    let [width, height]: [usize; 2] = args
+        .resolution
+        .split('x')
+        .map(|s| s.parse::<usize>().unwrap())
+        .collect::<Vec<usize>>()
+        .try_into()
+        .unwrap();
+
+    // Create window.
     let event_loop = EventLoop::new();
     let window = {
         let size = LogicalSize::new(width as f64, height as f64);
@@ -75,7 +95,6 @@ fn main() {
             .build(&event_loop)
             .unwrap()
     };
-
     let window_size = window.inner_size();
     let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
     let mut pixels = Pixels::new(
@@ -120,12 +139,9 @@ fn main() {
 fn update_display_buffer(pixels: &mut Pixels, img: &Image) {
     let frame: &mut [u8] = pixels.frame_mut();
 
-    let resolution = img.resolution();
-    let width = resolution.0;
-    let height = resolution.1;
-
+    let (width, _height) = img.resolution();
     for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-        let x = i % height;
+        let x = i % width;
         let y = i / width;
 
         let col = img.data[[x, y]];
