@@ -130,24 +130,29 @@ fn main() {
             _ => (),
         }
 
-        img.process();
+        for _ in 0..args.samples_per_frame {
+            img.process();
+        }
 
         window.request_redraw();
     });
 }
 
 fn update_display_buffer(pixels: &mut Pixels, img: &Image) {
-    let frame: &mut [u8] = pixels.frame_mut();
-
     let (width, _height) = img.resolution();
-    for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-        let x = i % width;
-        let y = i / width;
+    pixels
+        .frame_mut()
+        .par_chunks_exact_mut(4)
+        .enumerate()
+        .for_each(|(i, pixel)| calculate_pixel_colour(width, i, pixel, img));
+}
 
-        let col = img.data[[x, y]];
-        let slice = rgba_slice(col);
-        pixel.copy_from_slice(&slice);
-    }
+fn calculate_pixel_colour(width: usize, index: usize, pixel: &mut [u8], img: &Image) {
+    let x = index % width;
+    let y = index / width;
+    let col = img.data[[x, y]];
+    let slice = rgba_slice(col);
+    pixel.copy_from_slice(&slice);
 }
 
 fn rgba_slice(col: LinSrgba<f32>) -> [u8; 4] {
