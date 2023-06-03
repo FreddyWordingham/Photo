@@ -9,7 +9,7 @@ use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
+    window::{Window, WindowBuilder},
 };
 
 use photo::Image;
@@ -43,41 +43,17 @@ struct Parameters {
 fn main() {
     // Command line arguments.
     let args = Cli::from_args();
+    let (width, height) = parse_resolution_string(&args.resolution);
 
     // Load parameters from file.
-    let json_str = read_to_string(args.parameters_file_path).unwrap();
-    let p: Parameters = serde_json::from_str(&json_str).unwrap();
+    let params_json_str = read_to_string(args.parameters_file_path).unwrap();
+    let params: Parameters = serde_json::from_str(&params_json_str).unwrap();
 
     // Create output directory.
-    create_dir_all(&p.output_image_directory).unwrap();
-
-    // Image resolution.
-    let [width, height]: [usize; 2] = args
-        .resolution
-        .split('x')
-        .map(|s| s.parse::<usize>().unwrap())
-        .collect::<Vec<usize>>()
-        .try_into()
-        .unwrap();
+    create_dir_all(&params.output_image_directory).unwrap();
 
     // Create window.
-    let event_loop = EventLoop::new();
-    let window = {
-        let size = LogicalSize::new(width as f64, height as f64);
-        WindowBuilder::new()
-            .with_title("Photo")
-            .with_inner_size(size)
-            .build(&event_loop)
-            .unwrap()
-    };
-    let window_size = window.inner_size();
-    let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
-    let mut pixels = Pixels::new(
-        window_size.width as u32,
-        window_size.height as u32,
-        surface_texture,
-    )
-    .unwrap();
+    let (event_loop, window, mut pixels) = create_window(width, height);
 
     let mut img = Image::new(width, height);
     event_loop.run(move |event, _, control_flow| {
@@ -111,6 +87,35 @@ fn main() {
 
         window.request_redraw();
     });
+}
+
+fn parse_resolution_string(resolution: &str) -> (usize, usize) {
+    let mut split = resolution.split('x');
+    let width = split.next().unwrap().parse::<usize>().unwrap();
+    let height = split.next().unwrap().parse::<usize>().unwrap();
+    (width, height)
+}
+
+fn create_window(width: usize, height: usize) -> (EventLoop<()>, Window, Pixels) {
+    let event_loop = EventLoop::new();
+    let window = {
+        let size = LogicalSize::new(width as f64, height as f64);
+        WindowBuilder::new()
+            .with_title("Photo")
+            .with_inner_size(size)
+            .build(&event_loop)
+            .unwrap()
+    };
+    let window_size = window.inner_size();
+    let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
+    let pixels = Pixels::new(
+        window_size.width as u32,
+        window_size.height as u32,
+        surface_texture,
+    )
+    .unwrap();
+
+    return (event_loop, window, pixels);
 }
 
 fn update_display_buffer(pixels: &mut Pixels, img: &Image) {
