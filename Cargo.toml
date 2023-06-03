@@ -8,7 +8,6 @@ categories = ["game-development", "graphics", "physics", "simulation"]
 
 [dependencies]
 ndarray = "0.15.6"
-num-traits = "0.2.15"
 palette = "0.7.2"
 pixels = "0.12.1"
 rand = "0.8.5"
