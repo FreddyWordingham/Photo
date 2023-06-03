@@ -1,4 +1,3 @@
-use ndarray::Array2;
 use palette::LinSrgba;
 use pixels::{Pixels, SurfaceTexture};
 use rand::random;
@@ -12,6 +11,8 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
+
+use photo::Image;
 
 #[derive(StructOpt)]
 struct Cli {
@@ -37,31 +38,6 @@ struct Parameters {
 
     /// Output image filename.
     pub output_image_filename: String,
-}
-
-struct Image {
-    pub data: Array2<LinSrgba>,
-}
-impl Image {
-    /// Construct a new image.
-    pub fn new(width: usize, height: usize) -> Self {
-        let data = Array2::default((width, height));
-        Self { data }
-    }
-
-    /// Get the resolution of the image.
-    pub fn resolution(&self) -> (usize, usize) {
-        let shape = self.data.shape();
-        (shape[0], shape[1])
-    }
-
-    /// Process the image.
-    pub fn process(&mut self) {
-        let (width, height) = self.resolution();
-        let x = random::<usize>() % width;
-        let y = random::<usize>() % height;
-        self.data[[x, y]] = LinSrgba::new(1.0, 1.0, 1.0, 1.0);
-    }
 }
 
 fn main() {
@@ -130,7 +106,7 @@ fn main() {
         }
 
         for _ in 0..args.samples_per_frame {
-            img.process();
+            process(&mut img);
         }
 
         window.request_redraw();
@@ -152,4 +128,12 @@ fn calculate_pixel_colour(width: usize, index: usize, pixel: &mut [u8], img: &Im
     let col = img.data[[x, y]];
     let slice: [u8; 4] = col.into_format().into();
     pixel.copy_from_slice(&slice);
+}
+
+/// Process the image.
+pub fn process(img: &mut Image) {
+    let (width, height) = img.resolution();
+    let x = random::<usize>() % width;
+    let y = random::<usize>() % height;
+    img.data[[x, y]] = LinSrgba::new(1.0, 1.0, 1.0, 1.0);
 }
