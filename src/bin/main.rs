@@ -1,6 +1,5 @@
 use ndarray::Array2;
-use num_traits::cast::FromPrimitive;
-use palette::{LinSrgba, Srgba};
+use palette::LinSrgba;
 use pixels::{Pixels, SurfaceTexture};
 use rand::random;
 use rayon::prelude::*;
@@ -151,17 +150,6 @@ fn calculate_pixel_colour(width: usize, index: usize, pixel: &mut [u8], img: &Im
     let x = index % width;
     let y = index / width;
     let col = img.data[[x, y]];
-    let slice = rgba_slice(col);
+    let slice: [u8; 4] = col.into_format().into();
     pixel.copy_from_slice(&slice);
-}
-
-fn rgba_slice(col: LinSrgba<f32>) -> [u8; 4] {
-    let rgba: Srgba = Srgba::from_linear(col.into());
-    let (r, g, b, a) = rgba.into_components();
-    [
-        u8::from_f32(r * 255.0).unwrap_or(0),
-        u8::from_f32(g * 255.0).unwrap_or(0),
-        u8::from_f32(b * 255.0).unwrap_or(0),
-        u8::from_f32(a * 255.0).unwrap_or(0),
-    ]
 }
