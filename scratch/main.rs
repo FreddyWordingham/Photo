@@ -251,8 +251,5 @@ fn parse_resolution_string(resolution: &str) -> (usize, usize) {
 }
 
 pub fn process() -> [u8; 4] {
-    for _ in 0..10000 {
-        rand::random::<f32>();
-    }
     LinSrgba::new(1.0, 1.0, 1.0, 1.0).into_format().into()
 }
