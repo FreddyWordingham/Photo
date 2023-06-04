@@ -154,6 +154,12 @@ impl Screen {
                     *control_flow = ControlFlow::Exit;
                 }
             }
+            Event::WindowEvent {
+                event: WindowEvent::Resized(new_size),
+                ..
+            } => pixels
+                .resize_surface(new_size.width, new_size.height)
+                .unwrap(),
             _ => (),
         }
     }
@@ -198,10 +204,10 @@ fn main() {
             .into_par_iter()
             .map(|_| {
                 let mut state = state.lock().unwrap();
-                let final_length = state.len().saturating_sub(samples_per_frame);
+                let final_length = state.len().saturating_sub(samples_per_frame / num_threads);
                 let tail = state.split_off(final_length);
 
-                let mut changes = Vec::with_capacity(samples_per_frame as usize);
+                let mut changes = Vec::with_capacity(samples_per_frame / num_threads as usize);
                 for n in tail {
                     changes.push((n, process()));
                 }
@@ -245,5 +251,8 @@ fn parse_resolution_string(resolution: &str) -> (usize, usize) {
 }
 
 pub fn process() -> [u8; 4] {
+    for _ in 0..10000 {
+        rand::random::<f32>();
+    }
     LinSrgba::new(1.0, 1.0, 1.0, 1.0).into_format().into()
 }
