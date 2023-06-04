@@ -1,6 +1,13 @@
-use photo::util::{parse_resolution_string, title};
+use photo::{
+    print_info,
+    util::{parse_resolution_string, title},
+    Gui,
+};
 use serde::{Deserialize, Serialize};
-use std::{fs::read_to_string, path::PathBuf};
+use std::{
+    fs::{create_dir_all, read_to_string},
+    path::PathBuf,
+};
 use structopt::StructOpt;
 
 /// Input read from the command line.
@@ -22,24 +29,16 @@ struct Parameters {
     pub output_directory: PathBuf,
 }
 
-macro_rules! print_info {
-    ($name:expr, $value:expr) => {
-        println!("{:<30} : {}", $name, $value);
-    };
-    ($name:expr, $value:expr, $unit:expr) => {
-        println!("{:<30} : {} {}", $name, $value, $unit);
-    };
-}
-
 fn main() {
     title("Photo!");
     let (requested_res, output_dir) = setup();
+    let gui = Gui::new(requested_res);
 }
 
 /// Read the input from the command line and parameters file,
 /// and create the output directory if it doesn't exist.
 /// Return the requested resolution and output filepath.
-fn setup() -> ((usize, usize), PathBuf) {
+fn setup() -> ((f64, f64), PathBuf) {
     // Command line arguments.
     let args = Cli::from_args();
     let requested_res = parse_resolution_string(&args.resolution);
@@ -52,8 +51,7 @@ fn setup() -> ((usize, usize), PathBuf) {
 
     // Create output directory if it doesn't exist.
     if !params.output_directory.exists() {
-        std::fs::create_dir_all(&params.output_directory)
-            .expect("Failed to create output directory.");
+        create_dir_all(&params.output_directory).expect("Failed to create output directory.");
     }
 
     // Print info.

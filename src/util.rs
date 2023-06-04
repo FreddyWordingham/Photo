@@ -2,6 +2,16 @@ use colored::Colorize;
 use std::{fmt::Debug, str::FromStr};
 use termion::terminal_size;
 
+#[macro_export]
+macro_rules! print_info {
+    ($name:expr, $value:expr) => {
+        println!("{:<30} : {}", $name, $value);
+    };
+    ($name:expr, $value:expr, $unit:expr) => {
+        println!("{:<30} : {} {}", $name, $value, $unit);
+    };
+}
+
 /// Print a colourful title bar to the terminal.
 #[inline]
 pub fn title(title: &str) {
