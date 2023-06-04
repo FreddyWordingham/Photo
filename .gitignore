@@ -23,3 +23,6 @@ Cargo.lock
 ## Freddy ##
 # OS
 .DS_Store
+
+# Output
+output/
