@@ -1,6 +1,6 @@
 use photo::util::{parse_resolution_string, title};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{fs::read_to_string, path::PathBuf};
 use structopt::StructOpt;
 
 /// Input read from the command line.
@@ -19,22 +19,47 @@ pub struct Cli {
 #[derive(Serialize, Deserialize, Debug)]
 struct Parameters {
     /// Output directory.
-    pub output_directory: String,
+    pub output_directory: PathBuf,
+}
 
-    /// Output filename.
-    pub output_filename: String,
+macro_rules! print_info {
+    ($name:expr, $value:expr) => {
+        println!("{:<30} : {}", $name, $value);
+    };
+    ($name:expr, $value:expr, $unit:expr) => {
+        println!("{:<30} : {} {}", $name, $value, $unit);
+    };
 }
 
 fn main() {
     title("Photo!");
-    let (requested_resolution, output_file_path) = read_input();
-    println!("Requested resolution  : {:?}", requested_resolution);
-    println!("Output file path      : {:?}", output_file_path);
+    let (requested_res, output_dir) = setup();
 }
 
-fn read_input() -> ((usize, usize), PathBuf) {
+/// Read the input from the command line and parameters file,
+/// and create the output directory if it doesn't exist.
+/// Return the requested resolution and output filepath.
+fn setup() -> ((usize, usize), PathBuf) {
+    // Command line arguments.
     let args = Cli::from_args();
-    let requested_resolution = parse_resolution_string(&args.resolution);
-    let output_filepath = args.parameters_filepath;
-    (requested_resolution, output_filepath)
+    let requested_res = parse_resolution_string(&args.resolution);
+
+    // Parameters file.
+    let params_str =
+        read_to_string(&args.parameters_filepath).expect("Failed to read parameters file.");
+    let params: Parameters =
+        serde_json::from_str(&params_str).expect("Failed to parse parameters file.");
+
+    // Create output directory if it doesn't exist.
+    if !params.output_directory.exists() {
+        std::fs::create_dir_all(&params.output_directory)
+            .expect("Failed to create output directory.");
+    }
+
+    // Print info.
+    print_info!("Width", requested_res.0, "px");
+    print_info!("Height", requested_res.1, "px");
+    print_info!("Output directory", params.output_directory.display());
+
+    (requested_res, params.output_directory)
 }

@@ -1,4 +1,3 @@
 {
-    "output_image_directory": "output",
-    "output_image_filename": "image.png"
+    "output_directory": "output"
 }
