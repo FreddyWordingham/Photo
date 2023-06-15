@@ -57,6 +57,16 @@ init().then(() => console.log("Photo WASM module Loaded."));
 
 See [index](./index.html).
 
+#### CORS
+
+To enable CORS, you can the [`emscripten`](https://emscripten.org/) toolchain, which you can install using [`brew`](https://brew.sh/):
+
 ```shell
-open index.html
+brew install emscripten
+```
+
+Then run the following command to serve the application:
+
+```shell
+emrun index.html
 ```
