@@ -30,8 +30,8 @@ struct Parameters {
 
 fn main() {
     title("Photo!");
-    let (_requested_res, _output_dir) = setup();
-    run();
+    let (resolution, _output_dir) = setup();
+    run(resolution);
 }
 
 /// Read the input from the command line and parameters file,
@@ -40,23 +40,23 @@ fn main() {
 fn setup() -> ((f64, f64), PathBuf) {
     // Command line arguments.
     let args = Cli::from_args();
-    let requested_res = parse_resolution_string(&args.resolution);
+    let resolution = parse_resolution_string(&args.resolution);
 
     // Parameters file.
-    let params_str =
+    let parameters_string =
         read_to_string(&args.parameters_filepath).expect("Failed to read parameters file.");
-    let params: Parameters =
-        serde_json::from_str(&params_str).expect("Failed to parse parameters file.");
+    let parameters: Parameters =
+        serde_json::from_str(&parameters_string).expect("Failed to parse parameters file.");
 
     // Create output directory if it doesn't exist.
-    if !params.output_directory.exists() {
-        create_dir_all(&params.output_directory).expect("Failed to create output directory.");
+    if !parameters.output_directory.exists() {
+        create_dir_all(&parameters.output_directory).expect("Failed to create output directory.");
     }
 
     // Print info.
-    print_info!("Width", requested_res.0, "px");
-    print_info!("Height", requested_res.1, "px");
-    print_info!("Output directory", params.output_directory.display());
+    print_info!("Width", resolution.0, "px");
+    print_info!("Height", resolution.1, "px");
+    print_info!("Output directory", parameters.output_directory.display());
 
-    (requested_res, params.output_directory)
+    (resolution, parameters.output_directory)
 }

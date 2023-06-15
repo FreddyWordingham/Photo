@@ -1,13 +1,18 @@
 use winit::{
+    dpi::LogicalSize,
     event::*,
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
 
-pub fn run() {
+pub fn run(resolution: (f64, f64)) {
     env_logger::init();
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let window = WindowBuilder::new()
+        .with_title("Photo!")
+        .with_inner_size(LogicalSize::new(resolution.0, resolution.1))
+        .build(&event_loop)
+        .unwrap();
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
