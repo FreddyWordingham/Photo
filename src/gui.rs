@@ -1,4 +1,4 @@
-use pixels::{Pixels, SurfaceTexture};
+use pixels::{wgpu::Color, Pixels, SurfaceTexture};
 use winit::{
     dpi::LogicalSize,
     event::{Event, VirtualKeyCode, WindowEvent},
@@ -36,7 +36,16 @@ impl Gui {
         // Create the display buffer.
         let (width, height) = window.inner_size().into();
         let surface_texture = SurfaceTexture::new(width, height, &window);
-        let pixels = Pixels::new(width, height, surface_texture).unwrap();
+        let mut pixels = Pixels::new(width, height, surface_texture).unwrap();
+        pixels.clear_color(Color {
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 0.5,
+        });
+        for pixel in pixels.frame_mut().chunks_exact_mut(4) {
+            pixel.copy_from_slice(&[255, 255, 255, 100]);
+        }
 
         Self {
             window,
@@ -52,17 +61,17 @@ impl Gui {
         self.event_loop.run_return(|event, _, control_flow| {
             Self::handle_event(&event, control_flow, &mut self.pixels);
 
-            let changes = compute_changes();
-            if changes.is_empty() {
-                self.window.request_redraw();
-                *control_flow = ControlFlow::Exit;
-            }
+            // let changes = compute_changes();
+            // if changes.is_empty() {
+            //     self.window.request_redraw();
+            //     *control_flow = ControlFlow::Exit;
+            // }
 
-            for (index, colour) in changes {
-                self.pixels.frame_mut()[index * 4..(index + 1) * 4].copy_from_slice(&colour);
-            }
+            // for (index, colour) in changes {
+            //     self.pixels.frame_mut()[index * 4..(index + 1) * 4].copy_from_slice(&colour);
+            // }
 
-            self.window.request_redraw();
+            // self.window.request_redraw();
         });
     }
 

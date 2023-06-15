@@ -29,8 +29,14 @@ pub fn title(title: &str) {
 
         print!("{} ", "\u{2588}".repeat(left_bar));
 
+        let mut offset = 0;
         for (pos, ch) in title.chars().enumerate() {
-            match pos % 6 {
+            if ch == ' ' {
+                offset += 1;
+                print!("  ");
+                continue;
+            }
+            match (pos - offset) % 6 {
                 0 => print!(" {}", format!("{}", ch).bright_red().bold()),
                 1 => print!(" {}", format!("{}", ch).bright_yellow().bold()),
                 2 => print!(" {}", format!("{}", ch).bright_green().bold()),

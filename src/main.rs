@@ -31,22 +31,23 @@ struct Parameters {
 }
 
 fn main() {
-    title("Photo!");
-    let (requested_res, output_dir) = setup();
-    let mut gui = Gui::new(requested_res);
+    title("Riemann Zeta!");
+    // title("Photo!");
+    // let (requested_res, _output_dir) = setup();
+    // let mut gui = Gui::new(requested_res);
 
-    gui.run(move || {
-        let n = 1000;
-        let mut changes = Vec::with_capacity(n);
-        for _ in 0..n {
-            let x = rand::random::<f64>() * requested_res.0;
-            let y = rand::random::<f64>() * requested_res.1;
-            let index = x as usize + y as usize * requested_res.0 as usize;
-            let colour = LinSrgba::new(1.0, 1.0, 1.0, 1.0).into_format().into();
-            changes.push((index, colour));
-        }
-        changes
-    });
+    // gui.run(move || {
+    //     let n = 1000;
+    //     let mut changes = Vec::with_capacity(n);
+    //     for _ in 0..n {
+    //         let x = rand::random::<f64>() * requested_res.0;
+    //         let y = rand::random::<f64>() * requested_res.1;
+    //         let index = x as usize + y as usize * requested_res.0 as usize;
+    //         let colour = LinSrgba::new(1.0, 1.0, 1.0, 1.0).into_format().into();
+    //         changes.push((index, colour));
+    //     }
+    //     changes
+    // });
 }
 
 /// Read the input from the command line and parameters file,
