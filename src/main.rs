@@ -1,8 +1,6 @@
-use palette::LinSrgba;
 use photo::{
     print_info,
     util::{parse_resolution_string, title},
-    Gui,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -32,21 +30,7 @@ struct Parameters {
 
 fn main() {
     title("Photo!");
-    let (requested_res, _output_dir) = setup();
-    let mut gui = Gui::new(requested_res);
-
-    gui.run(move || {
-        let n = 1000;
-        let mut changes = Vec::with_capacity(n);
-        for _ in 0..n {
-            let x = rand::random::<f64>() * requested_res.0;
-            let y = rand::random::<f64>() * requested_res.1;
-            let index = x as usize + y as usize * requested_res.0 as usize;
-            let colour = LinSrgba::new(1.0, 1.0, 1.0, 1.0).into_format().into();
-            changes.push((index, colour));
-        }
-        changes
-    });
+    let (_requested_res, _output_dir) = setup();
 }
 
 /// Read the input from the command line and parameters file,
