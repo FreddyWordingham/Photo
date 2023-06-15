@@ -61,17 +61,17 @@ impl Gui {
         self.event_loop.run_return(|event, _, control_flow| {
             Self::handle_event(&event, control_flow, &mut self.pixels);
 
-            // let changes = compute_changes();
-            // if changes.is_empty() {
-            //     self.window.request_redraw();
-            //     *control_flow = ControlFlow::Exit;
-            // }
+            let changes = compute_changes();
+            if changes.is_empty() {
+                self.window.request_redraw();
+                *control_flow = ControlFlow::Exit;
+            }
 
-            // for (index, colour) in changes {
-            //     self.pixels.frame_mut()[index * 4..(index + 1) * 4].copy_from_slice(&colour);
-            // }
+            for (index, colour) in changes {
+                self.pixels.frame_mut()[index * 4..(index + 1) * 4].copy_from_slice(&colour);
+            }
 
-            // self.window.request_redraw();
+            self.window.request_redraw();
         });
     }
 
