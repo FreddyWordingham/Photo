@@ -1,5 +1,5 @@
 use photo::{
-    print_info,
+    print_info, run,
     util::{parse_resolution_string, title},
 };
 use serde::{Deserialize, Serialize};
@@ -31,6 +31,7 @@ struct Parameters {
 fn main() {
     title("Photo!");
     let (_requested_res, _output_dir) = setup();
+    run();
 }
 
 /// Read the input from the command line and parameters file,
