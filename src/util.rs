@@ -1,55 +1,28 @@
-use colored::Colorize;
 use std::{fmt::Debug, str::FromStr};
-use termion::terminal_size;
 
 #[macro_export]
 macro_rules! print_info {
     ($name:expr, $value:expr) => {
-        println!("{:<30} : {}", $name, $value);
+        info!("{:<30} : {}", $name, $value);
     };
     ($name:expr, $value:expr, $unit:expr) => {
-        println!("{:<30} : {} {}", $name, $value, $unit);
+        info!("{:<30} : {} {}", $name, $value, $unit);
     };
 }
 
-/// Print a colourful title bar to the terminal.
-#[inline]
-pub fn title(title: &str) {
-    if let Ok((width, _)) = terminal_size() {
-        let term_width = width as usize;
-
-        let title = title.to_uppercase();
-
-        let (left_bar, right_bar) = if term_width < ((title.len() * 2) + 11) {
-            (4, 4)
+/// Initialize the logger.
+/// If the target is wasm32, use console_log.
+/// Otherwise, use env_logger.
+pub fn init_logger() {
+    cfg_if::cfg_if! {
+        if #[cfg(target_arch = "wasm32")] {
+            std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+            console_log::init_with_level(log::Level::Warn).expect("Couldn't initialize logger");
+            log::info!("WASM logger initialized.");
         } else {
-            let left_bar = (term_width - (title.len() * 2) - 3) / 2;
-            (left_bar, term_width - (title.len() * 2) - 3 - left_bar)
-        };
-
-        print!("{} ", "\u{2588}".repeat(left_bar));
-
-        let mut offset = 0;
-        for (pos, ch) in title.chars().enumerate() {
-            if ch == ' ' {
-                offset += 1;
-                print!("  ");
-                continue;
-            }
-            match (pos - offset) % 6 {
-                0 => print!(" {}", format!("{}", ch).bright_red().bold()),
-                1 => print!(" {}", format!("{}", ch).bright_yellow().bold()),
-                2 => print!(" {}", format!("{}", ch).bright_green().bold()),
-                3 => print!(" {}", format!("{}", ch).bright_cyan().bold()),
-                4 => print!(" {}", format!("{}", ch).bright_blue().bold()),
-                5 => print!(" {}", format!("{}", ch).bright_magenta().bold()),
-                _ => unreachable!(),
-            }
+            env_logger::init();
+            log::info!("Standard logger initialized.");
         }
-
-        println!("  {}", "\u{2588}".repeat(right_bar));
-    } else {
-        println!("{}", title.to_uppercase());
     }
 }
 

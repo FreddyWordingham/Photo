@@ -1,7 +1,4 @@
-use photo::{
-    print_info, run,
-    util::{parse_resolution_string, title},
-};
+use photo::{run, util};
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir_all, read_to_string},
@@ -29,7 +26,7 @@ struct Parameters {
 }
 
 fn main() {
-    title("Photo!");
+    util::init_logger();
     let (resolution, _output_dir) = setup();
     run(resolution);
 }
@@ -40,7 +37,7 @@ fn main() {
 fn setup() -> ((f64, f64), PathBuf) {
     // Command line arguments.
     let args = Cli::from_args();
-    let resolution = parse_resolution_string(&args.resolution);
+    let resolution = util::parse_resolution_string(&args.resolution);
 
     // Parameters file.
     let parameters_string =
@@ -52,11 +49,6 @@ fn setup() -> ((f64, f64), PathBuf) {
     if !parameters.output_directory.exists() {
         create_dir_all(&parameters.output_directory).expect("Failed to create output directory.");
     }
-
-    // Print info.
-    print_info!("Width", resolution.0, "px");
-    print_info!("Height", resolution.1, "px");
-    print_info!("Output directory", parameters.output_directory.display());
 
     (resolution, parameters.output_directory)
 }
