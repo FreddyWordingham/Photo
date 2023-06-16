@@ -9,15 +9,26 @@
             canvas {
                 background-color: black;
             }
+
+            .display {
+                display: grid;
+                justify-items: center;
+                align-items: center;
+                height: 100vh;
+            }
         </style>
     </head>
 
-    <body id="render">
-        <script type="module">
-            import init from "./pkg/photo.js";
-            init().then(() => {
-                console.log("WASM Loaded");
-            });
-        </script>
+    <body>
+        <div class="display">
+            <div id="render">
+                <script type="module">
+                    import init from "./pkg/photo.js";
+                    init().then(() => {
+                        console.log("WASM Loaded");
+                    });
+                </script>
+            </div>
+        </div>
     </body>
 </html>

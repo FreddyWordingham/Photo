@@ -10,23 +10,8 @@ macro_rules! print_info {
     };
 }
 
-/// Initialize the logger.
-/// If the target is wasm32, use console_log.
-/// Otherwise, use env_logger.
-pub fn init_logger() {
-    cfg_if::cfg_if! {
-        if #[cfg(target_arch = "wasm32")] {
-            std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-            console_log::init_with_level(log::Level::Warn).expect("Couldn't initialize logger");
-            log::info!("WASM logger initialized.");
-        } else {
-            env_logger::init();
-            log::info!("Standard logger initialized.");
-        }
-    }
-}
-
 /// Parse a string of the form "WxH" into a tuple of (width, height).
+#[allow(dead_code)]
 pub fn parse_resolution_string<T: FromStr>(resolution: &str) -> (T, T)
 where
     <T as FromStr>::Err: Debug,
