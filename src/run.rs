@@ -67,22 +67,32 @@ fn init_window(resolution: (f64, f64)) -> (EventLoop<()>, Window) {
 /// Main process loop.
 fn process_loop(event_loop: EventLoop<()>, window: Window) {
     event_loop.run(move |event, _, control_flow| match event {
-        Event::WindowEvent {
-            ref event,
-            window_id,
-        } if window_id == window.id() => match event {
-            WindowEvent::CloseRequested
-            | WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        state: ElementState::Pressed,
-                        virtual_keycode: Some(VirtualKeyCode::Escape),
-                        ..
-                    },
-                ..
-            } => *control_flow = ControlFlow::Exit,
+        Event::WindowEvent { event, .. } => match event {
+            WindowEvent::KeyboardInput { input, .. } => handle_keypress(input, control_flow),
+            WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
             _ => {}
         },
+        Event::MainEventsCleared => {
+            window.request_redraw();
+        }
+        Event::RedrawRequested(_) => {}
         _ => {}
     });
+}
+
+/// Handle a keypress event.
+fn handle_keypress(event: KeyboardInput, control_flow: &mut ControlFlow) {
+    match event {
+        KeyboardInput {
+            state: ElementState::Pressed,
+            virtual_keycode: Some(code),
+            ..
+        } => match code {
+            VirtualKeyCode::Escape => *control_flow = ControlFlow::Exit,
+            _ => {
+                log::info!("Unhandled keypress: {:?}", code);
+            }
+        },
+        _ => {}
+    }
 }
