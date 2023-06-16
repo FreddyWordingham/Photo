@@ -5,11 +5,13 @@ pub struct State {
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
-    size: winit::dpi::PhysicalSize<u32>,
+    pub size: winit::dpi::PhysicalSize<u32>,
     window: Window,
+    clear_colour: wgpu::Color,
 }
 
 impl State {
+    /// Construct a new `State` from a `Window`.
     pub async fn new(window: Window) -> Self {
         let size = window.inner_size();
 
@@ -57,7 +59,7 @@ impl State {
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::AutoVsync,
-            alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
             view_formats: vec![],
         };
         surface.configure(&device, &config);
@@ -69,13 +71,21 @@ impl State {
             queue,
             config,
             size,
+            clear_colour: wgpu::Color::WHITE,
         }
     }
 
+    /// Get a reference to the window.
     pub fn window(&self) -> &Window {
         &self.window
     }
 
+    /// Set the clear colour.
+    pub fn set_clear_colour(&mut self, colour: wgpu::Color) {
+        self.clear_colour = colour;
+    }
+
+    /// Handle a window resize event by updating the surface configuration.
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width <= 0 || new_size.height <= 0 {
             return;
@@ -87,15 +97,43 @@ impl State {
         self.surface.configure(&self.device, &self.config);
     }
 
+    /// Return true if the event has fully been processed.
     pub fn input(&mut self, _event: &WindowEvent) -> bool {
         false
     }
 
-    fn update(&mut self) {
-        todo!()
-    }
+    pub fn update(&mut self) {}
 
-    fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        todo!()
+    /// Render to the next frame.
+    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        let output = self.surface.get_current_texture()?;
+        let view = output
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Render Encoder"),
+            });
+
+        {
+            let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Render Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(self.clear_colour),
+                        store: true,
+                    },
+                })],
+                depth_stencil_attachment: None,
+            });
+        }
+
+        self.queue.submit(std::iter::once(encoder.finish()));
+        output.present();
+
+        Ok(())
     }
 }

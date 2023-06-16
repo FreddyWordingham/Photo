@@ -28,6 +28,10 @@ pub async fn start() {
         } if window_id == state.window().id() => {
             if !state.input(event) {
                 match event {
+                    WindowEvent::CursorMoved { position, .. } => {
+                        let col = handle_mouse_move(position, state.size);
+                        state.set_clear_colour(col);
+                    }
                     WindowEvent::KeyboardInput { input, .. } => {
                         handle_keypress(input, control_flow)
                     }
@@ -41,6 +45,18 @@ pub async fn start() {
                     _ => {}
                 }
             }
+        }
+        Event::RedrawRequested(window_id) if window_id == state.window().id() => {
+            state.update();
+            match state.render() {
+                Ok(_) => {}
+                Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+                Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                Err(e) => eprintln!("{:?}", e),
+            }
+        }
+        Event::MainEventsCleared => {
+            state.window().request_redraw();
         }
         _ => {}
     });
@@ -104,5 +120,18 @@ fn handle_keypress(event: &KeyboardInput, control_flow: &mut ControlFlow) {
             }
         },
         _ => {}
+    }
+}
+
+/// Handle a mouse movement event.
+fn handle_mouse_move(
+    position: &winit::dpi::PhysicalPosition<f64>,
+    size: winit::dpi::PhysicalSize<u32>,
+) -> wgpu::Color {
+    wgpu::Color {
+        r: position.x / size.width as f64,
+        g: position.y / size.height as f64,
+        b: 0.3,
+        a: 1.0,
     }
 }
