@@ -1,3 +1,5 @@
+use crate::state::State;
+
 use winit::{
     dpi::PhysicalSize,
     event::*,
@@ -10,14 +12,15 @@ use wasm_bindgen::prelude::*;
 
 /// Common entry point for all platforms.
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-pub fn start() {
+pub async fn start() {
     init_logger();
 
     let scale = 0.5;
     let resolution = (1920.0 * scale, 1080.0 * scale);
 
     let (event_loop, window) = init_window(resolution);
-    process_loop(event_loop, window);
+    let state = State::new(window).await;
+    // process_loop(event_loop, state.window());
 }
 
 /// Initialize the logger.
@@ -28,10 +31,10 @@ pub fn init_logger() {
         if #[cfg(target_arch = "wasm32")] {
             std::panic::set_hook(Box::new(console_error_panic_hook::hook));
             console_log::init_with_level(log::Level::Info).expect("Couldn't initialize logger");
-            log::info!("WASM logger initialized.");
+            log::info!("WASM logger initialized");
         } else {
             env_logger::init();
-            log::info!("Standard logger initialized.");
+            log::info!("Standard logger initialized");
         }
     }
 }
@@ -58,27 +61,27 @@ fn init_window(resolution: (f64, f64)) -> (EventLoop<()>, Window) {
                 dst.append_child(&canvas).ok()?;
                 Some(())
             })
-            .expect("Couldn't append canvas to document body.");
+            .expect("Couldn't append canvas to document body");
     }
 
     (event_loop, window)
 }
 
-/// Main process loop.
-fn process_loop(event_loop: EventLoop<()>, window: Window) {
-    event_loop.run(move |event, _, control_flow| match event {
-        Event::WindowEvent { event, .. } => match event {
-            WindowEvent::KeyboardInput { input, .. } => handle_keypress(input, control_flow),
-            WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-            _ => {}
-        },
-        Event::MainEventsCleared => {
-            window.request_redraw();
-        }
-        Event::RedrawRequested(_) => {}
-        _ => {}
-    });
-}
+// /// Main process loop.
+// fn process_loop(event_loop: EventLoop<()>, window: &Window) {
+//     event_loop.run(move |event, _, control_flow| match event {
+//         Event::WindowEvent { event, .. } => match event {
+//             WindowEvent::KeyboardInput { input, .. } => handle_keypress(input, control_flow),
+//             WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+//             _ => {}
+//         },
+//         Event::MainEventsCleared => {
+//             window.request_redraw();
+//         }
+//         Event::RedrawRequested(_) => {}
+//         _ => {}
+//     });
+// }
 
 /// Handle a keypress event.
 fn handle_keypress(event: KeyboardInput, control_flow: &mut ControlFlow) {

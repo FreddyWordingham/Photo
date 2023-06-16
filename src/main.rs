@@ -1,5 +1,5 @@
 use photo::start;
 
 fn main() {
-    start();
+    pollster::block_on(start());
 }
