@@ -19,7 +19,6 @@ ndarray = "0.15.6"
 num_cpus = "1.15.0"
 palette = "0.7.2"
 pollster = "0.3.0"
-rand = "0.8.5"
 wgpu = "0.16.1"
 winit = "0.28.6"
 

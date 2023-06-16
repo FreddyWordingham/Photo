@@ -19,8 +19,31 @@ pub async fn start() {
     let resolution = (1920.0 * scale, 1080.0 * scale);
 
     let (event_loop, window) = init_window(resolution);
-    let state = State::new(window).await;
-    // process_loop(event_loop, state.window());
+    let mut state = State::new(window).await;
+
+    event_loop.run(move |event, _, control_flow| match event {
+        Event::WindowEvent {
+            ref event,
+            window_id,
+        } if window_id == state.window().id() => {
+            if !state.input(event) {
+                match event {
+                    WindowEvent::KeyboardInput { input, .. } => {
+                        handle_keypress(input, control_flow)
+                    }
+                    WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                    WindowEvent::Resized(physical_size) => {
+                        state.resize(*physical_size);
+                    }
+                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                        state.resize(**new_inner_size);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        _ => {}
+    });
 }
 
 /// Initialize the logger.
@@ -67,24 +90,8 @@ fn init_window(resolution: (f64, f64)) -> (EventLoop<()>, Window) {
     (event_loop, window)
 }
 
-// /// Main process loop.
-// fn process_loop(event_loop: EventLoop<()>, window: &Window) {
-//     event_loop.run(move |event, _, control_flow| match event {
-//         Event::WindowEvent { event, .. } => match event {
-//             WindowEvent::KeyboardInput { input, .. } => handle_keypress(input, control_flow),
-//             WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-//             _ => {}
-//         },
-//         Event::MainEventsCleared => {
-//             window.request_redraw();
-//         }
-//         Event::RedrawRequested(_) => {}
-//         _ => {}
-//     });
-// }
-
 /// Handle a keypress event.
-fn handle_keypress(event: KeyboardInput, control_flow: &mut ControlFlow) {
+fn handle_keypress(event: &KeyboardInput, control_flow: &mut ControlFlow) {
     match event {
         KeyboardInput {
             state: ElementState::Pressed,
