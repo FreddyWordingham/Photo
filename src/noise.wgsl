@@ -5,7 +5,6 @@ fn pseudo_random(u: vec2<f32>) -> f32 {
 }
 
 
-
 // Vertex shader
 
 struct VertexOutput {
