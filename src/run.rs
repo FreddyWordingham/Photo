@@ -33,7 +33,7 @@ pub async fn start() {
                         state.set_clear_colour(col);
                     }
                     WindowEvent::KeyboardInput { input, .. } => {
-                        handle_keypress(input, control_flow)
+                        handle_keypress(input, control_flow, &mut state)
                     }
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     WindowEvent::Resized(physical_size) => {
@@ -107,7 +107,7 @@ fn init_window(resolution: (f64, f64)) -> (EventLoop<()>, Window) {
 }
 
 /// Handle a keypress event.
-fn handle_keypress(event: &KeyboardInput, control_flow: &mut ControlFlow) {
+fn handle_keypress(event: &KeyboardInput, control_flow: &mut ControlFlow, state: &mut State) {
     match event {
         KeyboardInput {
             state: ElementState::Pressed,
@@ -115,6 +115,7 @@ fn handle_keypress(event: &KeyboardInput, control_flow: &mut ControlFlow) {
             ..
         } => match code {
             VirtualKeyCode::Escape => *control_flow = ControlFlow::Exit,
+            VirtualKeyCode::Space => state.cycle_render_pipeline(),
             _ => {
                 log::info!("Unhandled keypress: {:?}", code);
             }
