@@ -1,7 +1,7 @@
 use wgpu::util::DeviceExt;
 use winit::{event::WindowEvent, window::Window};
 
-use crate::VERTICES;
+use crate::{Vertex, VERTICES};
 
 pub struct State {
     surface: wgpu::Surface,
@@ -14,6 +14,7 @@ pub struct State {
     render_pipelines: Vec<wgpu::RenderPipeline>,
     render_pipeline_index: usize,
     vertex_buffer: wgpu::Buffer,
+    num_vertices: u32,
 }
 
 impl State {
@@ -87,7 +88,7 @@ impl State {
                 vertex: wgpu::VertexState {
                     module: &brown_shader,
                     entry_point: "vs_main",
-                    buffers: &[],
+                    buffers: &[Vertex::desc()],
                 },
                 fragment: Some(wgpu::FragmentState {
                     // 3.
@@ -127,7 +128,7 @@ impl State {
                 vertex: wgpu::VertexState {
                     module: &noise_shader,
                     entry_point: "vs_main",
-                    buffers: &[],
+                    buffers: &[Vertex::desc()],
                 },
                 fragment: Some(wgpu::FragmentState {
                     // 3.
@@ -178,6 +179,7 @@ impl State {
             render_pipelines: vec![brown_render_pipeline, noise_render_pipeline],
             render_pipeline_index: 0,
             vertex_buffer,
+            num_vertices: VERTICES.len() as u32,
         }
     }
 
@@ -244,7 +246,8 @@ impl State {
             });
 
             render_pass.set_pipeline(&self.render_pipelines[self.render_pipeline_index]);
-            render_pass.draw(0..3, 0..1);
+            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.draw(0..self.num_vertices, 0..1);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));

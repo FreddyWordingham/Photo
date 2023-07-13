@@ -7,7 +7,7 @@ pub use {run::start, vertex::Vertex};
 
 const VERTICES: &[Vertex] = &[
     Vertex {
-        position: [0.0, 0.5, 0.0],
+        position: [0.3, 0.5, 0.0],
         colour: [1.0, 0.0, 0.0],
     },
     Vertex {
