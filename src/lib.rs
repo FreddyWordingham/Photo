@@ -1,16 +1,9 @@
 mod run;
 mod state;
 mod util;
+mod vertex;
 
-pub use run::start;
-
-// lib.rs
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex {
-    position: [f32; 3],
-    colour: [f32; 3],
-}
+pub use {run::start, vertex::Vertex};
 
 const VERTICES: &[Vertex] = &[
     Vertex {
