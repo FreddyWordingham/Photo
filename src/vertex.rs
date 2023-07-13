@@ -11,37 +11,14 @@ pub struct Vertex {
 }
 
 impl Vertex {
+    const ATTRIBS: [wgpu::VertexAttribute; 2] =
+        wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3];
+
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
         wgpu::VertexBufferLayout {
-            array_stride: size_of::<Vertex>() as wgpu::BufferAddress,
+            array_stride: size_of::<Self>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &[
-                wgpu::VertexAttribute {
-                    offset: 0,
-                    shader_location: 0,
-                    format: wgpu::VertexFormat::Float32x3,
-                },
-                wgpu::VertexAttribute {
-                    offset: size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x3,
-                },
-            ],
+            attributes: &Self::ATTRIBS,
         }
     }
 }
-
-const VERTICES: &[Vertex] = &[
-    Vertex {
-        position: [0.0, 0.5, 0.0],
-        colour: [1.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [-0.5, -0.5, 0.0],
-        colour: [0.0, 1.0, 0.0],
-    },
-    Vertex {
-        position: [0.5, -0.5, 0.0],
-        colour: [0.0, 0.0, 1.0],
-    },
-];
