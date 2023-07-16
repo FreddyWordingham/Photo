@@ -71,9 +71,6 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let brown_shader = device.create_shader_module(wgpu::include_wgsl!("brown.wgsl"));
-        let noise_shader = device.create_shader_module(wgpu::include_wgsl!("noise.wgsl"));
-
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
@@ -81,86 +78,29 @@ impl State {
                 push_constant_ranges: &[],
             });
 
-        let brown_render_pipeline =
-            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some("Render Pipeline"),
-                layout: Some(&render_pipeline_layout),
-                vertex: wgpu::VertexState {
-                    module: &brown_shader,
-                    entry_point: "vs_main",
-                    buffers: &[Vertex::desc()],
-                },
-                fragment: Some(wgpu::FragmentState {
-                    // 3.
-                    module: &brown_shader,
-                    entry_point: "fs_main",
-                    targets: &[Some(wgpu::ColorTargetState {
-                        // 4.
-                        format: config.format,
-                        blend: Some(wgpu::BlendState::REPLACE),
-                        write_mask: wgpu::ColorWrites::ALL,
-                    })],
-                }),
-                primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::TriangleList,
-                    strip_index_format: None,
-                    front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: Some(wgpu::Face::Back),
-                    // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
-                    polygon_mode: wgpu::PolygonMode::Fill,
-                    // Requires Features::DEPTH_CLIP_CONTROL
-                    unclipped_depth: false,
-                    // Requires Features::CONSERVATIVE_RASTERIZATION
-                    conservative: false,
-                },
-                depth_stencil: None, // 1.
-                multisample: wgpu::MultisampleState {
-                    count: 1,
-                    mask: !0,
-                    alpha_to_coverage_enabled: false,
-                },
-                multiview: None,
-            });
-        let noise_render_pipeline =
-            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some("Render Pipeline"),
-                layout: Some(&render_pipeline_layout),
-                vertex: wgpu::VertexState {
-                    module: &noise_shader,
-                    entry_point: "vs_main",
-                    buffers: &[Vertex::desc()],
-                },
-                fragment: Some(wgpu::FragmentState {
-                    // 3.
-                    module: &noise_shader,
-                    entry_point: "fs_main",
-                    targets: &[Some(wgpu::ColorTargetState {
-                        // 4.
-                        format: config.format,
-                        blend: Some(wgpu::BlendState::REPLACE),
-                        write_mask: wgpu::ColorWrites::ALL,
-                    })],
-                }),
-                primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::TriangleList,
-                    strip_index_format: None,
-                    front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: Some(wgpu::Face::Back),
-                    // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
-                    polygon_mode: wgpu::PolygonMode::Fill,
-                    // Requires Features::DEPTH_CLIP_CONTROL
-                    unclipped_depth: false,
-                    // Requires Features::CONSERVATIVE_RASTERIZATION
-                    conservative: false,
-                },
-                depth_stencil: None, // 1.
-                multisample: wgpu::MultisampleState {
-                    count: 1,
-                    mask: !0,
-                    alpha_to_coverage_enabled: false,
-                },
-                multiview: None,
-            });
+        let brown_shader = device.create_shader_module(wgpu::include_wgsl!("brown.wgsl"));
+        let brown_render_pipeline = Self::create_render_pipeline_handle(
+            &device,
+            &config,
+            &brown_shader,
+            &render_pipeline_layout,
+        );
+
+        let noise_shader = device.create_shader_module(wgpu::include_wgsl!("noise.wgsl"));
+        let noise_render_pipeline = Self::create_render_pipeline_handle(
+            &device,
+            &config,
+            &noise_shader,
+            &render_pipeline_layout,
+        );
+
+        let coloured_shader = device.create_shader_module(wgpu::include_wgsl!("coloured.wgsl"));
+        let coloured_render_pipeline = Self::create_render_pipeline_handle(
+            &device,
+            &config,
+            &coloured_shader,
+            &render_pipeline_layout,
+        );
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
@@ -176,11 +116,62 @@ impl State {
             config,
             size,
             clear_colour: wgpu::Color::WHITE,
-            render_pipelines: vec![brown_render_pipeline, noise_render_pipeline],
+            render_pipelines: vec![
+                brown_render_pipeline,
+                noise_render_pipeline,
+                coloured_render_pipeline,
+            ],
             render_pipeline_index: 0,
             vertex_buffer,
             num_vertices: VERTICES.len() as u32,
         }
+    }
+
+    fn create_render_pipeline_handle(
+        device: &wgpu::Device,
+        config: &wgpu::SurfaceConfiguration,
+        shader: &wgpu::ShaderModule,
+        render_pipeline_layout: &wgpu::PipelineLayout,
+    ) -> wgpu::RenderPipeline {
+        device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Render Pipeline"),
+            layout: Some(&render_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: "vs_main",
+                buffers: &[Vertex::desc()],
+            },
+            fragment: Some(wgpu::FragmentState {
+                // 3.
+                module: &shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    // 4.
+                    format: config.format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Back),
+                // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
+                polygon_mode: wgpu::PolygonMode::Fill,
+                // Requires Features::DEPTH_CLIP_CONTROL
+                unclipped_depth: false,
+                // Requires Features::CONSERVATIVE_RASTERIZATION
+                conservative: false,
+            },
+            depth_stencil: None, // 1.
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview: None,
+        })
     }
 
     /// Get a reference to the window.
