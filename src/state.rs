@@ -78,29 +78,18 @@ impl State {
                 push_constant_ranges: &[],
             });
 
-        let brown_shader = device.create_shader_module(wgpu::include_wgsl!("brown.wgsl"));
-        let brown_render_pipeline = Self::create_render_pipeline_handle(
-            &device,
-            &config,
-            &brown_shader,
-            &render_pipeline_layout,
-        );
+        let make_pipeline = |shader: wgpu::ShaderModuleDescriptor| {
+            return Self::create_render_pipeline_handle(
+                &device,
+                &config,
+                shader,
+                &render_pipeline_layout,
+            );
+        };
 
-        let noise_shader = device.create_shader_module(wgpu::include_wgsl!("noise.wgsl"));
-        let noise_render_pipeline = Self::create_render_pipeline_handle(
-            &device,
-            &config,
-            &noise_shader,
-            &render_pipeline_layout,
-        );
-
-        let coloured_shader = device.create_shader_module(wgpu::include_wgsl!("coloured.wgsl"));
-        let coloured_render_pipeline = Self::create_render_pipeline_handle(
-            &device,
-            &config,
-            &coloured_shader,
-            &render_pipeline_layout,
-        );
+        let brown_render_pipeline = make_pipeline(wgpu::include_wgsl!("brown.wgsl"));
+        let noise_render_pipeline = make_pipeline(wgpu::include_wgsl!("noise.wgsl"));
+        let coloured_render_pipeline = make_pipeline(wgpu::include_wgsl!("coloured.wgsl"));
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
@@ -130,9 +119,11 @@ impl State {
     fn create_render_pipeline_handle(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
-        shader: &wgpu::ShaderModule,
+        shader: wgpu::ShaderModuleDescriptor,
         render_pipeline_layout: &wgpu::PipelineLayout,
     ) -> wgpu::RenderPipeline {
+        let shader = device.create_shader_module(shader);
+
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("Render Pipeline"),
             layout: Some(&render_pipeline_layout),
