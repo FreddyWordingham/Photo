@@ -5,7 +5,7 @@ mod vertex;
 
 pub use {run::start, vertex::Vertex};
 
-const VERTICES: &[Vertex] = &[
+const VERTICES_A: &[Vertex] = &[
     Vertex {
         position: [-0.0868241, 0.49240386, 0.0],
         colour: [0.5, 0.0, 0.5],
@@ -27,8 +27,35 @@ const VERTICES: &[Vertex] = &[
         colour: [0.5, 0.0, 0.5],
     },
 ];
+const INDICES_A: &[u16] = &[
+    0, 1, 4, //
+    1, 2, 4, //
+    2, 3, 4, //
+];
 
-const INDICES: &[u16] = &[
+const VERTICES_B: &[Vertex] = &[
+    Vertex {
+        position: [-0.0, 0.5, 0.0],
+        colour: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [-0.5, 0.1, 0.0],
+        colour: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [-0.2, -0.4, 0.0],
+        colour: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [0.4, -0.3, 0.0],
+        colour: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [0.5, 0.2, 0.0],
+        colour: [0.5, 0.0, 0.5],
+    },
+];
+const INDICES_B: &[u16] = &[
     0, 1, 4, //
     1, 2, 4, //
     2, 3, 4, //

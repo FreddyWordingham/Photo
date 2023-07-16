@@ -1,7 +1,7 @@
 use wgpu::util::DeviceExt;
 use winit::{event::WindowEvent, window::Window};
 
-use crate::{Vertex, INDICES, VERTICES};
+use crate::{Vertex, INDICES_A, INDICES_B, VERTICES_A, VERTICES_B};
 
 pub struct State {
     surface: wgpu::Surface,
@@ -13,9 +13,8 @@ pub struct State {
     clear_colour: wgpu::Color,
     render_pipelines: Vec<wgpu::RenderPipeline>,
     render_pipeline_index: usize,
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
-    num_indices: u32,
+    model_buffers: Vec<(wgpu::Buffer, wgpu::Buffer, u32)>,
+    model_index: usize,
 }
 
 impl State {
@@ -79,7 +78,7 @@ impl State {
                 push_constant_ranges: &[],
             });
 
-        let make_pipeline = |shader: wgpu::ShaderModuleDescriptor| {
+        let make_pipeline = |shader| {
             return Self::create_render_pipeline_handle(
                 &device,
                 &config,
@@ -88,21 +87,29 @@ impl State {
             );
         };
 
-        let brown_render_pipeline = make_pipeline(wgpu::include_wgsl!("brown.wgsl"));
-        let noise_render_pipeline = make_pipeline(wgpu::include_wgsl!("noise.wgsl"));
-        let coloured_render_pipeline = make_pipeline(wgpu::include_wgsl!("coloured.wgsl"));
+        let mut render_pipelines = Vec::with_capacity(3);
+        render_pipelines.push(make_pipeline(wgpu::include_wgsl!("brown.wgsl")));
+        render_pipelines.push(make_pipeline(wgpu::include_wgsl!("noise.wgsl")));
+        render_pipelines.push(make_pipeline(wgpu::include_wgsl!("coloured.wgsl")));
 
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(INDICES),
-            usage: wgpu::BufferUsages::INDEX,
-        });
+        let mut model_buffers = Vec::with_capacity(2);
+        let mut add_model_buffer = |vertices, indices| {
+            model_buffers.push((
+                device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Vertex Buffer"),
+                    contents: bytemuck::cast_slice(vertices),
+                    usage: wgpu::BufferUsages::VERTEX,
+                }),
+                device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Index Buffer"),
+                    contents: bytemuck::cast_slice(indices),
+                    usage: wgpu::BufferUsages::INDEX,
+                }),
+                INDICES_A.len() as u32,
+            ));
+        };
+        add_model_buffer(VERTICES_A, INDICES_A);
+        add_model_buffer(VERTICES_B, INDICES_B);
 
         Self {
             window,
@@ -112,15 +119,10 @@ impl State {
             config,
             size,
             clear_colour: wgpu::Color::WHITE,
-            render_pipelines: vec![
-                brown_render_pipeline,
-                noise_render_pipeline,
-                coloured_render_pipeline,
-            ],
+            render_pipelines,
             render_pipeline_index: 0,
-            vertex_buffer,
-            index_buffer,
-            num_indices: INDICES.len() as u32,
+            model_buffers,
+            model_index: 0,
         }
     }
 
@@ -206,6 +208,10 @@ impl State {
         self.render_pipeline_index = (self.render_pipeline_index + 1) % self.render_pipelines.len();
     }
 
+    pub fn cycle_model(&mut self) {
+        self.model_index = (self.model_index + 1) % self.model_buffers.len();
+    }
+
     /// Render to the next frame.
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
@@ -236,9 +242,12 @@ impl State {
             });
 
             render_pass.set_pipeline(&self.render_pipelines[self.render_pipeline_index]);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+
+            let (vertex_buffer, index_buffer, num_indices) = &self.model_buffers[self.model_index];
+
+            render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.draw_indexed(0..*num_indices, 0, 0..1);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
