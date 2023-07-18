@@ -1,3 +1,4 @@
+use image::GenericImageView;
 use wgpu::util::DeviceExt;
 use winit::{event::WindowEvent, window::Window};
 
@@ -71,6 +72,13 @@ impl State {
         };
         surface.configure(&device, &config);
 
+        // Textures
+        let texture_diffuse_bytes = include_bytes!("resources/images/happy_tree.png");
+        let texture_diffuse_image = image::load_from_memory(texture_diffuse_bytes).unwrap();
+        let texture_diffuse_rgba = texture_diffuse_image.to_rgba8();
+        let texture_dimensions = texture_diffuse_image.dimensions();
+
+        // Render Pipelines
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
