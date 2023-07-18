@@ -6,10 +6,8 @@ license = "MIT"
 description = "Render scenes with simulations"
 categories = ["game-development", "graphics", "physics", "simulation"]
 
-
 [lib]
 crate-type = ["cdylib", "rlib"]
-
 
 [dependencies]
 bytemuck = { version = "1.12", features = ["derive"] }
