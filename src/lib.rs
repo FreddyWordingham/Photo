@@ -1,5 +1,6 @@
 mod run;
 mod state;
+mod texture;
 mod util;
 mod vertex;
 
