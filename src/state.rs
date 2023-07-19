@@ -2,7 +2,8 @@ use wgpu::util::DeviceExt;
 use winit::{event::WindowEvent, window::Window};
 
 use crate::{
-    camera::Camera, texture::Texture, Vertex, INDICES_A, INDICES_B, VERTICES_A, VERTICES_B,
+    camera::Camera, camera_uniform::CameraUniform, texture::Texture, Vertex, INDICES_A, INDICES_B,
+    VERTICES_A, VERTICES_B,
 };
 
 pub struct State {
@@ -194,6 +195,15 @@ impl State {
             near_clip: 0.1,
             far_clip: 100.0,
         };
+
+        let mut camera_uniform = CameraUniform::new();
+        camera_uniform.update_view_proj(&camera);
+
+        let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Camera Buffer"),
+            contents: bytemuck::cast_slice(&[camera_uniform]),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
 
         Self {
             window,
