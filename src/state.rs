@@ -1,7 +1,9 @@
 use wgpu::util::DeviceExt;
 use winit::{event::WindowEvent, window::Window};
 
-use crate::{texture::Texture, Vertex, INDICES_A, INDICES_B, VERTICES_A, VERTICES_B};
+use crate::{
+    camera::Camera, texture::Texture, Vertex, INDICES_A, INDICES_B, VERTICES_A, VERTICES_B,
+};
 
 pub struct State {
     surface: wgpu::Surface,
@@ -20,6 +22,8 @@ pub struct State {
     render_pipeline_index: usize,
     model_buffers: Vec<(wgpu::Buffer, wgpu::Buffer, u32)>,
     model_index: usize,
+
+    camera: Camera,
 }
 
 impl State {
@@ -180,6 +184,17 @@ impl State {
         add_model_buffer(VERTICES_A, INDICES_A);
         add_model_buffer(VERTICES_B, INDICES_B);
 
+        // Camera
+        let camera = Camera {
+            position: cgmath::Point3::new(0.0, 1.0, 2.0),
+            target: cgmath::Point3::new(0.0, 0.0, 0.0),
+            up: cgmath::Vector3::unit_y(),
+            aspect_ratio: config.width as f32 / config.height as f32,
+            vertical_field_of_view: 45.0,
+            near_clip: 0.1,
+            far_clip: 100.0,
+        };
+
         Self {
             window,
             surface,
@@ -195,6 +210,7 @@ impl State {
             render_pipeline_index: 0,
             model_buffers,
             model_index: 0,
+            camera,
         }
     }
 
