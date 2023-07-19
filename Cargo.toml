@@ -10,21 +10,21 @@ categories = ["game-development", "graphics", "physics", "simulation"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+anyhow = "1.0"
 bytemuck = { version = "1.12", features = ["derive"] }
-cfg-if = "1"
-env_logger = "0.10.0"
-log = "0.4.19"
-ndarray = "0.15.6"
-num_cpus = "1.15.0"
-palette = "0.7.2"
-pollster = "0.3.0"
-wgpu = "0.16.1"
-winit = "0.28.6"
-
-[dependencies.image]
-version = "0.24.6"
-default-features = false
-features = ["png", "jpeg"]
+cfg-if = "1.0"
+env_logger = "0.10"
+image = { version = "0.24", default-features = false, features = [
+    "png",
+    "jpeg",
+] }
+log = "0.4"
+ndarray = "0.15"
+num_cpus = "1.15"
+palette = "0.7"
+pollster = "0.3"
+wgpu = "0.16"
+winit = "0.28"
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
