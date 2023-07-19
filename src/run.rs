@@ -116,6 +116,7 @@ fn handle_keypress(event: &KeyboardInput, control_flow: &mut ControlFlow, state:
         } => match code {
             VirtualKeyCode::Escape => *control_flow = ControlFlow::Exit,
             VirtualKeyCode::Space => state.cycle_render_pipeline(),
+            VirtualKeyCode::Q => state.cycle_texture(),
             VirtualKeyCode::E => state.cycle_model(),
             _ => {
                 log::info!("Unhandled keypress: {:?}", code);

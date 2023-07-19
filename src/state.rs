@@ -11,8 +11,11 @@ pub struct State {
     pub size: winit::dpi::PhysicalSize<u32>,
     window: Window,
     clear_colour: wgpu::Color,
-    diffuse_bind_group: wgpu::BindGroup,
-    diffuse_texture: Texture,
+
+    diffuse_textures: Vec<Texture>,
+    diffuse_bind_groups: Vec<wgpu::BindGroup>,
+    diffuse_bind_group_index: usize,
+
     render_pipelines: Vec<wgpu::RenderPipeline>,
     render_pipeline_index: usize,
     model_buffers: Vec<(wgpu::Buffer, wgpu::Buffer, u32)>,
@@ -74,9 +77,17 @@ impl State {
         surface.configure(&device, &config);
 
         // Textures
-        let diffuse_texture_bytes = include_bytes!("resources/images/happy_tree.png");
-        let diffuse_texture =
-            Texture::from_bytes(&device, &queue, diffuse_texture_bytes, "Happy Tree").unwrap();
+        let diffuse_texture_bytes_a = include_bytes!("resources/images/happy_tree.png");
+        let diffuse_texture_a =
+            Texture::from_bytes(&device, &queue, diffuse_texture_bytes_a, "Happy Tree").unwrap();
+        let diffuse_texture_bytes_b = include_bytes!("resources/images/happy_tree-cartoon.png");
+        let diffuse_texture_b = Texture::from_bytes(
+            &device,
+            &queue,
+            diffuse_texture_bytes_b,
+            "Happy Tree Cartoon",
+        )
+        .unwrap();
 
         // Bind texture.
         let texture_bind_group_layout =
@@ -102,16 +113,30 @@ impl State {
                 label: Some("Texture Bind Group Layout"),
             });
 
-        let diffuse_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        let diffuse_bind_group_a = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &texture_bind_group_layout,
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
+                    resource: wgpu::BindingResource::TextureView(&diffuse_texture_a.view),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
+                    resource: wgpu::BindingResource::Sampler(&diffuse_texture_a.sampler),
+                },
+            ],
+            label: Some("Diffuse Bind Group"),
+        });
+        let diffuse_bind_group_b = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &texture_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&diffuse_texture_b.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&diffuse_texture_b.sampler),
                 },
             ],
             label: Some("Diffuse Bind Group"),
@@ -169,8 +194,9 @@ impl State {
             config,
             size,
             clear_colour: wgpu::Color::WHITE,
-            diffuse_bind_group,
-            diffuse_texture,
+            diffuse_textures: vec![diffuse_texture_a, diffuse_texture_b],
+            diffuse_bind_groups: vec![diffuse_bind_group_a, diffuse_bind_group_b],
+            diffuse_bind_group_index: 0,
             render_pipelines,
             render_pipeline_index: 0,
             model_buffers,
@@ -264,6 +290,11 @@ impl State {
         self.model_index = (self.model_index + 1) % self.model_buffers.len();
     }
 
+    pub fn cycle_texture(&mut self) {
+        self.diffuse_bind_group_index =
+            (self.diffuse_bind_group_index + 1) % self.diffuse_textures.len();
+    }
+
     /// Render to the next frame.
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
@@ -295,7 +326,11 @@ impl State {
 
             render_pass.set_pipeline(&self.render_pipelines[self.render_pipeline_index]);
 
-            render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
+            render_pass.set_bind_group(
+                0,
+                &self.diffuse_bind_groups[self.diffuse_bind_group_index],
+                &[],
+            );
 
             let (vertex_buffer, index_buffer, num_indices) = &self.model_buffers[self.model_index];
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
