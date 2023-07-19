@@ -167,7 +167,9 @@ impl State {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[],
+                bind_group_layouts: &[
+                    &texture_bind_group_layout, // Diffuse Bind Group
+                ],
                 push_constant_ranges: &[],
             });
 
@@ -181,6 +183,7 @@ impl State {
         };
 
         let mut render_pipelines = Vec::with_capacity(3);
+        render_pipelines.push(make_pipeline(wgpu::include_wgsl!("texture.wgsl")));
         render_pipelines.push(make_pipeline(wgpu::include_wgsl!("brown.wgsl")));
         render_pipelines.push(make_pipeline(wgpu::include_wgsl!("noise.wgsl")));
         render_pipelines.push(make_pipeline(wgpu::include_wgsl!("coloured.wgsl")));
