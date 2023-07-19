@@ -1,4 +1,5 @@
 mod camera;
+mod camera_uniform;
 mod run;
 mod state;
 mod texture;
