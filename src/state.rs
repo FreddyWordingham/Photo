@@ -2,8 +2,8 @@ use wgpu::util::DeviceExt;
 use winit::{event::WindowEvent, window::Window};
 
 use crate::{
-    camera::Camera, camera_uniform::CameraUniform, texture::Texture, Vertex, INDICES_A, INDICES_B,
-    VERTICES_A, VERTICES_B,
+    camera::Camera, camera_controller::CameraController, camera_uniform::CameraUniform,
+    texture::Texture, Vertex, INDICES_A, INDICES_B, VERTICES_A, VERTICES_B,
 };
 
 pub struct State {
@@ -24,6 +24,7 @@ pub struct State {
     model_buffers: Vec<(wgpu::Buffer, wgpu::Buffer, u32)>,
     model_index: usize,
 
+    camera_controller: CameraController,
     camera: Camera,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -244,6 +245,7 @@ impl State {
             render_pipeline_index: 0,
             model_buffers,
             model_index: 0,
+            camera_controller: CameraController::new(1.0),
             camera,
             camera_uniform,
             camera_buffer,
@@ -323,11 +325,19 @@ impl State {
     }
 
     /// Return true if the event has fully been processed.
-    pub fn input(&mut self, _event: &WindowEvent) -> bool {
-        false
+    pub fn input(&mut self, event: &WindowEvent) -> bool {
+        self.camera_controller.process_events(event)
     }
 
-    pub fn update(&mut self) {}
+    pub fn update(&mut self) {
+        self.camera_controller.update_camera(&mut self.camera);
+        self.camera_uniform.update_view_proj(&self.camera);
+        self.queue.write_buffer(
+            &self.camera_buffer,
+            0,
+            bytemuck::cast_slice(&[self.camera_uniform]),
+        );
+    }
 
     pub fn cycle_render_pipeline(&mut self) {
         self.render_pipeline_index = (self.render_pipeline_index + 1) % self.render_pipelines.len();
