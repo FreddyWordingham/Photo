@@ -39,15 +39,15 @@ impl BindGroupController {
         }
     }
 
-    pub fn update_bindgroup_index(
+    pub fn update_bind_group_index(
         &mut self,
-        bindgroup_index: &mut usize,
-        bindgroups: &[wgpu::BindGroup],
+        bind_group_index: &mut usize,
+        bind_groups: &[wgpu::BindGroup],
     ) {
         if self.next.triggered() {
-            *bindgroup_index = (*bindgroup_index + 1) % bindgroups.len();
+            *bind_group_index = (*bind_group_index + 1) % bind_groups.len();
         } else if self.back.triggered() {
-            *bindgroup_index = (*bindgroup_index + bindgroups.len() - 1) % bindgroups.len();
+            *bind_group_index = (*bind_group_index + bind_groups.len() - 1) % bind_groups.len();
         }
     }
 }

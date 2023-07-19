@@ -336,7 +336,7 @@ impl State {
     }
 
     pub fn update(&mut self) {
-        self.bind_group_controller.update_bindgroup_index(
+        self.bind_group_controller.update_bind_group_index(
             &mut self.diffuse_bind_group_index,
             &self.diffuse_bind_groups,
         );
