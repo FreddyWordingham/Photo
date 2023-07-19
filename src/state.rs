@@ -25,6 +25,9 @@ pub struct State {
     model_index: usize,
 
     camera: Camera,
+    camera_uniform: CameraUniform,
+    camera_buffer: wgpu::Buffer,
+    camera_bind_group: wgpu::BindGroup,
 }
 
 impl State {
@@ -141,13 +144,54 @@ impl State {
             &diffuse_texture_b,
         );
 
+        // Camera
+        let camera = Camera {
+            position: cgmath::Point3::new(0.0, 1.0, 2.0),
+            target: cgmath::Point3::new(0.0, 0.0, 0.0),
+            up: cgmath::Vector3::unit_y(),
+            aspect_ratio: config.width as f32 / config.height as f32,
+            vertical_field_of_view: 45.0,
+            near_clip: 0.1,
+            far_clip: 100.0,
+        };
+
+        let mut camera_uniform = CameraUniform::new();
+        camera_uniform.update_view_proj(&camera);
+
+        let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Camera Buffer"),
+            contents: bytemuck::cast_slice(&[camera_uniform]),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
+
+        let camera_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+                label: Some("Camera Bind Group Layout"),
+            });
+        let camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &camera_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: camera_buffer.as_entire_binding(),
+            }],
+            label: Some("Camera Bind Group"),
+        });
+
         // Render Pipelines
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[
-                    &texture_bind_group_layout, // Diffuse Bind Group
-                ],
+                bind_group_layouts: &[&texture_bind_group_layout, &camera_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -185,26 +229,6 @@ impl State {
         add_model_buffer(VERTICES_A, INDICES_A);
         add_model_buffer(VERTICES_B, INDICES_B);
 
-        // Camera
-        let camera = Camera {
-            position: cgmath::Point3::new(0.0, 1.0, 2.0),
-            target: cgmath::Point3::new(0.0, 0.0, 0.0),
-            up: cgmath::Vector3::unit_y(),
-            aspect_ratio: config.width as f32 / config.height as f32,
-            vertical_field_of_view: 45.0,
-            near_clip: 0.1,
-            far_clip: 100.0,
-        };
-
-        let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(&camera);
-
-        let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Camera Buffer"),
-            contents: bytemuck::cast_slice(&[camera_uniform]),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
-
         Self {
             window,
             surface,
@@ -221,6 +245,9 @@ impl State {
             model_buffers,
             model_index: 0,
             camera,
+            camera_uniform,
+            camera_buffer,
+            camera_bind_group,
         }
     }
 
@@ -351,7 +378,7 @@ impl State {
                 &self.diffuse_bind_groups[self.diffuse_bind_group_index],
                 &[],
             );
-
+            render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
             let (vertex_buffer, index_buffer, num_indices) = &self.model_buffers[self.model_index];
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
