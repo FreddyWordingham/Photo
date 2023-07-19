@@ -113,34 +113,28 @@ impl State {
                 label: Some("Texture Bind Group Layout"),
             });
 
-        let diffuse_bind_group_a = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &texture_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture_a.view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_texture_a.sampler),
-                },
-            ],
-            label: Some("Diffuse Bind Group"),
-        });
-        let diffuse_bind_group_b = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &texture_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture_b.view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_texture_b.sampler),
-                },
-            ],
-            label: Some("Diffuse Bind Group"),
-        });
+        let create_bind_group = |label: &str, texture: &Texture| {
+            device.create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &texture_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(&texture.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Sampler(&texture.sampler),
+                    },
+                ],
+                label: Some(label),
+            })
+        };
+        let diffuse_bind_group_a =
+            create_bind_group("Happy Tree - Diffuse Bind Group", &diffuse_texture_a);
+        let diffuse_bind_group_b = create_bind_group(
+            "Happy Tree Cartoon - Diffuse Bind Group",
+            &diffuse_texture_b,
+        );
 
         // Render Pipelines
         let render_pipeline_layout =
