@@ -1,6 +1,8 @@
+mod bind_group_controller;
 mod camera;
 mod camera_controller;
 mod camera_uniform;
+mod click_button;
 mod run;
 mod state;
 mod texture;

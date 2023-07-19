@@ -2,8 +2,9 @@ use wgpu::util::DeviceExt;
 use winit::{event::WindowEvent, window::Window};
 
 use crate::{
-    camera::Camera, camera_controller::CameraController, camera_uniform::CameraUniform,
-    texture::Texture, Vertex, INDICES_A, INDICES_B, VERTICES_A, VERTICES_B,
+    bind_group_controller::BindGroupController, camera::Camera,
+    camera_controller::CameraController, camera_uniform::CameraUniform, texture::Texture, Vertex,
+    INDICES_A, INDICES_B, VERTICES_A, VERTICES_B,
 };
 
 pub struct State {
@@ -15,7 +16,7 @@ pub struct State {
     window: Window,
     clear_colour: wgpu::Color,
 
-    diffuse_textures: Vec<Texture>,
+    bind_group_controller: BindGroupController,
     diffuse_bind_groups: Vec<wgpu::BindGroup>,
     diffuse_bind_group_index: usize,
 
@@ -238,7 +239,7 @@ impl State {
             config,
             size,
             clear_colour: wgpu::Color::WHITE,
-            diffuse_textures: vec![diffuse_texture_a, diffuse_texture_b],
+            bind_group_controller: BindGroupController::new(),
             diffuse_bind_groups: vec![diffuse_bind_group_a, diffuse_bind_group_b],
             diffuse_bind_group_index: 0,
             render_pipelines,
@@ -326,10 +327,20 @@ impl State {
 
     /// Return true if the event has fully been processed.
     pub fn input(&mut self, event: &WindowEvent) -> bool {
-        self.camera_controller.process_events(event)
+        [
+            self.bind_group_controller.process_events(event),
+            self.camera_controller.process_events(event),
+        ]
+        .iter()
+        .any(|&x| x)
     }
 
     pub fn update(&mut self) {
+        self.bind_group_controller.update_bindgroup_index(
+            &mut self.diffuse_bind_group_index,
+            &self.diffuse_bind_groups,
+        );
+
         self.camera_controller.update_camera(&mut self.camera);
         self.camera_uniform.update_view_proj(&self.camera);
         self.queue.write_buffer(
@@ -345,11 +356,6 @@ impl State {
 
     pub fn cycle_model(&mut self) {
         self.model_index = (self.model_index + 1) % self.model_buffers.len();
-    }
-
-    pub fn cycle_texture(&mut self) {
-        self.diffuse_bind_group_index =
-            (self.diffuse_bind_group_index + 1) % self.diffuse_textures.len();
     }
 
     /// Render to the next frame.
