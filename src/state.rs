@@ -1,10 +1,13 @@
 use wgpu::util::DeviceExt;
-use winit::{event::WindowEvent, window::Window};
+use winit::{
+    event::{VirtualKeyCode, WindowEvent},
+    window::Window,
+};
 
 use crate::{
-    bind_group_controller::BindGroupController, camera::Camera,
-    camera_controller::CameraController, camera_uniform::CameraUniform, texture::Texture, Vertex,
-    INDICES_A, INDICES_B, VERTICES_A, VERTICES_B,
+    camera::Camera, camera_controller::CameraController, camera_uniform::CameraUniform,
+    cycle_controller::CycleController, texture::Texture, Vertex, INDICES_A, INDICES_B, VERTICES_A,
+    VERTICES_B,
 };
 
 pub struct State {
@@ -16,12 +19,15 @@ pub struct State {
     window: Window,
     clear_colour: wgpu::Color,
 
-    bind_group_controller: BindGroupController,
+    bind_group_controller: CycleController,
     diffuse_bind_groups: Vec<wgpu::BindGroup>,
     diffuse_bind_group_index: usize,
 
+    render_pipeline_controller: CycleController,
     render_pipelines: Vec<wgpu::RenderPipeline>,
     render_pipeline_index: usize,
+
+    model_controller: CycleController,
     model_buffers: Vec<(wgpu::Buffer, wgpu::Buffer, u32)>,
     model_index: usize,
 
@@ -212,6 +218,7 @@ impl State {
         render_pipelines.push(make_pipeline(wgpu::include_wgsl!("noise.wgsl")));
         render_pipelines.push(make_pipeline(wgpu::include_wgsl!("coloured.wgsl")));
 
+        // Models.
         let mut model_buffers = Vec::with_capacity(2);
         let mut add_model_buffer = |vertices, indices| {
             model_buffers.push((
@@ -239,11 +246,13 @@ impl State {
             config,
             size,
             clear_colour: wgpu::Color::WHITE,
-            bind_group_controller: BindGroupController::new(),
+            bind_group_controller: CycleController::new(VirtualKeyCode::E, VirtualKeyCode::Q),
             diffuse_bind_groups: vec![diffuse_bind_group_a, diffuse_bind_group_b],
             diffuse_bind_group_index: 0,
+            render_pipeline_controller: CycleController::new(VirtualKeyCode::X, VirtualKeyCode::Z),
             render_pipelines,
             render_pipeline_index: 0,
+            model_controller: CycleController::new(VirtualKeyCode::R, VirtualKeyCode::F),
             model_buffers,
             model_index: 0,
             camera_controller: CameraController::new(1.0),
@@ -329,6 +338,8 @@ impl State {
     pub fn input(&mut self, event: &WindowEvent) -> bool {
         [
             self.bind_group_controller.process_events(event),
+            self.render_pipeline_controller.process_events(event),
+            self.model_controller.process_events(event),
             self.camera_controller.process_events(event),
         ]
         .iter()
@@ -336,10 +347,16 @@ impl State {
     }
 
     pub fn update(&mut self) {
-        self.bind_group_controller.update_bind_group_index(
+        self.bind_group_controller.update_index(
             &mut self.diffuse_bind_group_index,
-            &self.diffuse_bind_groups,
+            self.diffuse_bind_groups.len(),
         );
+
+        self.render_pipeline_controller
+            .update_index(&mut self.render_pipeline_index, self.render_pipelines.len());
+
+        self.model_controller
+            .update_index(&mut self.model_index, self.model_buffers.len());
 
         self.camera_controller.update_camera(&mut self.camera);
         self.camera_uniform.update_view_proj(&self.camera);
@@ -348,14 +365,6 @@ impl State {
             0,
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
-    }
-
-    pub fn cycle_render_pipeline(&mut self) {
-        self.render_pipeline_index = (self.render_pipeline_index + 1) % self.render_pipelines.len();
-    }
-
-    pub fn cycle_model(&mut self) {
-        self.model_index = (self.model_index + 1) % self.model_buffers.len();
     }
 
     /// Render to the next frame.
