@@ -10,5 +10,8 @@
         "serve": "live-server --cors"
     },
     "keywords": [],
-    "author": ""
+    "author": "",
+    "dependencies": {
+        "typescript": "^5.1.6"
+    }
 }
