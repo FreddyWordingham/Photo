@@ -13,6 +13,7 @@
     "author": "",
     "dependencies": {
         "live-server": "^1.2.2",
+        "ts-loader": "^9.4.4",
         "typescript": "^5.1.6",
         "webpack": "^5.88.2"
     },
