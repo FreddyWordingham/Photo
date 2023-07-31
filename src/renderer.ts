@@ -42,4 +42,28 @@ export class Renderer {
     async create_assets() {}
 
     async make_pipeline() {}
+
+    render = () => {
+        // Command encoder - must be called first
+        const command_encoder: GPUCommandEncoder = this.device.createCommandEncoder();
+
+        // View to the texture (swapchain) of the canvas
+        const texture_view: GPUTextureView = this.context.getCurrentTexture().createView();
+
+        // Draw commands
+        const render_pass: GPURenderPassEncoder = command_encoder.beginRenderPass({
+            colorAttachments: [
+                {
+                    view: texture_view,
+                    clearValue: { r: 0.5, g: 0.0, b: 0.25, a: 1.0 },
+                    loadOp: "clear",
+                    storeOp: "store",
+                },
+            ],
+        });
+        render_pass.end();
+
+        // Submit commands
+        this.device.queue.submit([command_encoder.finish()]);
+    };
 }

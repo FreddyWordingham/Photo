@@ -4,3 +4,7 @@ const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("gf
 
 const renderer = new Renderer(canvas);
 renderer.init();
+
+for (let i = 0; i < 100; i++) {
+    requestAnimationFrame(renderer.render);
+}
