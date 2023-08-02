@@ -15,6 +15,7 @@ export class Renderer {
     colour_buffer: GPUTexture;
     colour_buffer_view: GPUTextureView;
     sampler: GPUSampler;
+    scene_buffer: GPUBuffer;
 
     // Pipeline
     ray_tracer_pipeline: GPUComputePipeline;
@@ -22,8 +23,12 @@ export class Renderer {
     display_pipeline: GPURenderPipeline;
     display_bind_group: GPUBindGroup;
 
+    // Scene to render
+    scene: Scene;
+
     constructor(canvas: HTMLCanvasElement, scene: Scene) {
         this.canvas = canvas;
+        this.scene = scene;
     }
 
     async init() {
@@ -69,6 +74,12 @@ export class Renderer {
             maxAnisotropy: 1,
         };
         this.sampler = this.device.createSampler(sampler_descriptor);
+
+        const parameter_buffer_descriptor: GPUBufferDescriptor = {
+            size: 64,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        };
+        this.scene_buffer = this.device.createBuffer(parameter_buffer_descriptor);
     }
 
     async make_pipeline() {
@@ -83,6 +94,13 @@ export class Renderer {
                         viewDimension: "2d",
                     },
                 },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type: "uniform",
+                    },
+                },
             ],
         });
         this.ray_tracer_bind_group = this.device.createBindGroup({
@@ -91,6 +109,12 @@ export class Renderer {
                 {
                     binding: 0,
                     resource: this.colour_buffer_view,
+                },
+                {
+                    binding: 1,
+                    resource: {
+                        buffer: this.scene_buffer,
+                    },
                 },
             ],
         });
@@ -162,11 +186,23 @@ export class Renderer {
         });
     }
 
+    prepare_scene() {
+        this.device.queue.writeBuffer(
+            this.scene_buffer,
+            0,
+            new Float32Array([this.scene.camera.position[0], this.scene.camera.position[1], this.scene.camera.position[2]]),
+            0,
+            3
+        );
+    }
+
     render = () => {
         if (!this.device) {
             console.log("Loading...");
             return;
         }
+
+        this.prepare_scene();
 
         // Command encoder - must be called first
         const command_encoder: GPUCommandEncoder = this.device.createCommandEncoder();

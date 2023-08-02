@@ -24,7 +24,7 @@ export class Scene {
     }
 
     private static create_camera(): Camera {
-        const position: vec3 = [0.0, 0.0, 0.0];
+        const position: vec3 = [0.75, 1.0, 0.25];
         const target: vec3 = [1.0, 0.0, 0.0];
         return new Camera(position, target);
     }

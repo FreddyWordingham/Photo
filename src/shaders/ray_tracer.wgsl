@@ -15,7 +15,7 @@ struct Scene {
     camera_right: vec3<f32>,
     camera_up: vec3<f32>,
 
-    sphere_count: u32,
+    sphere_count: f32,
 }
 
 
@@ -33,12 +33,13 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let ray_origin = scene.camera_position;
     let ray = Ray(ray_origin, direction);
 
-    var pixel_colour = sample(ray);
+    var pixel_colour = sample(ray, scene);
     textureStore(colour_buffer, screen_pos, vec4<f32>(pixel_colour, 1.0));
 }
 
-fn sample(ray: Ray) -> vec3<f32> {
-    return vec3<f32>(1.0, 0.0, 0.0);
+fn sample(ray: Ray, scene: Scene) -> vec3<f32> {
+    // return vec3<f32>(1.0, 0.0, 0.0);
+    return scene.camera_position;
 }
 
 fn hit(ray: Ray, sphere: Sphere) -> bool {
