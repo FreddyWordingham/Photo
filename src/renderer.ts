@@ -169,7 +169,6 @@ export class Renderer {
         // Command encoder - must be called first
         const command_encoder: GPUCommandEncoder = this.device.createCommandEncoder();
 
-        // View to the texture (swapchain) of the canvas
         const ray_tracer_pass: GPUComputePassEncoder = command_encoder.beginComputePass();
         ray_tracer_pass.setPipeline(this.ray_tracer_pipeline);
         ray_tracer_pass.setBindGroup(0, this.ray_tracer_bind_group);
@@ -177,8 +176,6 @@ export class Renderer {
         ray_tracer_pass.end();
 
         const texture_view: GPUTextureView = this.context.getCurrentTexture().createView();
-
-        // Draw commands
         const render_pass: GPURenderPassEncoder = command_encoder.beginRenderPass({
             colorAttachments: [
                 {
@@ -189,6 +186,11 @@ export class Renderer {
                 },
             ],
         });
+
+        render_pass.setPipeline(this.display_pipeline);
+        render_pass.setBindGroup(0, this.display_bind_group);
+        render_pass.draw(6, 1, 0, 0);
+
         render_pass.end();
 
         // Submit commands
