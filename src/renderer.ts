@@ -1,6 +1,8 @@
 import ray_tracer_kernel from "./shaders/ray_tracer.wgsl";
 import display_shader from "./shaders/display.wgsl";
 
+import { Scene } from "./scene";
+
 export class Renderer {
     // Device/Context objects
     canvas: HTMLCanvasElement;
@@ -20,7 +22,7 @@ export class Renderer {
     display_pipeline: GPURenderPipeline;
     display_bind_group: GPUBindGroup;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, scene: Scene) {
         this.canvas = canvas;
     }
 
