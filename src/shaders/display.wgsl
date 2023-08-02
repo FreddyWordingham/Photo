@@ -2,9 +2,9 @@
 @group(0) @binding(1) var colour_buffer: texture_2d<f32>;
 
 struct VertexOutput {
-    @location(position) position: f32;
-    @location(0) texture_coord: vec2<f32>;
-};
+    @builtin(position) position: vec4<f32>,
+    @location(0) texture_coord: vec2<f32>,
+}
 
 @vertex
 fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {

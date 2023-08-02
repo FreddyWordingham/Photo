@@ -1,3 +1,6 @@
+import ray_tracer_kernel from "./shaders/ray_tracer.wgsl";
+import display_shader from "./shaders/display.wgsl";
+
 export class Renderer {
     // Device/Context objects
     canvas: HTMLCanvasElement;
@@ -6,16 +9,16 @@ export class Renderer {
     device!: GPUDevice;
     context: GPUCanvasContext;
 
-    // // Assets
-    // colour_buffer: GPUTexture;
-    // colour_buffer_view: GPUTextureView;
-    // sampler: GPUSampler;
+    // Assets
+    colour_buffer: GPUTexture;
+    colour_buffer_view: GPUTextureView;
+    sampler: GPUSampler;
 
-    // // Pipeline
-    // ray_tracing_pipeline: GPUComputePipeline;
-    // ray_tracing_bind_group: GPUBindGroup;
-    // screen_pipeline: GPURenderPipeline;
-    // screen_bind_group: GPUBindGroup;
+    // Pipeline
+    ray_tracer_pipeline: GPUComputePipeline;
+    ray_tracer_bind_group: GPUBindGroup;
+    display_pipeline: GPURenderPipeline;
+    display_bind_group: GPUBindGroup;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -33,21 +36,146 @@ export class Renderer {
         this.device = <GPUDevice>await this.adapter.requestDevice();
         this.context = <GPUCanvasContext>this.canvas.getContext("webgpu");
         this.context.configure({
-            device: this.device,
             format: this.format,
+            device: this.device,
             alphaMode: "opaque",
         });
     }
 
-    async create_assets() {}
+    async create_assets() {
+        // Colour buffer
+        this.colour_buffer = this.device.createTexture({
+            format: "rgba8unorm",
+            size: {
+                width: this.canvas.width,
+                height: this.canvas.height,
+            },
+            usage:
+                GPUTextureUsage.COPY_DST | // Can be target of copy operations
+                GPUTextureUsage.STORAGE_BINDING | // Mutable in compute shader
+                GPUTextureUsage.TEXTURE_BINDING, // Can be used as a texture, with a sampler
+        });
+        this.colour_buffer_view = this.colour_buffer.createView();
 
-    async make_pipeline() {}
+        // Sampler
+        const sampler_descriptor: GPUSamplerDescriptor = {
+            addressModeU: "repeat",
+            addressModeV: "repeat",
+            magFilter: "linear",
+            minFilter: "nearest",
+            mipmapFilter: "nearest",
+            maxAnisotropy: 1,
+        };
+        this.sampler = this.device.createSampler(sampler_descriptor);
+    }
+
+    async make_pipeline() {
+        const ray_tracer_bind_group_layout: GPUBindGroupLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.COMPUTE,
+                    storageTexture: {
+                        format: "rgba8unorm",
+                        access: "write-only",
+                        viewDimension: "2d",
+                    },
+                },
+            ],
+        });
+        this.ray_tracer_bind_group = this.device.createBindGroup({
+            layout: ray_tracer_bind_group_layout,
+            entries: [
+                {
+                    binding: 0,
+                    resource: this.colour_buffer_view,
+                },
+            ],
+        });
+        const ray_tracer_pipeline_layout: GPUPipelineLayout = this.device.createPipelineLayout({
+            bindGroupLayouts: [ray_tracer_bind_group_layout],
+        });
+        this.ray_tracer_pipeline = this.device.createComputePipeline({
+            layout: ray_tracer_pipeline_layout,
+            compute: {
+                module: this.device.createShaderModule({
+                    code: ray_tracer_kernel,
+                }),
+                entryPoint: "main",
+            },
+        });
+
+        const display_bind_group_layout: GPUBindGroupLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {},
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {},
+                },
+            ],
+        });
+        this.display_bind_group = this.device.createBindGroup({
+            layout: display_bind_group_layout,
+            entries: [
+                {
+                    binding: 0,
+                    resource: this.sampler,
+                },
+                {
+                    binding: 1,
+                    resource: this.colour_buffer_view,
+                },
+            ],
+        });
+        const display_pipeline_layout: GPUPipelineLayout = this.device.createPipelineLayout({
+            bindGroupLayouts: [display_bind_group_layout],
+        });
+        this.display_pipeline = this.device.createRenderPipeline({
+            layout: display_pipeline_layout,
+            vertex: {
+                module: this.device.createShaderModule({
+                    code: display_shader,
+                }),
+                entryPoint: "vs_main",
+            },
+            primitive: {
+                topology: "triangle-list",
+            },
+            fragment: {
+                module: this.device.createShaderModule({
+                    code: display_shader,
+                }),
+                entryPoint: "fs_main",
+                targets: [
+                    {
+                        format: this.format,
+                    },
+                ],
+            },
+        });
+    }
 
     render = () => {
+        if (!this.device) {
+            console.log("Loading...");
+            return;
+        }
+
         // Command encoder - must be called first
         const command_encoder: GPUCommandEncoder = this.device.createCommandEncoder();
 
         // View to the texture (swapchain) of the canvas
+        const ray_tracer_pass: GPUComputePassEncoder = command_encoder.beginComputePass();
+        ray_tracer_pass.setPipeline(this.ray_tracer_pipeline);
+        ray_tracer_pass.setBindGroup(0, this.ray_tracer_bind_group);
+        ray_tracer_pass.dispatchWorkgroups(this.canvas.width, this.canvas.height, 1);
+        ray_tracer_pass.end();
+
         const texture_view: GPUTextureView = this.context.getCurrentTexture().createView();
 
         // Draw commands
@@ -65,5 +193,8 @@ export class Renderer {
 
         // Submit commands
         this.device.queue.submit([command_encoder.finish()]);
+
+        // Request next frame
+        requestAnimationFrame(this.render);
     };
 }
