@@ -21,6 +21,7 @@ struct Scene {
 
 @group(0) @binding(0) var colour_buffer: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(1) var<uniform> scene: Scene;
+
 @compute @workgroup_size(1, 1, 1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let screen_size = textureDimensions(colour_buffer);
@@ -38,8 +39,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 }
 
 fn sample(ray: Ray, scene: Scene) -> vec3<f32> {
-    // return vec3<f32>(1.0, 0.0, 0.0);
-    return scene.camera_position;
+    return scene.camera_forward;
 }
 
 fn hit(ray: Ray, sphere: Sphere) -> bool {

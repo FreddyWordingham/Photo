@@ -76,7 +76,7 @@ export class Renderer {
         this.sampler = this.device.createSampler(sampler_descriptor);
 
         const parameter_buffer_descriptor: GPUBufferDescriptor = {
-            size: 64,
+            size: 68,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         };
         this.scene_buffer = this.device.createBuffer(parameter_buffer_descriptor);
@@ -187,13 +187,26 @@ export class Renderer {
     }
 
     prepare_scene() {
-        this.device.queue.writeBuffer(
-            this.scene_buffer,
-            0,
-            new Float32Array([this.scene.camera.position[0], this.scene.camera.position[1], this.scene.camera.position[2]]),
-            0,
-            3
-        );
+        const data = new Float32Array([
+            this.scene.camera.position[0],
+            this.scene.camera.position[1],
+            this.scene.camera.position[2],
+            0.0,
+            this.scene.camera.forward[0],
+            this.scene.camera.forward[1],
+            this.scene.camera.forward[2],
+            0.0,
+            this.scene.camera.right[0],
+            this.scene.camera.right[1],
+            this.scene.camera.right[2],
+            0.0,
+            this.scene.camera.up[0],
+            this.scene.camera.up[1],
+            this.scene.camera.up[2],
+            0.0,
+            1.0 * this.scene.spheres.length,
+        ]);
+        this.device.queue.writeBuffer(this.scene_buffer, 0, data, 0, data.length);
     }
 
     render = () => {
