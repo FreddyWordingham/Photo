@@ -16,6 +16,7 @@ export class Renderer {
     colour_buffer_view: GPUTextureView;
     sampler: GPUSampler;
     scene_buffer: GPUBuffer;
+    sphere_buffer: GPUBuffer;
 
     // Pipeline
     ray_tracer_pipeline: GPUComputePipeline;
@@ -33,8 +34,8 @@ export class Renderer {
 
     async init() {
         await this.setup_device();
-        await this.create_assets();
-        await this.make_pipeline();
+        this.create_assets();
+        this.make_pipeline();
     }
 
     async setup_device() {
@@ -49,7 +50,7 @@ export class Renderer {
         });
     }
 
-    async create_assets() {
+    create_assets() {
         // Colour buffer
         this.colour_buffer = this.device.createTexture({
             format: "rgba8unorm",
@@ -64,6 +65,18 @@ export class Renderer {
         });
         this.colour_buffer_view = this.colour_buffer.createView();
 
+        // Scene buffer
+        this.scene_buffer = this.device.createBuffer({
+            size: 64,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+        // Sphere buffer
+        this.sphere_buffer = this.device.createBuffer({
+            size: 32 * this.scene.spheres.length,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+
         // Sampler
         const sampler_descriptor: GPUSamplerDescriptor = {
             addressModeU: "repeat",
@@ -74,15 +87,9 @@ export class Renderer {
             maxAnisotropy: 1,
         };
         this.sampler = this.device.createSampler(sampler_descriptor);
-
-        const parameter_buffer_descriptor: GPUBufferDescriptor = {
-            size: 68,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        };
-        this.scene_buffer = this.device.createBuffer(parameter_buffer_descriptor);
     }
 
-    async make_pipeline() {
+    make_pipeline() {
         const ray_tracer_bind_group_layout: GPUBindGroupLayout = this.device.createBindGroupLayout({
             entries: [
                 {
@@ -101,6 +108,13 @@ export class Renderer {
                         type: "uniform",
                     },
                 },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type: "read-only-storage",
+                    },
+                },
             ],
         });
         this.ray_tracer_bind_group = this.device.createBindGroup({
@@ -114,6 +128,12 @@ export class Renderer {
                     binding: 1,
                     resource: {
                         buffer: this.scene_buffer,
+                    },
+                },
+                {
+                    binding: 2,
+                    resource: {
+                        buffer: this.sphere_buffer,
                     },
                 },
             ],
@@ -203,10 +223,22 @@ export class Renderer {
             this.scene.camera.up[0],
             this.scene.camera.up[1],
             this.scene.camera.up[2],
-            0.0,
             1.0 * this.scene.spheres.length,
         ]);
         this.device.queue.writeBuffer(this.scene_buffer, 0, data, 0, data.length);
+
+        const sphere_data = new Float32Array(this.scene.spheres.length * 8);
+        for (let i = 0; i < this.scene.spheres.length; i++) {
+            sphere_data[i * 8 + 0] = this.scene.spheres[i].centre[0];
+            sphere_data[i * 8 + 1] = this.scene.spheres[i].centre[1];
+            sphere_data[i * 8 + 2] = this.scene.spheres[i].centre[2];
+            sphere_data[i * 8 + 3] = 0.0;
+            sphere_data[i * 8 + 4] = this.scene.spheres[i].colour[0];
+            sphere_data[i * 8 + 5] = this.scene.spheres[i].colour[1];
+            sphere_data[i * 8 + 6] = this.scene.spheres[i].colour[2];
+            sphere_data[i * 8 + 7] = this.scene.spheres[i].radius;
+        }
+        this.device.queue.writeBuffer(this.sphere_buffer, 0, sphere_data, 0, this.scene.spheres.length * 8);
     }
 
     render = () => {
