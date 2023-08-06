@@ -46,26 +46,26 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let direction = normalize(scene.camera_forward + horizontal_coeff * scene.camera_right + vertical_coeff * scene.camera_up);
     let ray = Ray(scene.camera_position, direction);
 
-    let pixel_colour = sample(ray, scene);
+    const min_distance: f32 = 0.001;
+    const max_distance: f32 = 1000000.0;
+    let sample = sample(ray, scene, min_distance, max_distance);
+    let pixel_colour = sample.colour;
     textureStore(colour_buffer, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(pixel_colour, 1.0));
 }
 
-fn sample(ray: Ray, scene: Scene) -> vec3<f32> {
-    const LARGE_NUMBER: f32 = 1000000.0;
-    var nearest: f32 = LARGE_NUMBER;
-
-    var state = RenderState(0.0, vec3<f32>(0.0, 0.0, 0.0), false);
-
+fn sample(ray: Ray, scene: Scene, t_min: f32, t_max: f32) -> RenderState {
+    // Create default return state
+    var nearest_hit = RenderState(t_max, vec3<f32>(0.0, 0.0, 0.0), false);
+    // For each sphere
     for (var n: u32 = u32(0); n < u32(scene.sphere_count); n++) {
-        let new_state = hit(ray, objects.spheres[n], 0.001, nearest, state);
-        if new_state.hit {
-            state = new_state;
-            nearest = new_state.t;
-            return state.colour;   // Directly return if a hit is found
-        }
+        // Check if the ray hits the sphere
+        let new_hit = hit(ray, objects.spheres[n], t_min, state.t, nearest_hit);
+        // If the ray hits the sphere, update the state with the new state
+        // (We already know that it is closer than the previous state)
+        if new_hit.hit { nearest_hit = new_hit; }
     }
-
-    return vec3<f32>(0.0, 0.0, 0.0);
+    // Return the colour the nearest hit
+    return nearest_hit;
 }
 
 fn hit(ray: Ray, sphere: Sphere, t_min: f32, t_max: f32, state: RenderState) -> RenderState {
