@@ -39,27 +39,47 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let inv_screen_width = 1.0 / f32(screen_size.x);
     let half_screen_size = 0.5 * vec2<f32>(f32(screen_size.x), f32(screen_size.y));
 
-    let screen_pos = vec2<f32>(f32(global_id.x), f32(global_id.y));
-    let horizontal_coeff = (screen_pos.x - half_screen_size.x) * inv_screen_width;
-    let vertical_coeff = (screen_pos.y - half_screen_size.y) * inv_screen_width;
+    const min_distance = 0.001;
+    const max_distance = 1000000.0;
+    const num_samples_sqrt = 2;
 
-    let direction = normalize(scene.camera_forward + horizontal_coeff * scene.camera_right + vertical_coeff * scene.camera_up);
-    let ray = Ray(scene.camera_position, direction);
+    var r = 0.0;
+    var g = 0.0;
+    var b = 0.0;
+    for (var u = 0; u < num_samples_sqrt; u++) {
+        let du = f32(u) / f32(num_samples_sqrt);
+        for (var v = 0; v < num_samples_sqrt; v++) {
+            let dv = f32(v) / f32(num_samples_sqrt) ;
+            let screen_pos = vec2<f32>(f32(global_id.x) + du, f32(global_id.y) + dv);
 
-    const min_distance: f32 = 0.001;
-    const max_distance: f32 = 1000000.0;
-    let sample = sample(ray, scene, min_distance, max_distance);
-    let pixel_colour = sample.colour;
-    textureStore(colour_buffer, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(pixel_colour, 1.0));
+            let horizontal_coeff = (screen_pos.x - half_screen_size.x) * inv_screen_width;
+            let vertical_coeff = (screen_pos.y - half_screen_size.y) * inv_screen_width;
+
+            let direction = normalize(scene.camera_forward + horizontal_coeff * scene.camera_right + vertical_coeff * scene.camera_up);
+            let ray = Ray(scene.camera_position, direction);
+
+            let sample = sample(ray, scene, min_distance, max_distance);
+            let pixel_colour = sample.colour;
+            r += pixel_colour.r;
+            g += pixel_colour.g;
+            b += pixel_colour.b;
+        }
+    }
+    r /= f32(num_samples_sqrt * num_samples_sqrt);
+    g /= f32(num_samples_sqrt * num_samples_sqrt);
+    b /= f32(num_samples_sqrt * num_samples_sqrt);
+
+    textureStore(colour_buffer, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(r, g, b, 1.0));
 }
 
+// Sample the scene for the nearest hit
 fn sample(ray: Ray, scene: Scene, t_min: f32, t_max: f32) -> RenderState {
     // Create default return state
     var nearest_hit = RenderState(t_max, vec3<f32>(0.0, 0.0, 0.0), false);
     // For each sphere
     for (var n: u32 = u32(0); n < u32(scene.sphere_count); n++) {
         // Check if the ray hits the sphere
-        let new_hit = hit(ray, objects.spheres[n], t_min, state.t, nearest_hit);
+        let new_hit = hit(ray, objects.spheres[n], t_min, nearest_hit.t, nearest_hit);
         // If the ray hits the sphere, update the state with the new state
         // (We already know that it is closer than the previous state)
         if new_hit.hit { nearest_hit = new_hit; }
@@ -78,7 +98,7 @@ fn hit(ray: Ray, sphere: Sphere, t_min: f32, t_max: f32, state: RenderState) -> 
         let temp = (-b - sqrt(discriminant)) / 2.0;
         if temp < t_max && temp > t_min {
             let point = ray.origin + temp * ray.direction;
-            let normal = (point - sphere.centre) / sphere.radius;
+            // let normal = (point - sphere.centre) / sphere.radius;
             let colour = sphere.colour;
             return RenderState(temp, colour, true);
         }
