@@ -111,19 +111,19 @@ fn sample(ray: Ray, scene: Scene, t_min: f32, t_max: f32) -> RenderState {
     var nearest_hit = RenderState(t_max, vec3<f32>(0.0, 0.0, 0.0), false);
     // Track the node
     var node: Node = bvh.nodes[0];
-    var stack: array<Node> = array<Node>(15);
-    var stack_index: i32 = u32(0);
+    var stack: array<Node, 15>;
+    var stack_index: i32 = 0;
 
     while true {
         let sphere_count: u32 = u32(node.sphere_count);
         let contents: u32 = u32(node.left_child);
 
         if sphere_count == 0 {
-            let child1: Node = bvh.nodes[contents];
-            let child2: Node = bvh.nodes[contents + 1];
+            var child1: Node = bvh.nodes[contents];
+            var child2: Node = bvh.nodes[contents + 1];
 
-            let distance1 = hit_aabb(ray, child1);
-            let distance2 = hit_aabb(ray, child2);
+            var distance1 = hit_aabb(ray, child1);
+            var distance2 = hit_aabb(ray, child2);
 
             if distance1 > distance2 {
                 let temp_distance: f32 = distance1;
@@ -188,4 +188,22 @@ fn hit(ray: Ray, sphere: Sphere, t_min: f32, t_max: f32, state: RenderState) -> 
         }
     }
     return state;
+}
+
+fn hit_aabb(ray: Ray, node: Node) -> f32 {
+    var inv_direction = vec3(1.0) / ray.direction;
+    var t1: vec3<f32> = (node.min - ray.origin) * inv_direction;
+    var t2: vec3<f32> = (node.max - ray.origin) * inv_direction;
+
+    var t_min: vec3<f32> = min(t1, t2);
+    var t_max: vec3<f32> = max(t1, t2);
+
+    var m = max(t_min.x, max(t_min.y, t_min.z));
+    var M = min(t_max.x, min(t_max.y, t_max.z));
+
+    if m > M || M < 0.0 {
+        return 1000000.0;
+    } else {
+        return m;
+    }
 }
