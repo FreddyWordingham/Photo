@@ -6,15 +6,18 @@ const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("gf
 const fps_label = <HTMLElement>document.getElementById("fps_label");
 const object_count_label = <HTMLElement>document.getElementById("object_count_label");
 
-const num_spheres = 64;
+const num_spheres = 1024;
 
 const scene = new Scene(num_spheres);
 const renderer = new Renderer(canvas, scene);
 
-let hundred_frame_average = 0.0;
+let prev_frame_times: number[] = [];
 function hud_callback(render_time: number) {
-    hundred_frame_average = (hundred_frame_average * 99.0 + render_time) / 100.0;
-    const fps = (1000.0 / hundred_frame_average).toFixed(0);
+    prev_frame_times.push(render_time);
+    if (prev_frame_times.length > 100) {
+        prev_frame_times.shift();
+    }
+    const fps = Math.round(1000 / (prev_frame_times.reduce((a, b) => a + b, 0) / prev_frame_times.length));
     fps_label.innerHTML = `${fps}`;
 }
 
