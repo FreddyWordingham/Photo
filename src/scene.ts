@@ -3,21 +3,19 @@ import { vec3 } from "gl-matrix";
 import { Camera } from "./camera";
 import { Sphere } from "./sphere";
 
-const NUM_SPHERES = 320;
-
 export class Scene {
     camera: Camera;
     spheres: Sphere[];
 
-    constructor() {
-        this.spheres = Scene.create_spheres();
+    constructor(num_spheres: number) {
+        this.spheres = Scene.create_spheres(num_spheres);
         this.camera = Scene.create_camera();
     }
 
-    private static create_spheres(): Sphere[] {
+    private static create_spheres(num_spheres: number): Sphere[] {
         let spheres: Sphere[] = [];
-        for (let i = 0; i < NUM_SPHERES; i++) {
-            const centre: vec3 = [3.0 + 7.0 * Math.random(), -5.0 + 10.0 * Math.random(), -5.0 + 10.0 * Math.random()];
+        for (let i = 0; i < num_spheres; i++) {
+            const centre: vec3 = [-50.0 + 100.0 * Math.random(), -50.0 + 100.0 * Math.random(), -50.0 + 100.0 * Math.random()];
             const radius = 0.1 + 1.9 * Math.random();
             const colour: vec3 = [0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random()];
             const sp = new Sphere(centre, radius, colour);

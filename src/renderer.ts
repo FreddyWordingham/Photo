@@ -241,12 +241,15 @@ export class Renderer {
         this.device.queue.writeBuffer(this.sphere_buffer, 0, sphere_data, 0, this.scene.spheres.length * 8);
     }
 
-    render = () => {
+    render = (hud_callback: any) => {
         if (!this.device) {
             console.log("Loading...");
             return;
         }
 
+        let start_time = performance.now();
+
+        // Prepare scene
         this.prepare_scene();
 
         // Command encoder - must be called first
@@ -278,8 +281,11 @@ export class Renderer {
 
         // Submit commands
         this.device.queue.submit([command_encoder.finish()]);
+        this.device.queue.onSubmittedWorkDone().then(() => {
+            hud_callback(performance.now() - start_time);
+        });
 
         // Request next frame
-        requestAnimationFrame(this.render);
+        requestAnimationFrame(this.render.bind(this, hud_callback));
     };
 }
