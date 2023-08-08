@@ -12,7 +12,7 @@ export class Scene {
     // Bounding Volume Hierarchy
     nodes: Node[];
     sphere_indices: number[];
-    node_count: number;
+    node_count: number = 0;
 
     constructor(num_spheres: number) {
         this.spheres = Scene.create_spheres(num_spheres);
@@ -48,8 +48,8 @@ export class Scene {
         }
 
         // Initialise the nodes array
-        this.nodes = new Array<Node>(this.spheres.length * 2 - 1); // This can hold the maximum number of nodes
-        for (let i = 0; i < this.spheres.length - 1; i++) {
+        this.nodes = new Array(this.spheres.length * 2 - 1); // This can hold the maximum number of nodes
+        for (let i = 0; i < 2 * this.spheres.length - 1; i++) {
             this.nodes[i] = new Node();
         }
 
@@ -57,7 +57,7 @@ export class Scene {
         let root = this.nodes[0];
         root.left_child = 0;
         root.sphere_count = this.spheres.length;
-        this.node_count += 1;
+        this.node_count = 1;
 
         this.update_bounds(0);
         this.subdivide(0);
@@ -68,10 +68,12 @@ export class Scene {
 
     update_bounds(node_index: number) {
         const node = this.nodes[node_index];
-        const left_child = this.nodes[node.left_child];
-        const right_child = this.nodes[node.left_child + 1];
+        node.min = [999999, 999999, 999999];
+        node.max = [-999999, -999999, -999999];
 
         // TODO: Optimise to look at min and max of children instead of all spheres
+        // const left_child = this.nodes[node.left_child];
+        // const right_child = this.nodes[node.left_child + 1];
 
         for (let i = 0; i < node.sphere_count; i++) {
             const sphere = this.spheres[this.sphere_indices[node.left_child + i]];

@@ -1,6 +1,6 @@
 struct Sphere {
-    centre: vec3<f32>,
-    colour: vec3<f32>,
+    center: vec3<f32>,
+    color: vec3<f32>,
     radius: f32,
 }
 
@@ -9,201 +9,188 @@ struct ObjectData {
 }
 
 struct Node {
-    min: vec3<f32>,
-    left_child: f32,
-    max: vec3<f32>,
-    sphere_count: f32,
+    minCorner: vec3<f32>,
+    leftChild: f32,
+    maxCorner: vec3<f32>,
+    sphereCount: f32,
 }
 
 struct BVH {
     nodes: array<Node>,
 }
 
-struct ObjectIndicies {
-    sphere_indicies: array<u32>,
+struct ObjectIndices {
+    sphereIndices: array<f32>,
 }
 
 struct Ray {
-    origin: vec3<f32>,
     direction: vec3<f32>,
+    origin: vec3<f32>,
 }
 
-struct Scene {
-    camera_position: vec3<f32>,
-    camera_forward: vec3<f32>,
-    camera_right: vec3<f32>,
-    camera_up: vec3<f32>,
-
-    sphere_count: f32,
+struct SceneData {
+    cameraPos: vec3<f32>,
+    cameraForwards: vec3<f32>,
+    cameraRight: vec3<f32>,
+    cameraUp: vec3<f32>,
+    sphereCount: f32,
 }
 
 struct RenderState {
     t: f32,
-    colour: vec3<f32>,
+    color: vec3<f32>,
     hit: bool,
 }
 
-
-@group(0) @binding(0) var colour_buffer: texture_storage_2d<rgba8unorm, write>;
-@group(0) @binding(1) var<uniform> scene: Scene;
+@group(0) @binding(0) var color_buffer: texture_storage_2d<rgba8unorm, write>;
+@group(0) @binding(1) var<uniform> scene: SceneData;
 @group(0) @binding(2) var<storage, read> objects: ObjectData;
-@group(0) @binding(3) var<storage, read> bvh: BVH;
-@group(0) @binding(4) var<storage, read> sphere_lookup: ObjectIndicies;
+@group(0) @binding(3) var<storage, read> tree: BVH;
+@group(0) @binding(4) var<storage, read> sphereLookup: ObjectIndices;
 
-@compute @workgroup_size(1, 1, 1)
-fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let screen_size = textureDimensions(colour_buffer);
-    let inv_screen_width = 1.0 / f32(screen_size.x);
-    let half_screen_size = 0.5 * vec2<f32>(f32(screen_size.x), f32(screen_size.y));
+@compute @workgroup_size(1,1,1)
+fn main(@builtin(global_invocation_id) GlobalInvocationID: vec3<u32>) {
 
-    const min_distance = 0.001;
-    const max_distance = 1000000.0;
-    const num_samples_sqrt = 2;
+    let screen_size: vec2<i32> = vec2<i32>(textureDimensions(color_buffer));
+    let screen_pos: vec2<i32> = vec2<i32>(i32(GlobalInvocationID.x), i32(GlobalInvocationID.y));
 
-    var r = 0.0;
-    var g = 0.0;
-    var b = 0.0;
-    for (var u = 0; u < num_samples_sqrt; u++) {
-        let du = f32(u) / f32(num_samples_sqrt);
-        for (var v = 0; v < num_samples_sqrt; v++) {
-            let dv = f32(v) / f32(num_samples_sqrt) ;
-            let screen_pos = vec2<f32>(f32(global_id.x) + du, f32(global_id.y) + dv);
+    let horizontal_coefficient: f32 = (f32(screen_pos.x) - f32(screen_size.x) / 2) / f32(screen_size.x);
+    let vertical_coefficient: f32 = (f32(screen_pos.y) - f32(screen_size.y) / 2) / f32(screen_size.x);
 
-            let horizontal_coeff = (screen_pos.x - half_screen_size.x) * inv_screen_width;
-            let vertical_coeff = (screen_pos.y - half_screen_size.y) * inv_screen_width;
+    let forwards: vec3<f32> = scene.cameraForwards;
+    let right: vec3<f32> = scene.cameraRight;
+    let up: vec3<f32> = scene.cameraUp;
 
-            let direction = normalize(scene.camera_forward + horizontal_coeff * scene.camera_right + vertical_coeff * scene.camera_up);
-            let ray = Ray(scene.camera_position, direction);
+    var myRay: Ray;
+    myRay.direction = normalize(forwards + horizontal_coefficient * right + vertical_coefficient * up);
+    myRay.origin = scene.cameraPos;
 
-            let sample = sample(ray, scene, min_distance, max_distance);
-            let pixel_colour = sample.colour;
-            r += pixel_colour.r;
-            g += pixel_colour.g;
-            b += pixel_colour.b;
-        }
-    }
-    r /= f32(num_samples_sqrt * num_samples_sqrt);
-    g /= f32(num_samples_sqrt * num_samples_sqrt);
-    b /= f32(num_samples_sqrt * num_samples_sqrt);
+    let pixel_color: vec3<f32> = rayColor(myRay);
 
-    textureStore(colour_buffer, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(r, g, b, 1.0));
+    textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
 }
 
-// // Sample the scene for the nearest hit
-// fn sample(ray: Ray, scene: Scene, t_min: f32, t_max: f32) -> RenderState {
-//     // Create default return state
-//     var nearest_hit = RenderState(t_max, vec3<f32>(0.0, 0.0, 0.0), false);
-//     // For each sphere
-//     for (var n: u32 = u32(0); n < u32(scene.sphere_count); n++) {
-//         // Check if the ray hits the sphere
-//         let new_hit = hit(ray, objects.spheres[n], t_min, nearest_hit.t, nearest_hit);
-//         // If the ray hits the sphere, update the state with the new state
-//         // (We already know that it is closer than the previous state)
-//         if new_hit.hit { nearest_hit = new_hit; }
-//     }
-//     // Return the colour the nearest hit
-//     return nearest_hit;
-// }
+fn rayColor(ray: Ray) -> vec3<f32> {
 
-// Sample the scene for the nearest hit
-fn sample(ray: Ray, scene: Scene, t_min: f32, t_max: f32) -> RenderState {
-    // Create default return state
-    var nearest_hit = RenderState(t_max, vec3<f32>(0.0, 0.0, 0.0), false);
-    // Track the node
-    var node: Node = bvh.nodes[0];
+    var color: vec3<f32> = vec3(0.0, 0.0, 0.0);
+
+    var nearestHit: f32 = 9999;
+    var hitSomething: bool = false;
+
+    var renderState: RenderState;
+
+    var node: Node = tree.nodes[0];
     var stack: array<Node, 15>;
-    var stack_index: i32 = 0;
+    var stackLocation: u32 = 0;
 
     while true {
-        let sphere_count: u32 = u32(node.sphere_count);
-        let contents: u32 = u32(node.left_child);
 
-        if sphere_count == 0 {
-            var child1: Node = bvh.nodes[contents];
-            var child2: Node = bvh.nodes[contents + 1];
+        var sphereCount: u32 = u32(node.sphereCount);
+        var contents: u32 = u32(node.leftChild);
 
-            var distance1 = hit_aabb(ray, child1);
-            var distance2 = hit_aabb(ray, child2);
+        if sphereCount == 0 {
+            var child1: Node = tree.nodes[contents];
+            var child2: Node = tree.nodes[contents + 1];
 
+            var distance1: f32 = hit_aabb(ray, child1);
+            var distance2: f32 = hit_aabb(ray, child2);
             if distance1 > distance2 {
-                let temp_distance: f32 = distance1;
+                var tempDist: f32 = distance1;
                 distance1 = distance2;
-                distance2 = temp_distance;
+                distance2 = tempDist;
 
-                let temp_node: Node = child1;
+                var tempChild: Node = child1;
                 child1 = child2;
-                child2 = temp_node;
+                child2 = tempChild;
             }
 
-            if distance1 > nearest_hit.t {
-                if stack_index == 0 {
+            if distance1 > nearestHit {
+                if stackLocation == 0 {
                     break;
                 } else {
-                    stack_index -= 1;
-                    node = stack[stack_index];
+                    stackLocation -= 1;
+                    node = stack[stackLocation];
                 }
             } else {
                 node = child1;
-                if distance2 < nearest_hit.t {
-                    stack[stack_index] = child2;
-                    stack_index += 1;
+                if distance2 < nearestHit {
+                    stack[stackLocation] = child2;
+                    stackLocation += 1;
                 }
             }
         } else {
-            // For each sphere
-            for (var n: u32 = u32(0); n < sphere_count; n++) {
-                let sphere_index: u32 = sphere_lookup.sphere_indicies[contents + n];
-                // Check if the ray hits the sphere
-                let new_hit = hit(ray, objects.spheres[sphere_index], t_min, nearest_hit.t, nearest_hit);
-                // If the ray hits the sphere, update the state with the new state
-                // (We already know that it is closer than the previous state)
-                if new_hit.hit { nearest_hit = new_hit; }
+            for (var i: u32 = 0; i < sphereCount; i++) {
+
+                var newRenderState: RenderState = hit_sphere(
+                    ray,
+                    objects.spheres[u32(sphereLookup.sphereIndices[i + contents])],
+                    0.001,
+                    nearestHit,
+                    renderState
+                );
+
+                if newRenderState.hit {
+                    nearestHit = newRenderState.t;
+                    renderState = newRenderState;
+                    hitSomething = true;
+                }
             }
-            if stack_index == 0 {
+
+            if stackLocation == 0 {
                 break;
             } else {
-                stack_index -= 1;
-                node = stack[stack_index];
+                stackLocation -= 1;
+                node = stack[stackLocation];
             }
         }
     }
 
-    // Return the colour the nearest hit
-    return nearest_hit;
+    if hitSomething {
+        color = renderState.color;
+    }
+    return color;
 }
 
-fn hit(ray: Ray, sphere: Sphere, t_min: f32, t_max: f32, state: RenderState) -> RenderState {
-    let oc = ray.origin - sphere.centre;
-    let b = dot(oc, ray.direction);
-    let c = dot(oc, oc) - sphere.radius * sphere.radius;
-    let discriminant = b * b - c;
+fn hit_sphere(ray: Ray, sphere: Sphere, tMin: f32, tMax: f32, oldRenderState: RenderState) -> RenderState {
+
+    let co: vec3<f32> = ray.origin - sphere.center;
+    let a: f32 = dot(ray.direction, ray.direction);
+    let b: f32 = 2.0 * dot(ray.direction, co);
+    let c: f32 = dot(co, co) - sphere.radius * sphere.radius;
+    let discriminant: f32 = b * b - 4.0 * a * c;
+
+    var renderState: RenderState;
+    renderState.color = oldRenderState.color;
 
     if discriminant > 0.0 {
-        let temp = (-b - sqrt(discriminant)) / 2.0;
-        if temp < t_max && temp > t_min {
-            let point = ray.origin + temp * ray.direction;
-            // let normal = (point - sphere.centre) / sphere.radius;
-            let colour = sphere.colour;
-            return RenderState(temp, colour, true);
+
+        let t: f32 = (-b - sqrt(discriminant)) / (2 * a);
+
+        if t > tMin && t < tMax {
+            renderState.t = t;
+            renderState.color = sphere.color;
+            renderState.hit = true;
+            return renderState;
         }
     }
-    return state;
+
+    renderState.hit = false;
+    return renderState;
 }
 
 fn hit_aabb(ray: Ray, node: Node) -> f32 {
-    var inv_direction = vec3(1.0) / ray.direction;
-    var t1: vec3<f32> = (node.min - ray.origin) * inv_direction;
-    var t2: vec3<f32> = (node.max - ray.origin) * inv_direction;
+    var inverseDir: vec3<f32> = vec3(1.0) / ray.direction;
+    var t1: vec3<f32> = (node.minCorner - ray.origin) * inverseDir;
+    var t2: vec3<f32> = (node.maxCorner - ray.origin) * inverseDir;
+    var tMin: vec3<f32> = min(t1, t2);
+    var tMax: vec3<f32> = max(t1, t2);
 
-    var t_min: vec3<f32> = min(t1, t2);
-    var t_max: vec3<f32> = max(t1, t2);
+    var t_min: f32 = max(max(tMin.x, tMin.y), tMin.z);
+    var t_max: f32 = min(min(tMax.x, tMax.y), tMax.z);
 
-    var m = max(t_min.x, max(t_min.y, t_min.z));
-    var M = min(t_max.x, min(t_max.y, t_max.z));
-
-    if m > M || M < 0.0 {
-        return 1000000.0;
+    if t_min > t_max || t_max < 0 {
+        return 99999;
     } else {
-        return m;
+        return t_min;
     }
 }

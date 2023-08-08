@@ -87,7 +87,7 @@ export class Renderer {
 
         // Sphere indices buffer
         this.sphere_indices_buffer = this.device.createBuffer({
-            size: this.scene.sphere_indices.length,
+            size: 4 * this.scene.sphere_indices.length,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
         });
 
@@ -127,6 +127,23 @@ export class Renderer {
                     visibility: GPUShaderStage.COMPUTE,
                     buffer: {
                         type: "read-only-storage",
+                        hasDynamicOffset: false,
+                    },
+                },
+                {
+                    binding: 3,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type: "read-only-storage",
+                        hasDynamicOffset: false,
+                    },
+                },
+                {
+                    binding: 4,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type: "read-only-storage",
+                        hasDynamicOffset: false,
                     },
                 },
             ],
@@ -148,6 +165,18 @@ export class Renderer {
                     binding: 2,
                     resource: {
                         buffer: this.sphere_buffer,
+                    },
+                },
+                {
+                    binding: 3,
+                    resource: {
+                        buffer: this.node_buffer,
+                    },
+                },
+                {
+                    binding: 4,
+                    resource: {
+                        buffer: this.sphere_indices_buffer,
                     },
                 },
             ],
@@ -243,6 +272,7 @@ export class Renderer {
 
         const sphere_data = new Float32Array(this.scene.spheres.length * 8);
         for (let i = 0; i < this.scene.spheres.length; i++) {
+            const node = this.scene.nodes[i];
             sphere_data[i * 8 + 0] = this.scene.spheres[i].centre[0];
             sphere_data[i * 8 + 1] = this.scene.spheres[i].centre[1];
             sphere_data[i * 8 + 2] = this.scene.spheres[i].centre[2];
@@ -253,6 +283,26 @@ export class Renderer {
             sphere_data[i * 8 + 7] = this.scene.spheres[i].radius;
         }
         this.device.queue.writeBuffer(this.sphere_buffer, 0, sphere_data, 0, this.scene.spheres.length * 8);
+
+        const node_data = new Float32Array(this.scene.node_count * 8);
+        for (let i = 0; i < this.scene.node_count; i++) {
+            const node = this.scene.nodes[i];
+            node_data[i * 8 + 0] = node.min[0];
+            node_data[i * 8 + 1] = node.min[1];
+            node_data[i * 8 + 2] = node.min[2];
+            node_data[i * 8 + 3] = node.left_child;
+            node_data[i * 8 + 4] = node.max[0];
+            node_data[i * 8 + 5] = node.max[1];
+            node_data[i * 8 + 6] = node.max[2];
+            node_data[i * 8 + 7] = node.sphere_count;
+        }
+        this.device.queue.writeBuffer(this.node_buffer, 0, node_data, 0, this.scene.node_count * 8);
+
+        const sphere_index_data = new Float32Array(this.scene.spheres.length);
+        for (let i = 0; i < this.scene.spheres.length; i++) {
+            sphere_index_data[i] = this.scene.sphere_indices[i];
+        }
+        this.device.queue.writeBuffer(this.sphere_indices_buffer, 0, sphere_index_data, 0, this.scene.spheres.length);
     }
 
     render = (hud_callback: any) => {
