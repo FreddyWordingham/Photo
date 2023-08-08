@@ -17,6 +17,8 @@ export class Renderer {
     sampler: GPUSampler;
     scene_buffer: GPUBuffer;
     sphere_buffer: GPUBuffer;
+    node_buffer: GPUBuffer;
+    sphere_indices_buffer: GPUBuffer;
 
     // Pipeline
     ray_tracer_pipeline: GPUComputePipeline;
@@ -74,6 +76,18 @@ export class Renderer {
         // Sphere buffer
         this.sphere_buffer = this.device.createBuffer({
             size: 32 * this.scene.spheres.length,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+
+        // Node buffer
+        this.node_buffer = this.device.createBuffer({
+            size: 32 * this.scene.node_count,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+
+        // Sphere indices buffer
+        this.sphere_indices_buffer = this.device.createBuffer({
+            size: this.scene.sphere_indices.length,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
         });
 
