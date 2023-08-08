@@ -8,6 +8,21 @@ struct ObjectData {
     spheres: array<Sphere>,
 }
 
+struct Node {
+    min: vec3<f32>,
+    left_child: f32,
+    max: vec3<f32>,
+    sphere_count: f32,
+}
+
+struct BVH {
+    nodes: array<Node>,
+}
+
+struct ObjectIndicies {
+    sphere_indicies: array<u32>,
+}
+
 struct Ray {
     origin: vec3<f32>,
     direction: vec3<f32>,
@@ -32,6 +47,8 @@ struct RenderState {
 @group(0) @binding(0) var colour_buffer: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(1) var<uniform> scene: Scene;
 @group(0) @binding(2) var<storage, read> objects: ObjectData;
+@group(0) @binding(3) var<storage, read> bvh: BVH;
+@group(0) @binding(4) var<storage, read> sphere_lookup: ObjectIndicies;
 
 @compute @workgroup_size(1, 1, 1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
@@ -72,18 +89,85 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     textureStore(colour_buffer, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(r, g, b, 1.0));
 }
 
+// // Sample the scene for the nearest hit
+// fn sample(ray: Ray, scene: Scene, t_min: f32, t_max: f32) -> RenderState {
+//     // Create default return state
+//     var nearest_hit = RenderState(t_max, vec3<f32>(0.0, 0.0, 0.0), false);
+//     // For each sphere
+//     for (var n: u32 = u32(0); n < u32(scene.sphere_count); n++) {
+//         // Check if the ray hits the sphere
+//         let new_hit = hit(ray, objects.spheres[n], t_min, nearest_hit.t, nearest_hit);
+//         // If the ray hits the sphere, update the state with the new state
+//         // (We already know that it is closer than the previous state)
+//         if new_hit.hit { nearest_hit = new_hit; }
+//     }
+//     // Return the colour the nearest hit
+//     return nearest_hit;
+// }
+
 // Sample the scene for the nearest hit
 fn sample(ray: Ray, scene: Scene, t_min: f32, t_max: f32) -> RenderState {
     // Create default return state
     var nearest_hit = RenderState(t_max, vec3<f32>(0.0, 0.0, 0.0), false);
-    // For each sphere
-    for (var n: u32 = u32(0); n < u32(scene.sphere_count); n++) {
-        // Check if the ray hits the sphere
-        let new_hit = hit(ray, objects.spheres[n], t_min, nearest_hit.t, nearest_hit);
-        // If the ray hits the sphere, update the state with the new state
-        // (We already know that it is closer than the previous state)
-        if new_hit.hit { nearest_hit = new_hit; }
+    // Track the node
+    var node: Node = bvh.nodes[0];
+    var stack: array<Node> = array<Node>(15);
+    var stack_index: i32 = u32(0);
+
+    while true {
+        let sphere_count: u32 = u32(node.sphere_count);
+        let contents: u32 = u32(node.left_child);
+
+        if sphere_count == 0 {
+            let child1: Node = bvh.nodes[contents];
+            let child2: Node = bvh.nodes[contents + 1];
+
+            let distance1 = hit_aabb(ray, child1);
+            let distance2 = hit_aabb(ray, child2);
+
+            if distance1 > distance2 {
+                let temp_distance: f32 = distance1;
+                distance1 = distance2;
+                distance2 = temp_distance;
+
+                let temp_node: Node = child1;
+                child1 = child2;
+                child2 = temp_node;
+            }
+
+            if distance1 > nearest_hit.t {
+                if stack_index == 0 {
+                    break;
+                } else {
+                    stack_index -= 1;
+                    node = stack[stack_index];
+                }
+            } else {
+                node = child1;
+                if distance2 < nearest_hit.t {
+                    stack[stack_index] = child2;
+                    stack_index += 1;
+                }
+            }
+        } else {
+            // For each sphere
+            for (var n: u32 = u32(0); n < sphere_count; n++) {
+                let sphere_index: u32 = sphere_lookup.sphere_indicies[contents + n];
+                // Check if the ray hits the sphere
+                let new_hit = hit(ray, objects.spheres[sphere_index], t_min, nearest_hit.t, nearest_hit);
+                // If the ray hits the sphere, update the state with the new state
+                // (We already know that it is closer than the previous state)
+                if new_hit.hit { nearest_hit = new_hit; }
+            }
+            if stack_index == 0 {
+                break;
+            } else {
+                stack_index -= 1;
+                node = stack[stack_index];
+            }
+        }
     }
+
     // Return the colour the nearest hit
     return nearest_hit;
 }
