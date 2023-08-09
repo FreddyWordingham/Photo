@@ -38,9 +38,12 @@ struct SceneData {
 
 struct RenderState {
     distance: f32,
+    normal: vec3<f32>,
     colour: vec3<f32>,
     hit: bool,
 }
+
+const SUN_POS: vec3<f32> = vec3<f32>(200.0, -300.0, 500.0);
 
 const INFINITY: f32 = 9999999.9;
 const SUPER_SAMPLES_SQRT: u32 = 2;
@@ -84,7 +87,21 @@ fn single_sample(
     let origin = scene.camera_position;
     let ray = Ray(origin, direction);
 
-    return sample_bvh(ray);
+    let sample = sample_bvh(ray);
+
+    var lightness = 1.0;
+    if sample.hit {
+        let surface_position = ray.origin + (sample.distance * ray.direction);
+        let surface_to_sun = normalize(SUN_POS - surface_position);
+        let surface_normal = sample.normal;
+        let surface_to_sun_dot_normal = dot(surface_to_sun, surface_normal);
+        lightness = max(0.0, surface_to_sun_dot_normal) * 0.9 + 0.1;
+    }
+
+    colour += sample.colour * lightness;
+
+
+    return colour;
 }
 
 fn multi_sample(
@@ -107,7 +124,9 @@ fn multi_sample(
             let origin = scene.camera_position;
             let ray = Ray(origin, direction);
 
-            colour += sample_bvh(ray);
+            let sample = sample_bvh(ray);
+
+            colour += sample.colour;
         }
     }
 
@@ -116,9 +135,10 @@ fn multi_sample(
     return colour;
 }
 
-fn sample_bvh(ray: Ray) -> vec3<f32> {
+fn sample_bvh(ray: Ray) -> RenderState {
     var state = RenderState(
         INFINITY,
+        vec3<f32>(0.0, 0.0, 1.0),
         vec3<f32>(0.0, 0.0, 0.0),
         false
     );
@@ -180,7 +200,7 @@ fn sample_bvh(ray: Ray) -> vec3<f32> {
         }
     }
 
-    return state.colour;
+    return state;
 }
 
 fn hit_sphere(ray: Ray, sphere: Sphere, min_distance: f32, max_distance: f32, old_state: RenderState) -> RenderState {
@@ -192,12 +212,16 @@ fn hit_sphere(ray: Ray, sphere: Sphere, min_distance: f32, max_distance: f32, ol
 
     if discriminant > 0.0 {
         let t: f32 = (-half_b - sqrt(discriminant));
+
+        let position = ray.origin + t * ray.direction;
+        let normal = normalize(position - sphere.center);
+
         if t > min_distance && t < max_distance {
-            return RenderState(t, sphere.colour, true);
+            return RenderState(t, normal, sphere.colour, true);
         }
     }
 
-    return RenderState(old_state.distance, old_state.colour, false);
+    return RenderState(old_state.distance, old_state.normal, old_state.colour, false);
 }
 
 fn hit_aabb(ray: Ray, node: Node) -> f32 {

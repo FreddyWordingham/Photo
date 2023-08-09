@@ -1,4 +1,4 @@
-import ray_tracer_kernel from "./shaders/ray_tracer.wgsl";
+import ray_tracer_kernel from "./shaders/shadow_tracer.wgsl";
 import display_shader from "./shaders/display.wgsl";
 
 import { Scene } from "./scene";
