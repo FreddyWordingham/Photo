@@ -6,7 +6,7 @@ const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("gf
 const fps_label = <HTMLElement>document.getElementById("fps_label");
 const object_count_label = <HTMLElement>document.getElementById("object_count_label");
 
-const num_spheres = 1024 * 1;
+const num_spheres = 1024 * 16;
 
 const scene = new Scene(num_spheres);
 const renderer = new Renderer(canvas, scene);

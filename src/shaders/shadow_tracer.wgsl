@@ -95,10 +95,21 @@ fn single_sample(
         let surface_to_sun = normalize(SUN_POS - surface_position);
         let surface_normal = sample.normal;
         let surface_to_sun_dot_normal = dot(surface_to_sun, surface_normal);
-        lightness = max(0.0, surface_to_sun_dot_normal) * 0.9 + 0.1;
+        lightness = max(0.0, surface_to_sun_dot_normal);
     }
 
-    colour += sample.colour * lightness;
+    var darkness = 1.0;
+    if sample.hit {
+        let surface_position = ray.origin + (sample.distance * ray.direction);
+        let surface_to_sun = normalize(SUN_POS - surface_position);
+        let shadow_ray = Ray(surface_position, surface_to_sun);
+        let shadow_sample = sample_bvh(shadow_ray);
+        if shadow_sample.hit {
+            darkness = 0.0;
+        }
+    }
+
+    colour += sample.colour * lightness * darkness;
 
 
     return colour;
