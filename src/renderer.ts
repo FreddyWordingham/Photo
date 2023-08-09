@@ -27,6 +27,7 @@ export class Renderer {
     display_bind_group: GPUBindGroup;
 
     // Scene to render
+    lambda: number = 0.0;
     scene: Scene;
 
     constructor(canvas: HTMLCanvasElement, scene: Scene) {
@@ -250,8 +251,12 @@ export class Renderer {
     }
 
     prepare_scene() {
+        this.lambda += 0.01;
+        if (this.lambda > 2.0 * Math.PI) {
+            this.lambda -= 2.0 * Math.PI;
+        }
         const data = new Float32Array([
-            this.scene.camera.position[0],
+            this.scene.camera.position[0] - 50.0 + 100.0 * Math.sin(this.lambda),
             this.scene.camera.position[1],
             this.scene.camera.position[2],
             0.0,

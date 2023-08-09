@@ -73,9 +73,11 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID: vec3<u32>) {
 }
 
 fn sample_bvh(ray: Ray) -> vec3<f32> {
-    var colour: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
-    var nearest_hit: f32 = INFINITY;
-    var state: RenderState;
+    var state = RenderState(
+        INFINITY,
+        vec3<f32>(0.0, 0.0, 0.0),
+        false
+    );
 
     var node: Node = tree.nodes[0];
     var stack = array<Node, 15>();
@@ -102,13 +104,13 @@ fn sample_bvh(ray: Ray) -> vec3<f32> {
                 child2 = temp_child;
             }
 
-            if distance1 > nearest_hit {
+            if distance1 > state.distance {
                 if stack_location == u32(0) { break; }
                 stack_location -= u32(1);
                 node = stack[stack_location];
             } else {
                 node = child1;
-                if distance2 < nearest_hit {
+                if distance2 < state.distance {
                     stack[stack_location] = child2;
                     stack_location += u32(1);
                 }
@@ -119,12 +121,11 @@ fn sample_bvh(ray: Ray) -> vec3<f32> {
                     ray,
                     objects.spheres[u32(sphere_lookup_table.sphere_indices[i + contents])],
                     0.001,
-                    nearest_hit,
+                    state.distance,
                     state
                 );
 
                 if new_state.hit {
-                    nearest_hit = new_state.distance;
                     state = new_state;
                 }
             }
@@ -135,11 +136,7 @@ fn sample_bvh(ray: Ray) -> vec3<f32> {
         }
     }
 
-    if state.hit {
-        colour = state.colour;
-    }
-
-    return colour;
+    return state.colour;
 }
 
 fn hit_sphere(ray: Ray, sphere: Sphere, min_distance: f32, max_distance: f32, old_state: RenderState) -> RenderState {
