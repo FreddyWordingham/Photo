@@ -2,6 +2,7 @@ import ray_tracer_kernel from "./shaders/ray_tracer.wgsl";
 import display_shader from "./shaders/display.wgsl";
 
 import { Scene } from "./scene";
+import { position_and_target_to_spherical } from "./util";
 
 export class Renderer {
     // Device/Context objects
@@ -255,8 +256,19 @@ export class Renderer {
         if (this.lambda > 2.0 * Math.PI) {
             this.lambda -= 2.0 * Math.PI;
         }
+        let x = 50.0 * Math.sin(this.lambda);
+        let y = 50.0 * Math.cos(this.lambda);
+        this.scene.camera.position[0] = x;
+        this.scene.camera.position[1] = 0.0;
+        this.scene.camera.position[2] = y;
+
+        const { theta, phi } = position_and_target_to_spherical(this.scene.camera.position, [0.0, 0.0, 0.0]);
+        this.scene.camera.theta = theta;
+        this.scene.camera.phi = phi;
+        this.scene.camera.recalculate_vectors();
+
         const data = new Float32Array([
-            this.scene.camera.position[0] - 50.0 + 100.0 * Math.sin(this.lambda),
+            this.scene.camera.position[0],
             this.scene.camera.position[1],
             this.scene.camera.position[2],
             0.0,

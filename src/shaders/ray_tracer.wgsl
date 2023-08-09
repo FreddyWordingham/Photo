@@ -42,7 +42,10 @@ struct RenderState {
     hit: bool,
 }
 
+const SUN_POS: vec3<f32> = vec3<f32>(20.0, 30.0, 50.0);
+
 const INFINITY: f32 = 9999999.9;
+const SUPER_SAMPLES_SQRT: u32 = 2;
 
 @group(0) @binding(0) var colour_buffer: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(1) var<uniform> scene: SceneData;
@@ -54,22 +57,65 @@ const INFINITY: f32 = 9999999.9;
 fn main(@builtin(global_invocation_id) GlobalInvocationID: vec3<u32>) {
 
     let screen_size = vec2<i32>(textureDimensions(colour_buffer));
-    let screen_pos = vec2<i32>(i32(GlobalInvocationID.x), i32(GlobalInvocationID.y));
-
-    let horizontal_coefficient: f32 = (f32(screen_pos.x) - f32(screen_size.x) * 0.5) / f32(screen_size.x);
-    let vertical_coefficient: f32 = (f32(screen_pos.y) - f32(screen_size.y) * 0.5) / f32(screen_size.x);
+    let screen_position = vec2<i32>(i32(GlobalInvocationID.x), i32(GlobalInvocationID.y));
 
     let forwards = scene.camera_forwards;
     let right = scene.camera_right;
     let up = scene.camera_up;
 
-    let direction = normalize(forwards + horizontal_coefficient * right + vertical_coefficient * up);
+    let pixel_colour = single_sample(screen_size, screen_position, forwards, right, up);
+    // let pixel_colour = multi_sample(screen_size, screen_position, forwards, right, up);
+
+    // Write the colour to the buffer
+    textureStore(colour_buffer, screen_position, vec4<f32>(pixel_colour, 1.0));
+}
+
+fn single_sample(
+    screen_size: vec2<i32>,
+    screen_position: vec2<i32>,
+    forwards: vec3<f32>,
+    right: vec3<f32>,
+    up: vec3<f32>
+) -> vec3<f32> {
+    var colour = vec3<f32>(0.0, 0.0, 0.0);
+
+    let horizontal_coefficient = (f32(screen_position.x) - f32(screen_size.x) * 0.5) / f32(screen_size.x);
+    let vertical_coefficient = (f32(screen_position.y) - f32(screen_size.y) * 0.5) / f32(screen_size.x);
+
+    let direction = normalize(forwards + (horizontal_coefficient) * right + (vertical_coefficient) * up);
     let origin = scene.camera_position;
     let ray = Ray(origin, direction);
 
-    let pixel_colour = sample_bvh(ray);
+    return sample_bvh(ray);
+}
 
-    textureStore(colour_buffer, screen_pos, vec4<f32>(pixel_colour, 1.0));
+fn multi_sample(
+    screen_size: vec2<i32>,
+    screen_position: vec2<i32>,
+    forwards: vec3<f32>,
+    right: vec3<f32>,
+    up: vec3<f32>
+) -> vec3<f32> {
+    var colour = vec3<f32>(0.0, 0.0, 0.0);
+
+    for (var i = u32(0); i < SUPER_SAMPLES_SQRT; i++) {
+        let du = f32(i) / f32(SUPER_SAMPLES_SQRT);
+        let horizontal_coefficient = (du + f32(screen_position.x) - f32(screen_size.x) * 0.5) / f32(screen_size.x);
+        for (var j = u32(0); j < SUPER_SAMPLES_SQRT; j++) {
+            let dv = f32(j) / f32(SUPER_SAMPLES_SQRT);
+            let vertical_coefficient = (dv + f32(screen_position.y) - f32(screen_size.y) * 0.5) / f32(screen_size.x);
+
+            let direction = normalize(forwards + (horizontal_coefficient) * right + (vertical_coefficient) * up);
+            let origin = scene.camera_position;
+            let ray = Ray(origin, direction);
+
+            colour += sample_bvh(ray);
+        }
+    }
+
+    // Normalise the colour
+    colour /= f32(SUPER_SAMPLES_SQRT * SUPER_SAMPLES_SQRT);
+    return colour;
 }
 
 fn sample_bvh(ray: Ray) -> vec3<f32> {
