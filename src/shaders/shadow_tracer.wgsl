@@ -43,9 +43,11 @@ struct RenderState {
     hit: bool,
 }
 
-const SUN_POS: vec3<f32> = vec3<f32>(200.0, -300.0, 500.0);
+const SUN_POS: vec3<f32> = vec3<f32>(0.0, -0.0, 0.0);
 
 const INFINITY: f32 = 9999999.9;
+const EPSILON: f32 = 0.0001;
+
 const SUPER_SAMPLES_SQRT: u32 = 2;
 
 @group(0) @binding(0) var colour_buffer: texture_storage_2d<rgba8unorm, write>;
@@ -87,7 +89,7 @@ fn single_sample(
     let origin = scene.camera_position;
     let ray = Ray(origin, direction);
 
-    let sample = sample_bvh(ray);
+    let sample = sample_bvh(ray, EPSILON, INFINITY);
 
     var lightness = 1.0;
     if sample.hit {
@@ -96,20 +98,27 @@ fn single_sample(
         let surface_normal = sample.normal;
         let surface_to_sun_dot_normal = dot(surface_to_sun, surface_normal);
         lightness = max(0.0, surface_to_sun_dot_normal);
+        lightness = pow(lightness, 2.0);
     }
 
     var darkness = 1.0;
     if sample.hit {
-        let surface_position = ray.origin + (sample.distance * ray.direction);
-        let surface_to_sun = normalize(SUN_POS - surface_position);
-        let shadow_ray = Ray(surface_position, surface_to_sun);
-        let shadow_sample = sample_bvh(shadow_ray);
+        let surface_position = travel(ray, sample.distance);
+        var surface_ray = Ray(surface_position, sample.normal);
+        surface_ray.origin = travel(surface_ray, 0.01);
+        let surface_to_sun = normalize(SUN_POS - surface_ray.origin);
+        let sun_distance = distance(SUN_POS, surface_ray.origin);
+        let shadow_ray = Ray(surface_ray.origin, surface_to_sun);
+        let shadow_sample = sample_bvh(shadow_ray, EPSILON, sun_distance);
         if shadow_sample.hit {
             darkness = 0.0;
         }
     }
 
-    colour += sample.colour * lightness * darkness;
+    var hsv = rgb_to_hsv(sample.colour);
+    hsv.x = (hsv.x + (lightness * 60.0)) % 360.0;
+
+    colour = hsv_to_rgb(hsv) * darkness;
 
 
     return colour;
@@ -135,7 +144,7 @@ fn multi_sample(
             let origin = scene.camera_position;
             let ray = Ray(origin, direction);
 
-            let sample = sample_bvh(ray);
+            let sample = sample_bvh(ray, EPSILON, INFINITY);
 
             colour += sample.colour;
         }
@@ -146,9 +155,9 @@ fn multi_sample(
     return colour;
 }
 
-fn sample_bvh(ray: Ray) -> RenderState {
+fn sample_bvh(ray: Ray, min_distance: f32, max_distance: f32) -> RenderState {
     var state = RenderState(
-        INFINITY,
+        max_distance,
         vec3<f32>(0.0, 0.0, 1.0),
         vec3<f32>(0.0, 0.0, 0.0),
         false
@@ -195,7 +204,7 @@ fn sample_bvh(ray: Ray) -> RenderState {
                 let new_state: RenderState = hit_sphere(
                     ray,
                     objects.spheres[u32(sphere_lookup_table.sphere_indices[i + contents])],
-                    0.001,
+                    EPSILON,
                     state.distance,
                     state
                 );
@@ -227,7 +236,7 @@ fn hit_sphere(ray: Ray, sphere: Sphere, min_distance: f32, max_distance: f32, ol
         let position = ray.origin + t * ray.direction;
         let normal = normalize(position - sphere.center);
 
-        if t > min_distance && t < max_distance {
+        if t >= min_distance && t <= max_distance {
             return RenderState(t, normal, sphere.colour, true);
         }
     }
@@ -252,4 +261,84 @@ fn hit_aabb(ray: Ray, node: Node) -> f32 {
     } else {
         return nearest_intersection;
     }
+}
+
+fn travel(ray: Ray, distance: f32) -> vec3<f32> {
+    return ray.origin + (ray.direction * distance);
+}
+
+
+fn rgb_to_hsv(rgb: vec3<f32>) -> vec3<f32> {
+    let cmax = max(rgb.r, max(rgb.g, rgb.b));
+    let cmin = min(rgb.r, min(rgb.g, rgb.b));
+    let delta = cmax - cmin;
+
+    // Hue calculation
+    var hue: f32 = 0.0;
+    if delta == 0.0 {
+        hue = 0.0;
+    } else if cmax == rgb.r {
+        hue = 60.0 * (((rgb.g - rgb.b) / delta) % 6.0);
+    } else if cmax == rgb.g {
+        hue = 60.0 * (((rgb.b - rgb.r) / delta) + 2.0);
+    } else if cmax == rgb.b {
+        hue = 60.0 * (((rgb.r - rgb.g) / delta) + 4.0);
+    }
+
+    if hue < 0.0 {
+        hue += 360.0;
+    }
+
+    // Saturation calculation
+    var saturation: f32 = 0.0;
+    if cmax != 0.0 {
+        saturation = delta / cmax;
+    }
+
+    // Value calculation
+    let value = cmax;
+
+    return vec3<f32>(hue, saturation, value);
+}
+
+fn hsv_to_rgb(hsv: vec3<f32>) -> vec3<f32> {
+    let h = hsv.x;
+    let s = hsv.y;
+    let v = hsv.z;
+
+    let c = v * s;
+    let x = c * (1.0 - abs((h / 60.0) - 2.0 * floor(h / 120.0) - 1.0));
+    let m = v - c;
+
+    var rp: f32 = 0.0;
+    var gp: f32 = 0.0;
+    var bp: f32 = 0.0;
+
+    if h >= 0.0 && h < 60.0 {
+        rp = c;
+        gp = x;
+        bp = 0.0;
+    } else if h >= 60.0 && h < 120.0 {
+        rp = x;
+        gp = c;
+        bp = 0.0;
+    } else if h >= 120.0 && h < 180.0 {
+        rp = 0.0;
+        gp = c;
+        bp = x;
+    } else if h >= 180.0 && h < 240.0 {
+        rp = 0.0;
+        gp = x;
+        bp = c;
+    } else if h >= 240.0 && h < 300.0 {
+        rp = x;
+        gp = 0.0;
+        bp = c;
+    } else if h >= 300.0 && h < 360.0 {
+        rp = c;
+        gp = 0.0;
+        bp = x;
+    }
+
+    return vec3<f32>(rp + m, gp + m, bp + m);
 }

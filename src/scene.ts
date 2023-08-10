@@ -22,10 +22,13 @@ export class Scene {
 
     private static create_spheres(num_spheres: number): Sphere[] {
         let spheres: Sphere[] = [];
-        let max_dist = 100.0;
+        let max_dist = 20.0;
         for (let i = 0; i < num_spheres; i++) {
             const centre: vec3 = [2.0 * (Math.random() - 0.5) * max_dist, 2.0 * (Math.random() - 0.5) * max_dist, 2.0 * (Math.random() - 0.5) * max_dist];
-            const radius = 0.1 + 1.9 * Math.random();
+            let radius = Math.random();
+            radius *= radius;
+            radius *= radius;
+            radius *= 3.0;
             const colour: vec3 = [0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random()];
             const sp = new Sphere(centre, radius, colour);
             spheres.push(sp);
