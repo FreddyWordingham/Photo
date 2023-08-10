@@ -1,4 +1,4 @@
-import ray_tracer_kernel from "./shaders/shadow_tracer.wgsl";
+import ray_tracer_kernel from "./shaders/dev.wgsl";
 import display_shader from "./shaders/display.wgsl";
 
 import { Scene } from "./scene";
@@ -251,17 +251,25 @@ export class Renderer {
         });
     }
 
-    prepare_scene() {
-        this.lambda += 0.01;
+    animate() {
+        // Rotate the camera around the origin
+        let camera_distance = Math.sqrt(
+            this.scene.camera.position[0] * this.scene.camera.position[0] +
+                this.scene.camera.position[1] * this.scene.camera.position[1] +
+                this.scene.camera.position[2] * this.scene.camera.position[2]
+        );
+        this.lambda += 0.1;
         if (this.lambda > 2.0 * Math.PI) {
             this.lambda -= 2.0 * Math.PI;
         }
-        let x = 50.0 * Math.sin(this.lambda);
-        let y = 50.0 * Math.cos(this.lambda);
+        let x = camera_distance * Math.sin(this.lambda);
+        let y = camera_distance * Math.cos(this.lambda);
         this.scene.camera.position[0] = x;
         this.scene.camera.position[1] = 0.0;
         this.scene.camera.position[2] = y;
+    }
 
+    prepare_scene() {
         const { theta, phi } = position_and_target_to_spherical(this.scene.camera.position, [0.0, 0.0, 0.0]);
         this.scene.camera.theta = theta;
         this.scene.camera.phi = phi;
@@ -331,6 +339,7 @@ export class Renderer {
         let start_time = performance.now();
 
         // Prepare scene
+        this.animate();
         this.prepare_scene();
 
         // Command encoder - must be called first
