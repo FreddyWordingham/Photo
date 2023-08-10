@@ -1,4 +1,4 @@
-import ray_tracer_kernel from "./shaders/dev.wgsl";
+import ray_tracer_kernel from "./shaders/sunbeam.wgsl";
 import display_shader from "./shaders/display.wgsl";
 
 import { Scene } from "./scene";
@@ -252,16 +252,18 @@ export class Renderer {
     }
 
     animate() {
+        this.lambda += 0.001;
+        if (this.lambda > 2.0 * Math.PI) {
+            this.lambda -= 2.0 * Math.PI;
+        }
+
         // Rotate the camera around the origin
         let camera_distance = Math.sqrt(
             this.scene.camera.position[0] * this.scene.camera.position[0] +
                 this.scene.camera.position[1] * this.scene.camera.position[1] +
                 this.scene.camera.position[2] * this.scene.camera.position[2]
         );
-        this.lambda += 0.1;
-        if (this.lambda > 2.0 * Math.PI) {
-            this.lambda -= 2.0 * Math.PI;
-        }
+
         let x = camera_distance * Math.sin(this.lambda);
         let y = camera_distance * Math.cos(this.lambda);
         this.scene.camera.position[0] = x;
@@ -287,6 +289,7 @@ export class Renderer {
             this.scene.camera.right[0],
             this.scene.camera.right[1],
             this.scene.camera.right[2],
+            // this.scene.max_bounces,
             0.0,
             this.scene.camera.up[0],
             this.scene.camera.up[1],
