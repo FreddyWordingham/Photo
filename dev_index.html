@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="Viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+                height: 100vh;
+            }
+            .container {
+                display: grid;
+                place-items: center;
+                height: 100%;
+            }
+        </style>
+        <title>Ray-tracing</title>
+    </head>
+    <body>
+        <div id="container" class="container">
+            <h1 id="output_label" style="display: none; color: red">WebGPU is not supported by this browser.</h1>
+            <canvas id="gfx_main" width="800" height="600"></canvas>
+            <div id="hud">
+                <h4 style="display: inline-block">Frames time:</h4>
+                <h4 id="frame_time_label" style="display: inline-block"></h4>
+                |
+                <h4 style="display: inline-block">Object count:</h4>
+                <h4 id="object_count_label" style="display: inline-block"></h4>
+            </div>
+        </div>
+        <script src="dist/main.js"></script>
+    </body>
+</html>

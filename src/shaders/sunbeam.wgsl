@@ -48,7 +48,7 @@ const SUN_POS: vec3<f32> = vec3<f32>(0.0, -0.0, 0.0);
 
 const INFINITY: f32 = 1000.0;
 const EPSILON: f32 = 0.001;
-const MAX_GAS_SAMPLES: i32 = 50;
+const MAX_GAS_SAMPLES: i32 = 105;
 const STEP: f32 = 80.0 / f32(MAX_GAS_SAMPLES);
 
 const SUPER_SAMPLES_SQRT: u32 = 2;
@@ -103,10 +103,12 @@ fn single_sample(
         let sun_dist = distance(SUN_POS, sample_pos);
         let gas_sample = sample_bvh(gas_ray, EPSILON, sun_dist);
         if !gas_sample.hit {
-            gas += 20.0 / sun_dist;
+            gas += 15.0 / sun_dist;
         }
     }
     gas /= f32(MAX_GAS_SAMPLES);
+    gas = clamp(gas, 0.0, 1.0);
+    gas = pow(gas, 2.0);
 
     var lightness = 1.0;
     if sample.hit {
