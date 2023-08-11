@@ -6,8 +6,8 @@ const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("gf
 const frame_time_label = <HTMLElement>document.getElementById("frame_time_label");
 const object_count_label = <HTMLElement>document.getElementById("object_count_label");
 
-const num_spheres = 1024 * 8;
-const super_resolution = 0.25;
+const num_spheres = 1024 * 1;
+const super_resolution = 1;
 
 const scene = new Scene(num_spheres);
 const renderer = new Renderer([canvas.width * super_resolution, canvas.height * super_resolution], canvas, scene);

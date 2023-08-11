@@ -274,7 +274,7 @@ export class Renderer {
     }
 
     prepare_scene() {
-        const { theta, phi } = position_and_target_to_spherical(this.scene.camera.position, [0.0, 0.0, 0.0]);
+        const { theta, phi } = position_and_target_to_spherical(this.scene.camera.position, [0.0, 30.0, 0.0]);
         this.scene.camera.theta = theta;
         this.scene.camera.phi = phi;
         this.scene.camera.recalculate_vectors();
@@ -394,10 +394,10 @@ export class Renderer {
             // Release the object URL after the download starts
             URL.revokeObjectURL(url);
 
-            setTimeout(() => {
-                // Request next frame
-                requestAnimationFrame(this.render);
-            }, 100);
+            // setTimeout(() => {
+            // Request next frame
+            requestAnimationFrame(this.render);
+            // }, 100);
         }, "image/png");
     };
 }

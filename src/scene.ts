@@ -15,7 +15,7 @@ export class Scene {
     node_count: number = 0;
 
     constructor(num_spheres: number) {
-        this.spheres = Scene.create_spheres(num_spheres);
+        this.spheres = Scene.create_sphere_disk(num_spheres);
         this.camera = Scene.create_camera();
         this.build_bvh();
     }
@@ -37,19 +37,24 @@ export class Scene {
         let spheres: Sphere[] = [];
 
         let min_radius = 30.0;
-        let max_radius = 70.0;
+        let max_radius = 100.0;
         let grad = 0.25;
+        let flair = 0.5;
 
         for (let i = 0; i < num_spheres; i++) {
             let r = Math.random() * (max_radius - min_radius) + min_radius;
-            var z = (Math.random() - 0.5) * (r - min_radius) * grad;
+            let z = (Math.random() - 0.5) * (r - min_radius) * grad;
             let theta = Math.random() * 2.0 * Math.PI;
             let x = Math.cos(theta) * Math.sqrt(r * r - z * z);
             let y = Math.sin(theta) * Math.sqrt(r * r - z * z);
-            z += x * Math.sin(theta) * grad;
+            z += x * Math.sin(theta) * flair;
+            z += x * Math.sin(theta * 2.0 + 0.4) * flair * 0.5;
 
             const centre: vec3 = [x, z, y];
             let radius = Math.random();
+            radius *= radius;
+            radius *= 3.0;
+
             const colour: vec3 = [0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random()];
             const sp = new Sphere(centre, radius, colour);
             spheres.push(sp);
@@ -58,8 +63,8 @@ export class Scene {
     }
 
     private static create_camera(): Camera {
-        const position: vec3 = [-150.0, -50.0, 0.0];
-        const target: vec3 = [0.0, 0.0, 0.0];
+        const position: vec3 = [-80.0, -25.0, -80.0];
+        const target: vec3 = [0.0, 50.0, 0.0];
         return new Camera(position, target);
     }
 
