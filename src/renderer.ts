@@ -10,6 +10,7 @@ import display_shader from "./shaders/display.wgsl";
 
 export class Renderer {
     // Resolution
+    output_image_index: number = 0;
     resolution: number[];
 
     // Device/Context objects
@@ -73,7 +74,8 @@ export class Renderer {
             usage:
                 GPUTextureUsage.COPY_DST | // Can be target of copy operations
                 GPUTextureUsage.STORAGE_BINDING | // Mutable in compute shader
-                GPUTextureUsage.TEXTURE_BINDING, // Can be used as a texture, with a sampler
+                GPUTextureUsage.TEXTURE_BINDING | // Can be used as a texture, with a sampler
+                GPUTextureUsage.COPY_SRC, // Can be copied FROM
         });
         this.colour_buffer_view = this.colour_buffer.createView();
 
@@ -260,11 +262,6 @@ export class Renderer {
     }
 
     animate() {
-        // this.lambda += 0.00001;
-        // if (this.lambda > 2.0 * Math.PI) {
-        //     this.lambda -= 2.0 * Math.PI;
-        // }
-
         var cam_pos: vec3 = [0.0, 0.0, 0.0];
         cam_pos[0] = this.scene.camera.position[0];
         cam_pos[1] = this.scene.camera.position[1];
@@ -274,17 +271,6 @@ export class Renderer {
         this.scene.camera.position[0] = cam_pos[0] * Math.cos(this.lambda) - cam_pos[2] * Math.sin(this.lambda);
         this.scene.camera.position[1] = cam_pos[1];
         this.scene.camera.position[2] = cam_pos[0] * Math.sin(this.lambda) + cam_pos[2] * Math.cos(this.lambda);
-
-        // let camera_distance = Math.sqrt(
-        //     this.scene.camera.position[0] * this.scene.camera.position[0] +
-        //         this.scene.camera.position[1] * this.scene.camera.position[1] +
-        //         this.scene.camera.position[2] * this.scene.camera.position[2]
-        // );
-        // let x = camera_distance * Math.sin(this.lambda);
-        // let y = camera_distance * Math.cos(this.lambda);
-        // this.scene.camera.position[0] = x;
-        // this.scene.camera.position[1] = 30.0;
-        // this.scene.camera.position[2] = y;
     }
 
     prepare_scene() {
@@ -349,7 +335,7 @@ export class Renderer {
         this.device.queue.writeBuffer(this.sphere_indices_buffer, 0, sphere_index_data, 0, this.scene.spheres.length);
     }
 
-    render = (hud_callback: any) => {
+    render = () => {
         if (!this.device) {
             console.log("Loading...");
             return;
@@ -390,11 +376,28 @@ export class Renderer {
 
         // Submit commands
         this.device.queue.submit([command_encoder.finish()]);
-        this.device.queue.onSubmittedWorkDone().then(() => {
-            hud_callback(performance.now() - start_time);
-        });
 
-        // Request next frame
-        requestAnimationFrame(this.render.bind(this, hud_callback));
+        this.canvas.toBlob((blob) => {
+            const a = document.createElement("a");
+
+            // Create an object URL for the blob
+            const url = URL.createObjectURL(blob!);
+
+            // Set the file name and download attributes for the anchor element
+            a.href = url;
+            a.download = `render_frame/${this.output_image_index.toString().padStart(6, "0")}.png`;
+            this.output_image_index += 1;
+
+            // Trigger a click event on the anchor to start the download
+            a.click();
+
+            // Release the object URL after the download starts
+            URL.revokeObjectURL(url);
+
+            setTimeout(() => {
+                // Request next frame
+                requestAnimationFrame(this.render);
+            }, 100);
+        }, "image/png");
     };
 }

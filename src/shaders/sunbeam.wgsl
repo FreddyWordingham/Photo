@@ -48,7 +48,7 @@ const SUN_POS: vec3<f32> = vec3<f32>(0.0, -0.0, 0.0);
 
 const INFINITY: f32 = 1000.0;
 const EPSILON: f32 = 0.001;
-const MAX_GAS_SAMPLES: i32 = 45;
+const MAX_GAS_SAMPLES: i32 = 450;
 const STEP: f32 = 300.0 / f32(MAX_GAS_SAMPLES);
 
 const SUPER_SAMPLES_SQRT: u32 = 2;
