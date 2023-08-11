@@ -1,7 +1,7 @@
 # Photo
 
 Ray-tracing renderer with WebGPU and TypeScript.
-![Screenshot](./screenshot.png)
+[![Screenshot](./screenshot.png)](https://freddywordingham.github.io/Photo/)
 
 ## Quickstart
 
