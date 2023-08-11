@@ -1,5 +1,9 @@
+// import ray_tracer_kernel from "./shaders/shadow_tracer.wgsl";
 import ray_tracer_kernel from "./shaders/sunbeam.wgsl";
+// import ray_tracer_kernel from "./shaders/ray_tracer.wgsl";
 import display_shader from "./shaders/display.wgsl";
+
+import { vec3, vec4, mat4 } from "gl-matrix";
 
 import { Scene } from "./scene";
 import { position_and_target_to_spherical } from "./util";
@@ -28,7 +32,7 @@ export class Renderer {
     display_bind_group: GPUBindGroup;
 
     // Scene to render
-    lambda: number = 0.0;
+    lambda: number = 0.001;
     scene: Scene;
 
     constructor(canvas: HTMLCanvasElement, scene: Scene) {
@@ -252,23 +256,31 @@ export class Renderer {
     }
 
     animate() {
-        this.lambda += 0.001;
-        if (this.lambda > 2.0 * Math.PI) {
-            this.lambda -= 2.0 * Math.PI;
-        }
+        // this.lambda += 0.00001;
+        // if (this.lambda > 2.0 * Math.PI) {
+        //     this.lambda -= 2.0 * Math.PI;
+        // }
+
+        var cam_pos: vec3 = [0.0, 0.0, 0.0];
+        cam_pos[0] = this.scene.camera.position[0];
+        cam_pos[1] = this.scene.camera.position[1];
+        cam_pos[2] = this.scene.camera.position[2];
 
         // Rotate the camera around the origin
-        let camera_distance = Math.sqrt(
-            this.scene.camera.position[0] * this.scene.camera.position[0] +
-                this.scene.camera.position[1] * this.scene.camera.position[1] +
-                this.scene.camera.position[2] * this.scene.camera.position[2]
-        );
+        this.scene.camera.position[0] = cam_pos[0] * Math.cos(this.lambda) - cam_pos[2] * Math.sin(this.lambda);
+        this.scene.camera.position[1] = cam_pos[1];
+        this.scene.camera.position[2] = cam_pos[0] * Math.sin(this.lambda) + cam_pos[2] * Math.cos(this.lambda);
 
-        let x = camera_distance * Math.sin(this.lambda);
-        let y = camera_distance * Math.cos(this.lambda);
-        this.scene.camera.position[0] = x;
-        this.scene.camera.position[1] = 0.0;
-        this.scene.camera.position[2] = y;
+        // let camera_distance = Math.sqrt(
+        //     this.scene.camera.position[0] * this.scene.camera.position[0] +
+        //         this.scene.camera.position[1] * this.scene.camera.position[1] +
+        //         this.scene.camera.position[2] * this.scene.camera.position[2]
+        // );
+        // let x = camera_distance * Math.sin(this.lambda);
+        // let y = camera_distance * Math.cos(this.lambda);
+        // this.scene.camera.position[0] = x;
+        // this.scene.camera.position[1] = 30.0;
+        // this.scene.camera.position[2] = y;
     }
 
     prepare_scene() {

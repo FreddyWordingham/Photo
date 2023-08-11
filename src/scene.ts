@@ -22,13 +22,34 @@ export class Scene {
 
     private static create_spheres(num_spheres: number): Sphere[] {
         let spheres: Sphere[] = [];
-        let max_dist = 30.0;
+        let max_dist = 230.0;
         for (let i = 0; i < num_spheres; i++) {
             const centre: vec3 = [2.0 * (Math.random() - 0.5) * max_dist, 2.0 * (Math.random() - 0.5) * max_dist, 2.0 * (Math.random() - 0.5) * max_dist];
             let radius = Math.random();
-            radius *= radius;
-            radius *= radius;
-            radius *= 3.0;
+            const colour: vec3 = [0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random()];
+            const sp = new Sphere(centre, radius, colour);
+            spheres.push(sp);
+        }
+        return spheres;
+    }
+
+    private static create_sphere_disk(num_spheres: number): Sphere[] {
+        let spheres: Sphere[] = [];
+
+        let min_radius = 30.0;
+        let max_radius = 70.0;
+        let grad = 0.25;
+
+        for (let i = 0; i < num_spheres; i++) {
+            let r = Math.random() * (max_radius - min_radius) + min_radius;
+            var z = (Math.random() - 0.5) * (r - min_radius) * grad;
+            let theta = Math.random() * 2.0 * Math.PI;
+            let x = Math.cos(theta) * Math.sqrt(r * r - z * z);
+            let y = Math.sin(theta) * Math.sqrt(r * r - z * z);
+            z += x * Math.sin(theta) * grad;
+
+            const centre: vec3 = [x, z, y];
+            let radius = Math.random();
             const colour: vec3 = [0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random(), 0.3 + 0.7 * Math.random()];
             const sp = new Sphere(centre, radius, colour);
             spheres.push(sp);
@@ -37,7 +58,7 @@ export class Scene {
     }
 
     private static create_camera(): Camera {
-        const position: vec3 = [-75.0, 0.0, 0.0];
+        const position: vec3 = [-150.0, -50.0, 0.0];
         const target: vec3 = [0.0, 0.0, 0.0];
         return new Camera(position, target);
     }
