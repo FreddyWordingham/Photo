@@ -1,14 +1,17 @@
+import { vec3 } from "gl-matrix";
+
+import { Scene } from "./scene";
+import { position_and_target_to_spherical } from "./util";
+
 // import ray_tracer_kernel from "./shaders/shadow_tracer.wgsl";
 import ray_tracer_kernel from "./shaders/sunbeam.wgsl";
 // import ray_tracer_kernel from "./shaders/ray_tracer.wgsl";
 import display_shader from "./shaders/display.wgsl";
 
-import { vec3, vec4, mat4 } from "gl-matrix";
-
-import { Scene } from "./scene";
-import { position_and_target_to_spherical } from "./util";
-
 export class Renderer {
+    // Resolution
+    resolution: number[];
+
     // Device/Context objects
     canvas: HTMLCanvasElement;
     format: GPUTextureFormat;
@@ -35,7 +38,8 @@ export class Renderer {
     lambda: number = 0.001;
     scene: Scene;
 
-    constructor(canvas: HTMLCanvasElement, scene: Scene) {
+    constructor(resolution: number[], canvas: HTMLCanvasElement, scene: Scene) {
+        this.resolution = [resolution[0], resolution[1]];
         this.canvas = canvas;
         this.scene = scene;
     }
@@ -63,8 +67,8 @@ export class Renderer {
         this.colour_buffer = this.device.createTexture({
             format: "rgba8unorm",
             size: {
-                width: this.canvas.width,
-                height: this.canvas.height,
+                width: this.resolution[0],
+                height: this.resolution[1],
             },
             usage:
                 GPUTextureUsage.COPY_DST | // Can be target of copy operations
@@ -101,7 +105,7 @@ export class Renderer {
         const sampler_descriptor: GPUSamplerDescriptor = {
             addressModeU: "repeat",
             addressModeV: "repeat",
-            magFilter: "linear",
+            magFilter: "nearest",
             minFilter: "nearest",
             mipmapFilter: "nearest",
             maxAnisotropy: 1,
@@ -363,7 +367,7 @@ export class Renderer {
         const ray_tracer_pass: GPUComputePassEncoder = command_encoder.beginComputePass();
         ray_tracer_pass.setPipeline(this.ray_tracer_pipeline);
         ray_tracer_pass.setBindGroup(0, this.ray_tracer_bind_group);
-        ray_tracer_pass.dispatchWorkgroups(this.canvas.width, this.canvas.height, 1);
+        ray_tracer_pass.dispatchWorkgroups(this.resolution[0], this.resolution[1], 1);
         ray_tracer_pass.end();
 
         const texture_view: GPUTextureView = this.context.getCurrentTexture().createView();
