@@ -353,7 +353,7 @@ export class Renderer {
         const ray_tracer_pass: GPUComputePassEncoder = command_encoder.beginComputePass();
         ray_tracer_pass.setPipeline(this.ray_tracer_pipeline);
         ray_tracer_pass.setBindGroup(0, this.ray_tracer_bind_group);
-        ray_tracer_pass.dispatchWorkgroups(this.resolution[0], this.resolution[1], 1);
+        ray_tracer_pass.dispatchWorkgroups(this.resolution[0] / 8, this.resolution[1] / 8, 1);
         ray_tracer_pass.end();
 
         const texture_view: GPUTextureView = this.context.getCurrentTexture().createView();
