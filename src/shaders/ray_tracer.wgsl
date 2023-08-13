@@ -51,7 +51,7 @@ const SUPER_SAMPLES_SQRT: u32 = 2;
 @group(0) @binding(3) var<storage, read> tree: BVH;
 @group(0) @binding(4) var<storage, read> sphere_lookup_table: ObjectIndices;
 
-@compute @workgroup_size(1,1,1)
+@compute @workgroup_size(16,16,1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID: vec3<u32>) {
 
     let screen_size = vec2<i32>(textureDimensions(colour_buffer));

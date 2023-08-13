@@ -353,7 +353,7 @@ export class Renderer {
         const ray_tracer_pass: GPUComputePassEncoder = command_encoder.beginComputePass();
         ray_tracer_pass.setPipeline(this.ray_tracer_pipeline);
         ray_tracer_pass.setBindGroup(0, this.ray_tracer_bind_group);
-        ray_tracer_pass.dispatchWorkgroups(this.resolution[0] / 8, this.resolution[1] / 8, 1);
+        ray_tracer_pass.dispatchWorkgroups(this.resolution[0] / 16, this.resolution[1] / 16, 1);
         ray_tracer_pass.end();
 
         const texture_view: GPUTextureView = this.context.getCurrentTexture().createView();
@@ -377,27 +377,6 @@ export class Renderer {
         // Submit commands
         this.device.queue.submit([command_encoder.finish()]);
 
-        this.canvas.toBlob((blob) => {
-            const a = document.createElement("a");
-
-            // Create an object URL for the blob
-            const url = URL.createObjectURL(blob!);
-
-            // Set the file name and download attributes for the anchor element
-            a.href = url;
-            a.download = `render_frame/${this.output_image_index.toString().padStart(6, "0")}.png`;
-            this.output_image_index += 1;
-
-            // Trigger a click event on the anchor to start the download
-            a.click();
-
-            // Release the object URL after the download starts
-            URL.revokeObjectURL(url);
-
-            // setTimeout(() => {
-            // Request next frame
-            requestAnimationFrame(this.render);
-            // }, 100);
-        }, "image/png");
+        requestAnimationFrame(this.render);
     };
 }

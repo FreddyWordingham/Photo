@@ -48,7 +48,7 @@ const SUN_POS: vec3<f32> = vec3<f32>(0.0, -0.0, 0.0);
 
 const INFINITY: f32 = 1000.0;
 const EPSILON: f32 = 0.001;
-const MAX_GAS_SAMPLES: i32 = 450;
+const MAX_GAS_SAMPLES: i32 = 45;
 const STEP: f32 = 300.0 / f32(MAX_GAS_SAMPLES);
 
 const SUPER_SAMPLES_SQRT: u32 = 2;
@@ -59,7 +59,7 @@ const SUPER_SAMPLES_SQRT: u32 = 2;
 @group(0) @binding(3) var<storage, read> tree: BVH;
 @group(0) @binding(4) var<storage, read> sphere_lookup_table: ObjectIndices;
 
-@compute @workgroup_size(8,8,1)
+@compute @workgroup_size(16,16,1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID: vec3<u32>) {
 
     let screen_size = vec2<i32>(textureDimensions(colour_buffer));
