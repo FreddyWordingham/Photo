@@ -1,36 +1,66 @@
-use minifb::{Key, Window, WindowOptions};
-use std::time::Duration;
-const WIDTH: usize = 640;
-const HEIGHT: usize = 640;
-const FRAMES_PER_SECOND: usize = 60;
+use pixels::{Error, Pixels, SurfaceTexture};
+use winit::dpi::LogicalSize;
+use winit::event::{Event, WindowEvent};
+use winit::event_loop::EventLoop;
+use winit::window::WindowBuilder;
 
-fn main() {
-    run();
-}
+use photo::canvas::Canvas;
+use photo::keypress::handle_keypress;
+use photo::state::State;
 
-fn run() {
-    let width = WIDTH;
-    let height = HEIGHT;
-    let frame_time = Duration::from_micros((1000.0 / (FRAMES_PER_SECOND as f64)) as u64);
+fn main() -> Result<(), Error> {
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new()
+        .with_title("Pixels Example")
+        .with_inner_size(LogicalSize::new(400.0 * 3.0, 300.0 * 3.0))
+        .build(&event_loop)
+        .unwrap();
 
-    // Create a buffer for the window.
-    let mut buffer: Vec<u32> = vec![0; width * height];
+    let mut pixels = {
+        let window_size = window.inner_size();
+        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
+        Pixels::new(100, 75, surface_texture)?
+    };
 
-    // Create the window.
-    let mut window =
-        Window::new("Photo", width, height, WindowOptions::default()).unwrap_or_else(|e| {
-            panic!("{}", e);
-        });
+    let mut canvas = Canvas::new(100, 75);
+    let mut state = State { save_image: false };
 
-    // Limit framerate
-    window.limit_update_rate(Some(frame_time));
+    let mut x = 0;
+    let y = 75 / 2;
+    let r = 15;
+    event_loop.run(move |event, _, control_flow| {
+        if x > 100 {
+            x = 0;
+        }
+        x += 1;
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        for i in buffer.iter_mut() {
-            *i = 0;
+        match event {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput { input, .. } => {
+                    if let Some(keycode) = input.virtual_keycode {
+                        handle_keypress(keycode, input.state, control_flow, &mut state);
+                    }
+                }
+                WindowEvent::Resized(new_size) => pixels
+                    .resize_surface(new_size.width, new_size.height)
+                    .expect("Failed to resize surface"),
+                _ => (),
+            },
+            _ => (),
         }
 
-        // We unwrap here as we want this code to exit if it fails.
-        window.update_with_buffer(&buffer, WIDTH, HEIGHT).unwrap();
-    }
+        // Handle controls
+        {
+            if state.save_image {
+                canvas.save_to_png("image.png");
+                state.save_image = false;
+            }
+        }
+
+        canvas.clear_background([0x00, 0x77, 0x00, 0xff]);
+        canvas.draw_circle(x, y, r, [0xff, 0x00, 0x00, 0xff]);
+        canvas.render(pixels.frame_mut());
+
+        pixels.render().expect("Failed to render")
+    });
 }
