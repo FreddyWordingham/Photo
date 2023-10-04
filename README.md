@@ -1,19 +1,20 @@
 # Photo
 
-Ray-tracing renderer with WebGPU and TypeScript.
-[![Screenshot](./screenshot.png)](https://freddywordingham.github.io/Photo/)
+Rendering engine.
 
-## Quickstart
+## Installation
 
-Download the repository and set the current directory to the root of the repository:
+Download this repository and set the current working directory to the root of the project:
 
-```bash
-git clone https://github.com/FreddyWordingham/Photo.git photo
+```shell
+git clone https://github.com/FreddyWordingham/photo.git
 cd photo
 ```
 
-Install all dependencies and run:
+Build the main executable:
 
-```bash
-npm run start
+```shell
+cargo build --release
 ```
+
+Run the
