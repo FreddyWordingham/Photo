@@ -4,8 +4,11 @@ version = "0.0.0"
 edition = "2021"
 
 [dependencies]
+bytemuck = { version = "1.14.0", features = ["derive"] }
+futures-intrusive = "0.5.0"
 image = "0.24.7"
 pixels = "0.13.0"
+pollster = "0.3.0"
 rand = "0.8.5"
 rayon = "1.8.0"
 wgpu = "0.17.1"
