@@ -1,7 +1,7 @@
 use wgpu;
 use wgpu::util::DeviceExt;
 
-use crate::{Chunk, Hardware};
+use crate::gpu::{Chunk, Hardware};
 
 pub struct Shaders<'a> {
     hardware: &'a Hardware,

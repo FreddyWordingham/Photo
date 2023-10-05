@@ -1,7 +1,7 @@
 use pollster::FutureExt;
 use std::str::FromStr;
 
-use photo::{Chunk, Hardware, Shaders};
+use photo::gpu::{Chunk, Hardware, Shaders};
 
 fn main() {
     let mut chunks = read_input_chunks();
