@@ -2,35 +2,70 @@ use pollster::FutureExt;
 use std::{borrow::Cow, str::FromStr};
 
 fn main() {
-    let mut numbers = read_input_numbers();
-    println!(" Input: {:?}", numbers);
+    let mut chunks = read_input_chunks();
+    println!(" Input: {:?}", chunks);
 
     let hardware = (Hardware::new()).block_on();
     let shaders = Shaders::new(
         &hardware,
-        &numbers,
-        vec![include_str!("shader.wgsl"), include_str!("double.wgsl")],
+        &chunks,
+        vec![
+            include_str!("invert_colour.wgsl"),
+            include_str!("add_colour.wgsl"),
+            include_str!("sub_colour.wgsl"),
+        ],
     );
 
-    for _ in 0..20 {
-        numbers = shaders.run(&mut numbers, 0).block_on();
-        println!("Output: {:?}", numbers);
-    }
-
-    numbers = shaders.run(&mut numbers, 1).block_on();
-    println!("Output: {:?}", numbers);
+    chunks = shaders.run(&mut chunks, 2).block_on();
+    println!("Output: {:?}", chunks);
 }
 
-fn read_input_numbers() -> Vec<u32> {
+#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+#[repr(C)]
+struct Chunk {
+    col: [f32; 4],
+    x: f32,
+    pad_a: f32,
+    pad_b: f32,
+    pad_c: f32,
+}
+
+fn read_input_chunks() -> Vec<Chunk> {
     if std::env::args().len() <= 1 {
-        let default = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let default = vec![
+            Chunk {
+                col: [0.0, 1.0, 0.0, 1.0],
+                x: 0.1,
+                pad_a: 0.0,
+                pad_b: 0.0,
+                pad_c: 0.0,
+            },
+            Chunk {
+                col: [1.0, 0.0, 1.0, 1.0],
+                x: 0.2,
+                pad_a: 0.0,
+                pad_b: 0.0,
+                pad_c: 0.0,
+            },
+        ];
         println!("No numbers were provided, defaulting to {default:?}");
         return default;
     }
 
-    std::env::args()
+    let elements: Vec<_> = std::env::args()
         .skip(1)
-        .map(|s| u32::from_str(&s).expect("Input must be a list of positive integers"))
+        .map(|s| f32::from_str(&s).expect("Invalid input"))
+        .collect();
+
+    elements
+        .chunks_exact(5)
+        .map(|chunk| Chunk {
+            col: [chunk[0], chunk[1], chunk[2], chunk[3]],
+            x: chunk[4],
+            pad_a: 0.0,
+            pad_b: 0.0,
+            pad_c: 0.0,
+        })
         .collect()
 }
 
@@ -80,8 +115,11 @@ struct Shaders<'a> {
 }
 
 impl<'a> Shaders<'a> {
-    fn new(hardware: &'a Hardware, numbers: &[u32], shader_codes: Vec<&str>) -> Self {
-        let buffer_size = std::mem::size_of_val(numbers);
+    fn new(hardware: &'a Hardware, chunks: &[Chunk], shader_codes: Vec<&str>) -> Self {
+        let buffer_size = std::mem::size_of_val(chunks);
+        if buffer_size % 16 != 0 {
+            panic!("Buffer size must be a multiple of 16 bytes");
+        }
 
         // Instantiates buffer without data.
         let staging_buffer = hardware.device.create_buffer(&wgpu::BufferDescriptor {
@@ -92,13 +130,13 @@ impl<'a> Shaders<'a> {
             mapped_at_creation: false,
         });
 
-        // Instantiates buffer with data (`numbers`).
+        // Instantiates buffer with data (`cols`).
         let storage_buffer =
             hardware
                 .device
                 .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: Some("Storage Buffer"),
-                    contents: bytemuck::cast_slice(numbers),
+                    contents: bytemuck::cast_slice(chunks),
                     usage: wgpu::BufferUsages::STORAGE // `STORAGE` can be used with a bind group, and thus available to a shader.
                         | wgpu::BufferUsages::COPY_DST // `COPY_DST` allows it to be the destination of a copy.
                         | wgpu::BufferUsages::COPY_SRC, // `COPY_SRC` allows it to be the source of a copy.
@@ -160,7 +198,7 @@ impl<'a> Shaders<'a> {
         }
     }
 
-    async fn run(&self, numbers: &[u32], shader_index: usize) -> Vec<u32> {
+    async fn run(&self, chunks: &[Chunk], shader_index: usize) -> Vec<Chunk> {
         // A command encoder executes one or many pipelines.
         // It is to WebGPU what a command buffer is to Vulkan.
         let mut encoder = self
@@ -172,7 +210,7 @@ impl<'a> Shaders<'a> {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             cpass.set_bind_group(0, &self.bind_groups[shader_index], &[]);
             cpass.set_pipeline(&self.compute_pipelines[shader_index]);
-            cpass.dispatch_workgroups(numbers.len() as u32, 1, 1); // Number of cells to run, the (x,y,z) size of item being processed
+            cpass.dispatch_workgroups(chunks.len() as u32, 1, 1); // Number of cells to run, the (x,y,z) size of item being processed
         }
 
         // Sets adds copy operation to command encoder.
