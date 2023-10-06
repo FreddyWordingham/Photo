@@ -1,44 +1,49 @@
 use pollster::FutureExt;
 use std::str::FromStr;
 
-use photo::gpu::{Chunk, Hardware, Shaders};
+use photo::gpu::{ComputeShaderRunner, Hardware};
+use photo::{Chunk, Settings};
 
 fn main() {
     let mut chunks = read_input_chunks();
     println!(" Input: {:?}", chunks);
 
-    let hardware = (Hardware::new()).block_on();
-    let shaders = Shaders::new(
-        &hardware,
-        &chunks,
-        vec![
-            include_str!("invert_colour.wgsl"),
-            include_str!("add_colour.wgsl"),
-            include_str!("sub_colour.wgsl"),
-        ],
-    );
+    let settings = Settings {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        w: 0.0,
+        v: 0.1,
+    };
 
-    chunks = shaders.run(&mut chunks, 2).block_on();
+    let hardware = (Hardware::new()).block_on();
+    let shaders = ComputeShaderRunner::new(&hardware, include_str!("add.wgsl"), settings, &chunks);
+
+    chunks = shaders.run(&settings, &mut chunks).block_on();
     println!("Output: {:?}", chunks);
+
+    let settings = Settings {
+        x: 0.1,
+        y: 0.1,
+        z: 324.0,
+        w: 0.0,
+        v: 0.1,
+    };
+    chunks = shaders.run(&settings, &mut chunks).block_on();
+    println!("Output: {:?}", chunks);
+    // chunks = shaders.run(&mut chunks, 1).block_on();
+    // println!("Output: {:?}", chunks);
+    // chunks = shaders.run(&mut chunks, 1).block_on();
+    // println!("Output: {:?}", chunks);
+    // chunks = shaders.run(&mut chunks, 2).block_on();
+    // println!("Output: {:?}", chunks);
 }
 
 fn read_input_chunks() -> Vec<Chunk> {
     if std::env::args().len() <= 1 {
         let default = vec![
-            Chunk {
-                col: [0.0, 1.0, 0.0, 1.0],
-                x: 0.1,
-                pad_a: 0.0,
-                pad_b: 0.0,
-                pad_c: 0.0,
-            },
-            Chunk {
-                col: [1.0, 0.0, 1.0, 1.0],
-                x: 0.2,
-                pad_a: 0.0,
-                pad_b: 0.0,
-                pad_c: 0.0,
-            },
+            Chunk::new([0.0, 1.0, 0.0, 1.0], 0.1),
+            Chunk::new([1.0, 0.0, 1.0, 1.0], 0.2),
         ];
         println!("No numbers were provided, defaulting to {default:?}");
         return default;
@@ -51,12 +56,6 @@ fn read_input_chunks() -> Vec<Chunk> {
 
     elements
         .chunks_exact(5)
-        .map(|chunk| Chunk {
-            col: [chunk[0], chunk[1], chunk[2], chunk[3]],
-            x: chunk[4],
-            pad_a: 0.0,
-            pad_b: 0.0,
-            pad_c: 0.0,
-        })
+        .map(|chunk| Chunk::new([chunk[0], chunk[1], chunk[2], chunk[3]], chunk[4]))
         .collect()
 }

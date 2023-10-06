@@ -1,7 +1,5 @@
-pub mod chunk;
+pub mod compute_shader_runner;
 pub mod hardware;
-pub mod shaders;
 
-pub use chunk::Chunk;
+pub use compute_shader_runner::ComputeShaderRunner;
 pub use hardware::Hardware;
-pub use shaders::Shaders;

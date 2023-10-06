@@ -14,7 +14,7 @@ impl Hardware {
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions::default())
             .await
-            .expect("No suitable GPU adapters found on the system!");
+            .expect("No suitable GPU adapters found on the system");
 
         // `request_device` instantiates the feature specific connection to the GPU.
         let (device, queue) = adapter
@@ -27,7 +27,7 @@ impl Hardware {
                 None,
             )
             .await
-            .unwrap();
+            .expect("Failed to create device and queue");
 
         Self { device, queue }
     }
