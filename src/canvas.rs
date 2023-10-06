@@ -6,14 +6,14 @@ use image::{ImageBuffer, Rgba};
 pub struct Canvas {
     width: u32,
     height: u32,
-    pixels: Vec<u8>,
+    pub pixels: Vec<u8>,
 }
 
 impl Canvas {
     pub fn new(width: u32, height: u32) -> Self {
         let mut pixels = vec![0u8; (width * height * 4) as usize];
         for chunk in pixels.chunks_exact_mut(4) {
-            chunk.copy_from_slice(&[0x00, 0x00, 0x00, 0xff]);
+            chunk.copy_from_slice(&[0x00, 0xaa, 0x00, 0xff]);
         }
 
         Self {
