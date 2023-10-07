@@ -1,23 +1,23 @@
 use bytemuck::Pod;
+use futures_intrusive::buffer;
 use wgpu;
 use wgpu::util::DeviceExt;
 
 use crate::gpu::Hardware;
 
 // Run compute shaders which take in a single uniform object and and operate on an array of read-write storage.
-pub struct ComputeShaderRunner<'a> {
-    hardware: &'a Hardware,
+pub struct ComputeShaderRunner {
     buffer_size: usize,
     uniform_buffer: wgpu::Buffer,
-    storage_buffer: wgpu::Buffer,
+    pub storage_buffer: wgpu::Buffer,
     copy_buffer: wgpu::Buffer,
     compute_pipeline: wgpu::ComputePipeline,
     bind_group: wgpu::BindGroup,
 }
 
-impl<'a> ComputeShaderRunner<'a> {
+impl ComputeShaderRunner {
     pub fn new<BufferData: Pod, UniformData: Pod>(
-        hardware: &'a Hardware,
+        hardware: &Hardware,
         shader_code: &str,
         uniform: UniformData,
         buffer_data: &[BufferData],
@@ -81,7 +81,6 @@ impl<'a> ComputeShaderRunner<'a> {
             });
 
         Self {
-            hardware,
             buffer_size,
             uniform_buffer,
             storage_buffer,
@@ -93,15 +92,22 @@ impl<'a> ComputeShaderRunner<'a> {
 
     pub async fn run<BufferData: Pod, UniformData: Pod>(
         &self,
+        hardware: &Hardware,
         uniform: &UniformData,
         buffer_data: &[BufferData],
     ) -> Vec<BufferData> {
-        self.write_uniform(uniform);
-        let mut encoder = self.execute_pipeline(buffer_data);
+        // Write chunks to the storage buffer.
+        hardware
+            .queue()
+            .write_buffer(&self.storage_buffer, 0, bytemuck::cast_slice(buffer_data));
+
+        // Writes the uniform to the uniform buffer.
+        self.write_uniform(hardware, uniform);
+        let mut encoder = self.execute_pipeline(hardware, buffer_data);
         self.copy_data_to_cpu(&mut encoder);
 
         // Submits command encoder for processing
-        self.hardware.queue().submit(Some(encoder.finish()));
+        hardware.queue().submit(Some(encoder.finish()));
 
         // Sets the buffer up for mapping, sending over the result of the mapping back to us when it is finished.
         let buffer_slice = self.copy_buffer.slice(..);
@@ -111,7 +117,7 @@ impl<'a> ComputeShaderRunner<'a> {
         // Poll the device in a blocking manner so that our future resolves.
         // In an actual application, `device.poll(...)` should
         // be called in an event loop or on another thread.
-        self.hardware.device().poll(wgpu::Maintain::Wait);
+        hardware.device().poll(wgpu::Maintain::Wait);
 
         // Awaits until `buffer_future` can be read from
         if let Some(Ok(())) = receiver.receive().await {
@@ -132,8 +138,8 @@ impl<'a> ComputeShaderRunner<'a> {
     }
 
     // Writes the uniform to the uniform buffer.
-    pub fn write_uniform<Uniform: Pod>(&self, uniform: &Uniform) {
-        self.hardware
+    pub fn write_uniform<Uniform: Pod>(&self, hardware: &Hardware, uniform: &Uniform) {
+        hardware
             .queue()
             .write_buffer(&self.uniform_buffer, 0, bytemuck::bytes_of(uniform));
     }
@@ -141,10 +147,10 @@ impl<'a> ComputeShaderRunner<'a> {
     // Executes the pipelines.
     pub fn execute_pipeline<BufferData: Pod>(
         &self,
+        hardware: &Hardware,
         read_write_storage: &[BufferData],
     ) -> wgpu::CommandEncoder {
-        let mut encoder = self
-            .hardware
+        let mut encoder = hardware
             .device()
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
         {
@@ -152,7 +158,7 @@ impl<'a> ComputeShaderRunner<'a> {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
             compute_pass.set_pipeline(&self.compute_pipeline);
-            compute_pass.dispatch_workgroups(read_write_storage.len() as u32, 1, 1);
+            compute_pass.dispatch_workgroups((read_write_storage.len() / 64) as u32, 1, 1);
         }
         encoder
     }
