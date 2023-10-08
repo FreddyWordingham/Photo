@@ -1,5 +1,4 @@
 use bytemuck::Pod;
-use futures_intrusive::buffer;
 use wgpu;
 use wgpu::util::DeviceExt;
 
@@ -158,7 +157,12 @@ impl ComputeShaderRunner {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
             compute_pass.set_pipeline(&self.compute_pipeline);
-            compute_pass.dispatch_workgroups((read_write_storage.len() / 64) as u32, 1, 1);
+
+            compute_pass.dispatch_workgroups(
+                (read_write_storage.len() as f32 / 64.0).ceil() as u32,
+                1,
+                1,
+            );
         }
         encoder
     }

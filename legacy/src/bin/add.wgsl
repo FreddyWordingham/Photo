@@ -16,7 +16,7 @@ var<uniform> settings: Settings;
 var<storage, read_write> chunks: array<Chunk>;
 
 @compute
-@workgroup_size(64)
+@workgroup_size(64, 1, 1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     var chunk = chunks[global_id.x];
     var p = settings.x;
