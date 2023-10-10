@@ -48,7 +48,7 @@ impl GPUProcessor {
         println!("Running invert.wgsl");
         println!("Loading shader...");
 
-        let shader_source = include_str!("invert.wgsl");
+        let shader_source = include_str!("invert_buffer.wgsl");
         let shader_module = self
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -83,11 +83,39 @@ impl GPUProcessor {
             mapped_at_creation: false,
         });
 
+        let bind_group_layout =
+            self.device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    label: Some("Invert - Bind Group Layout"),
+                    entries: &[
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                min_binding_size: None,
+                                has_dynamic_offset: false,
+                                ty: wgpu::BufferBindingType::Uniform,
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 1,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                min_binding_size: None,
+                                has_dynamic_offset: false,
+                                ty: wgpu::BufferBindingType::Storage { read_only: false },
+                            },
+                            count: None,
+                        },
+                    ],
+                });
+
         let pipeline_layout = self
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Invert - Compute Pipeline Layout"),
-                bind_group_layouts: &[],
+                bind_group_layouts: &[&bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -95,8 +123,7 @@ impl GPUProcessor {
             .device
             .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
                 label: Some("Invert - Compute Pipeline"),
-                // layout: Some(&pipeline_layout),
-                layout: None,
+                layout: Some(&pipeline_layout),
                 module: &shader_module,
                 entry_point: "main",
             });

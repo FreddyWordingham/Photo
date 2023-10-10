@@ -61,6 +61,7 @@ impl Image {
 
     pub fn from_1d_f32(&mut self, data: &[f32]) {
         for (i, &c) in data.iter().enumerate() {
+            // println!("{} {}", i, c);
             let channel = i % 4;
             let x = i / 4 % self.width;
             let y = i / 4 / self.width;
