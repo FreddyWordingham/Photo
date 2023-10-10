@@ -67,20 +67,22 @@ impl Image {
         ImageBuffer::from_raw(width, height, self.as_1d_u8()).unwrap()
     }
 
-    /// Save the image as a PNG file at the given path.
+    /// Save the image as a PNG file at the given file path.
     /// The directory will be created if it doesn't exist.
-    pub fn save<P: AsRef<Path>>(&self, path: P) {
+    pub fn save(&self, file_path: &str) {
         // Create the directory if it doesn't exist.
-        if let Some(parent) = path.as_ref().parent() {
+        if let Some(parent) = Path::new(file_path).parent() {
             std::fs::create_dir_all(parent).expect("Failed to create directory");
         }
 
-        self.as_2d_rgba().save(path).expect("Failed to save image");
+        self.as_2d_rgba()
+            .save(file_path)
+            .expect("Failed to save image");
     }
 
-    /// Load a PNG image from the given path.
-    pub fn load(path: &str) -> Self {
-        let image = image::open(path).expect("Failed to load image");
+    /// Load a PNG image from the given file path.
+    pub fn load(file_path: &str) -> Self {
+        let image = image::open(file_path).expect("Failed to load image");
 
         let image = image.to_rgba8();
 
@@ -108,6 +110,46 @@ impl Image {
             width,
             height,
             colours,
+        }
+    }
+
+    /// Select all pixels within the given radius of the given position.
+    pub fn select_circle(&self, x: usize, y: usize, r: usize) -> Vec<[usize; 2]> {
+        let mut points = Vec::new();
+        let radius_squared = (r as isize).pow(2);
+
+        for dx in -(r as isize) as isize..=r as isize {
+            let x_pos = x as isize + dx;
+            if x_pos < 0 || x_pos >= self.height as isize {
+                continue;
+            }
+
+            for dy in -(r as isize) as isize..=r as isize {
+                let y_pos = y as isize + dy;
+                if y_pos < 0 || y_pos >= self.width as isize {
+                    continue;
+                }
+
+                let distance_squared = dx.pow(2) + dy.pow(2);
+                if distance_squared <= radius_squared {
+                    points.push([y_pos as usize, x_pos as usize]);
+                }
+            }
+        }
+
+        points
+    }
+
+    /// Draw a pixel at the given position with the given radius and colour.
+    pub fn draw_pixel(&mut self, x: usize, y: usize, col: [f32; 4]) {
+        self.colours[[y, x]] = Rgba([col[0] as f32, col[1] as f32, col[2] as f32, col[3] as f32]);
+    }
+
+    /// Draw a circle at the given position with the given radius and colour.
+    pub fn draw_circle(&mut self, x: usize, y: usize, r: usize, col: [f32; 4]) {
+        let points = self.select_circle(x, y, r);
+        for point in points {
+            self.draw_pixel(point[0], point[1], col);
         }
     }
 }
