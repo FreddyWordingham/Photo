@@ -59,6 +59,15 @@ impl Image {
             .collect()
     }
 
+    pub fn from_1d_f32(&mut self, data: &[f32]) {
+        for (i, &c) in data.iter().enumerate() {
+            let channel = i % 4;
+            let x = i / 4 % self.width;
+            let y = i / 4 / self.width;
+            self.colours[[y, x]][channel] = c;
+        }
+    }
+
     /// Get the image data as a 2D array of RGBA components.
     pub fn as_2d_rgba(&self) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
         let width = self.colours.ncols() as u32;
