@@ -1,5 +1,8 @@
 /target
 /Cargo.lock
 
+# Input
+/input
+
 # Output
 /output
