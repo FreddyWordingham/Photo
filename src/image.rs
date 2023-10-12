@@ -125,6 +125,13 @@ impl Image {
         unsafe { std::slice::from_raw_parts(raw_ptr, self.data.len() * 4) }
     }
 
+    pub fn from_slice(&mut self, slice: &[f32]) {
+        let raw_ptr = self.data.as_mut_ptr() as *mut f32;
+        unsafe {
+            std::ptr::copy_nonoverlapping(slice.as_ptr(), raw_ptr, slice.len());
+        }
+    }
+
     /// Get the image data as a mutable slice.
     pub fn as_mut_slice(&mut self) -> &mut [f32] {
         let raw_ptr = self.data.as_mut_ptr() as *mut f32;
