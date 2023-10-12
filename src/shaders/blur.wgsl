@@ -24,7 +24,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
     let loc = vec2<u32>(x, y);
 
-    let blur_radius: u32 = u32(3);
+    let blur_radius: u32 = u32(10);
     let col = avg_colour_around(loc, blur_radius);
 
     textureStore(write_texture, loc, col);
@@ -36,7 +36,6 @@ fn avg_colour_around(centre: vec2<u32>, radius: u32) -> vec4<f32> {
 
     let dims = textureDimensions(read_texture);
     let int_radius = i32(radius);
-    let half_radius = radius / 2u;
     let int_centre = vec2<i32>(i32(centre.x), i32(centre.y));
 
     for (var dx: i32 = -int_radius; dx <= int_radius; dx = dx + 1) {
@@ -46,7 +45,7 @@ fn avg_colour_around(centre: vec2<u32>, radius: u32) -> vec4<f32> {
                 continue;
             }
 
-            let pos = int_centre + vec2<i32>(dx, dy) - vec2<i32>(int_radius, int_radius);
+            let pos = int_centre + vec2<i32>(dx, dy) ;
             if (any(pos < vec2<i32>(0))) || any(pos >= vec2<i32>(dims)) {
                 continue;
             }

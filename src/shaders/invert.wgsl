@@ -22,12 +22,12 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let y = global_id.y;
 
     let loc = vec2<u32>(x, y);
-    let loc2 = vec2<u32>(x * u32(2), y);
+    let loc2 = vec2<u32>(x + u32(settings.x), y + u32(settings.y));
 
     var col = textureLoad(read_texture, loc);
     col.r = 1.0 - col.r;
     col.g = 1.0 - col.g;
     col.b = 1.0 - col.b;
 
-    textureStore(write_texture, loc, col);
+    textureStore(write_texture, loc2, col);
 }
