@@ -2,37 +2,36 @@ use wgpu::{self, util::DeviceExt};
 
 use crate::{Hardware, Image};
 
-pub struct Shader<'a> {
+/// This compute shader can be used to mutate an image.
+/// - [2; f32] uniform buffer
+/// - [nrows * ncols; rgba32float] read texture
+/// - [nrows * ncols; rgba32float] write texture
+pub struct Shader {
     nrows: u32,
     ncols: u32,
-    hardware: &'a Hardware,
+    hardware: Hardware,
     texture_extent: wgpu::Extent3d,
+    uniform_buffer: wgpu::Buffer,
     read_texture: wgpu::Texture,
     write_texture: wgpu::Texture,
-    uniform_buffer: wgpu::Buffer,
     cpu_buffer: wgpu::Buffer,
     pipeline: wgpu::ComputePipeline,
     bind_group: wgpu::BindGroup,
 }
 
-impl<'a> Shader<'a> {
-    pub async fn new(
-        shader_source: &str,
-        nrows: u32,
-        ncols: u32,
-        hardware: &'a Hardware,
-    ) -> Shader<'a> {
+impl Shader {
+    pub async fn new(shader_source: &str, nrows: u32, ncols: u32, hardware: Hardware) -> Shader {
         let uniform_data = [0.0f32; 2];
         let texture_extent = create_texture_extent(nrows, ncols);
 
-        let uniform_buffer = create_uniform_buffer(hardware, &uniform_data);
-        let read_texture = create_read_texture(hardware, &texture_extent);
-        let write_texture = create_write_texture(hardware, &texture_extent);
-        let cpu_buffer = create_cpu_buffer(nrows, ncols, hardware);
+        let uniform_buffer = create_uniform_buffer(&hardware, &uniform_data);
+        let read_texture = create_read_texture(&hardware, &texture_extent);
+        let write_texture = create_write_texture(&hardware, &texture_extent);
+        let cpu_buffer = create_cpu_buffer(nrows, ncols, &hardware);
 
         let (pipeline, bind_group) = create_pipeline_and_bind_group(
             shader_source,
-            hardware,
+            &hardware,
             &uniform_buffer,
             &read_texture,
             &write_texture,
@@ -43,9 +42,9 @@ impl<'a> Shader<'a> {
             ncols,
             hardware,
             texture_extent,
+            uniform_buffer,
             read_texture,
             write_texture,
-            uniform_buffer,
             cpu_buffer,
             pipeline,
             bind_group,
@@ -91,8 +90,8 @@ impl<'a> Shader<'a> {
             cpass.set_bind_group(0, &self.bind_group, &[]);
             cpass.set_pipeline(&self.pipeline);
             cpass.dispatch_workgroups(
-                (self.ncols).try_into().unwrap(),
-                (self.nrows).try_into().unwrap(),
+                (self.ncols / 8).try_into().unwrap(),
+                (self.nrows / 8).try_into().unwrap(),
                 1,
             );
         }

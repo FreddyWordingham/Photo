@@ -1,10 +1,10 @@
-use photo::Image;
+use photo;
 use rand::Rng;
 
 fn main() {
     let nrows = 600;
     let ncols = 800;
-    let mut image = Image::new(nrows, ncols, [0.1, 0.1, 0.1, 1.0]);
+    let mut image = photo::Image::new(nrows, ncols, [0.1, 0.1, 0.1, 1.0]);
     println!("{} rows - {} cols", image.nrows(), image.ncols());
 
     let mut rng = rand::thread_rng();

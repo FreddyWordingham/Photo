@@ -2,6 +2,7 @@ use image::{ImageBuffer, Rgba};
 use ndarray::Array2;
 use termion;
 
+#[derive(Clone)]
 pub struct Image {
     /// Stored in row-major order.
     data: Array2<Rgba<f32>>,
@@ -117,6 +118,21 @@ impl Image {
             println!();
         }
         println!("{}", termion::color::Fg(termion::color::Reset));
+    }
+
+    /// Get the image data as a Vec<u8> after converting.
+    pub fn as_u8(&self) -> Vec<u8> {
+        self.data
+            .iter()
+            .flat_map(|&Rgba([r, g, b, a])| {
+                vec![
+                    (r * 255.0) as u8,
+                    (g * 255.0) as u8,
+                    (b * 255.0) as u8,
+                    (a * 255.0) as u8,
+                ]
+            })
+            .collect()
     }
 
     /// Get the image data as a slice.

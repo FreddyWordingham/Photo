@@ -1,14 +1,15 @@
-use photo::{Hardware, Image, Shader};
+use photo;
 
 fn main() {
-    let mut image = Image::load("input/test0.png");
+    let mut image = photo::Image::load("input/test0.png");
+    println!("{} rows - {} cols", image.nrows(), image.ncols());
 
-    let hardware = pollster::block_on(Hardware::new());
-    let mut shader = pollster::block_on(Shader::new(
+    let hardware = pollster::block_on(photo::Hardware::new());
+    let mut shader = pollster::block_on(photo::Shader::new(
         include_str!("../shaders/blur.wgsl"),
         image.nrows() as u32,
         image.ncols() as u32,
-        &hardware,
+        hardware,
     ));
     let uniform = [0.0f32, 0.0f32];
     shader.write_uniform_to_gpu(&uniform);

@@ -16,7 +16,7 @@ var read_texture: texture_storage_2d<rgba32float, read>;
 var write_texture: texture_storage_2d<rgba32float, write>;
 
 @compute
-@workgroup_size(1, 1, 1)
+@workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let x = global_id.x;
     let y = global_id.y;
