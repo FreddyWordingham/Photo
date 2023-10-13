@@ -31,7 +31,7 @@ impl Cont {
 
         let hardware = pollster::block_on(photo::Hardware::new());
         let shader = pollster::block_on(photo::Shader::new(
-            include_str!("../shaders/invert.wgsl"),
+            include_str!("../shaders/blur.wgsl"),
             nrows,
             ncols,
             hardware,

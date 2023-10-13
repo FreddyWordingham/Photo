@@ -2,6 +2,7 @@ pub mod controller;
 pub mod hardware;
 pub mod image;
 pub mod shader;
+pub mod simulation;
 pub mod window;
 
 pub use controller::Controller;

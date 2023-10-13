@@ -154,6 +154,13 @@ impl Image {
         unsafe { std::slice::from_raw_parts_mut(raw_ptr, self.data.len() * 4) }
     }
 
+    // The all the pixels to a given colour.
+    pub fn clear(&mut self, rgba: [f32; 4]) {
+        debug_assert!(rgba.iter().all(|&c| c >= 0.0 && c <= 1.0));
+
+        self.data.fill(Rgba(rgba));
+    }
+
     // Set a pixel's colour.
     pub fn set_pixel(&mut self, row: usize, col: usize, rgba: [f32; 4]) {
         debug_assert!(row < self.nrows());
