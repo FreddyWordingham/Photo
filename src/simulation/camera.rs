@@ -7,11 +7,11 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(background_colour: [f32; 4]) -> Self {
+    pub fn new(background_colour: [f32; 4], position: [f32; 2], zoom: f32) -> Self {
         Self {
             background_colour,
-            position: [0.0, 0.0],
-            zoom: 100.0,
+            position,
+            zoom,
         }
     }
 
@@ -35,9 +35,13 @@ impl Camera {
         let nrows = image.nrows() as f32;
         let ncols = image.ncols() as f32;
 
-        for pos in simulation.positions() {
+        let mut max_speed = 0.4;
+
+        for (pos, [vx, vy]) in simulation.positions().iter().zip(simulation.velocities()) {
             if let Some([row, col]) = self.position_to_pixel(pos, nrows, ncols) {
-                image.set_pixel(row, col, [1.0, 1.0, 1.0, 1.0]);
+                let r = vx.hypot(*vy) / max_speed;
+
+                image.set_pixel(row, col, [r, r, r, 1.0]);
             }
         }
     }
