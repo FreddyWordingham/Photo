@@ -22,7 +22,7 @@ var<storage, read_write> ghost_velocities: array<vec4<f32>>;
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let n = global_id.x;
 
-    let dt = 0.0001;
+    let dt = 0.001;
 
     ghost_velocities[n].x += ghost_forces[n].x * dt;
     ghost_velocities[n].y += ghost_forces[n].y * dt;

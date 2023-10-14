@@ -41,9 +41,9 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 }
 
 fn position_to_pixel(x: f32, y: f32) -> vec2<i32> {
-    let col = (x * settings.zoom) + (settings.ncols / 2.0);
-    let row = (y * settings.zoom) + (settings.nrows / 2.0);
-    return vec2<i32>(i32(row), i32(col));
+    let col = (x * settings.zoom) + (settings.nrows / 2.0);
+    let row = (y * settings.zoom) + (settings.ncols / 2.0);
+    return vec2<i32>(i32(col), i32(row));
 }
 
 fn mass_to_colour(mass: f32) -> vec4<f32> {

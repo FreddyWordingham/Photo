@@ -114,6 +114,45 @@ impl NBodyInit {
         }
     }
 
+    pub fn add_ghost_disk<R: Rng>(
+        &mut self,
+        rng: &mut R,
+        centre: [f32; 3],
+        drift: [f32; 3],
+        radius: f32,
+        num: usize,
+        speed: f32,
+    ) {
+        debug_assert!(radius > 0.0);
+        debug_assert!(num > 0);
+
+        self.ghost_positions.reserve_exact(num);
+        self.ghost_velocities.reserve_exact(num);
+
+        for _ in 0..num {
+            let mut dx = rng.gen_range(-radius..radius);
+            let mut dy = rng.gen_range(-radius..radius);
+
+            while dx * dx + dy * dy > radius * radius {
+                dx = rng.gen_range(-radius..radius);
+                dy = rng.gen_range(-radius..radius);
+            }
+
+            let r = (dx * dx + dy * dy).sqrt();
+            let theta = dy.atan2(dx);
+
+            let angular_velocity = speed / r.sqrt();
+            let vx = angular_velocity * theta.sin();
+            let vy = angular_velocity * -theta.cos();
+
+            let position = [centre[0] + dx, centre[1] + dy, centre[2]];
+            let velocity = [vx + drift[0], vy + drift[1], drift[2]];
+
+            self.ghost_positions.push(position);
+            self.ghost_velocities.push(velocity);
+        }
+    }
+
     pub fn add_ghost_field<R: Rng>(
         &mut self,
         rng: &mut R,
