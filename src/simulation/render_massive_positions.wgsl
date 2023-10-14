@@ -25,7 +25,19 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let pixel = position_to_pixel(positions[n].x, positions[n].y);
     let colour = mass_to_colour(positions[n].w);
 
-    textureStore(texture, pixel, colour);
+    // textureStore(texture, pixel, colour);
+
+    let radius = 4;
+    for (var i = -radius; i <= radius; i = i + 1) {
+        for (var j = -radius; j <= radius; j = j + 1) {
+            if i * i + j * j > radius * radius {
+                continue;
+            }
+
+            let p = pixel + vec2<i32>(i, j);
+            textureStore(texture, p, colour);
+        }
+    }
 }
 
 fn position_to_pixel(x: f32, y: f32) -> vec2<i32> {

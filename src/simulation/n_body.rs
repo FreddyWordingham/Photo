@@ -7,15 +7,6 @@ pub struct NBody {
     num_ghost_bodies: usize,
     hardware: Hardware,
     settings_buffer: wgpu::Buffer,
-    // massive_positions: [wgpu::Buffer; 2],
-    // massive_velocities_a: wgpu::Buffer,
-    // massive_velocities_b: wgpu::Buffer,
-    // massive_forces: wgpu::Buffer,
-    // massive_masses: wgpu::Buffer,
-    // ghost_positions: [wgpu::Buffer; 2],
-    // ghost_velocities_a: wgpu::Buffer,
-    // ghost_velocities_b: wgpu::Buffer,
-    // ghost_forces: wgpu::Buffer,
     texture_extent: wgpu::Extent3d,
     textures: [wgpu::Texture; 2],
     cpu_texture_buffer: wgpu::Buffer,
@@ -65,7 +56,7 @@ impl NBody {
         let settings_buffer = create_settings_buffer(&hardware, &init_settings);
 
         // Ghost bodies
-        let ghost_positions_a = create_4d_buffer(
+        let ghost_positions = create_4d_buffer(
             &hardware,
             init_conditions
                 .ghost_positions
@@ -74,17 +65,7 @@ impl NBody {
                 .collect::<Vec<_>>()
                 .as_slice(),
         );
-        let ghost_positions_b = create_4d_buffer(
-            &hardware,
-            init_conditions
-                .ghost_positions
-                .iter()
-                .map(|[px, py, pz]| [*px, *py, *pz, 1.0])
-                .collect::<Vec<_>>()
-                .as_slice(),
-        );
-        let ghost_positions = [ghost_positions_a, ghost_positions_b];
-        let ghost_velocities_a = create_4d_buffer(
+        let ghost_velocities = create_4d_buffer(
             &hardware,
             init_conditions
                 .ghost_velocities
@@ -93,20 +74,10 @@ impl NBody {
                 .collect::<Vec<_>>()
                 .as_slice(),
         );
-        let ghost_velocities_b = create_4d_buffer(
-            &hardware,
-            init_conditions
-                .ghost_velocities
-                .iter()
-                .map(|[vx, vy, vz]| [*vx, *vy, *vz, 1.0])
-                .collect::<Vec<_>>()
-                .as_slice(),
-        );
-        let ghost_velocities = [ghost_velocities_a, ghost_velocities_b];
         let ghost_forces = create_4d_buffer(&hardware, &vec![[0.0; 4]; num_ghost_bodies]);
 
         // Massive bodies
-        let massive_positions_a = create_4d_buffer(
+        let massive_positions = create_4d_buffer(
             &hardware,
             init_conditions
                 .massive_positions
@@ -116,17 +87,6 @@ impl NBody {
                 .collect::<Vec<_>>()
                 .as_slice(),
         );
-        let massive_positions_b = create_4d_buffer(
-            &hardware,
-            init_conditions
-                .massive_positions
-                .iter()
-                .zip(&init_conditions.massive_masses)
-                .map(|([px, py, pz], m)| [*px, *py, *pz, *m])
-                .collect::<Vec<_>>()
-                .as_slice(),
-        );
-        let massive_positions = [massive_positions_a, massive_positions_b];
 
         // Pipelines and bind groups
         let (calculate_ghost_forces_pipeline, calculate_ghost_forces_bind_group) =
@@ -208,12 +168,32 @@ impl NBody {
                 });
 
         {
+            let view = &self.textures[0].create_view(&wgpu::TextureViewDescriptor::default());
+            encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("N-Body - Clear Texture"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color {
+                            r: 0.0,
+                            g: 0.0,
+                            b: 0.0,
+                            a: 1.0,
+                        }),
+                        store: true,
+                    },
+                })],
+                depth_stencil_attachment: None,
+            });
+        }
+        {
             let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
                 label: Some("N-Body - Calculate Ghost Forces"),
             });
             compute_pass.set_bind_group(0, &self.calculate_ghost_forces_bind_group, &[]);
             compute_pass.set_pipeline(&self.calculate_ghost_forces_pipeline);
-            compute_pass.dispatch_workgroups(self.num_ghost_bodies as u32, 1, 1);
+            compute_pass.dispatch_workgroups((self.num_ghost_bodies / 64) as u32, 1, 1);
         }
         {
             let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -221,7 +201,7 @@ impl NBody {
             });
             compute_pass.set_bind_group(0, &self.calculate_ghost_velocities_bind_group, &[]);
             compute_pass.set_pipeline(&self.calculate_ghost_velocities_pipeline);
-            compute_pass.dispatch_workgroups(self.num_ghost_bodies as u32, 1, 1);
+            compute_pass.dispatch_workgroups((self.num_ghost_bodies / 64) as u32, 1, 1);
         }
         {
             let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -229,7 +209,7 @@ impl NBody {
             });
             compute_pass.set_bind_group(0, &self.calculate_ghost_positions_bind_group, &[]);
             compute_pass.set_pipeline(&self.calculate_ghost_positions_pipeline);
-            compute_pass.dispatch_workgroups(self.num_ghost_bodies as u32, 1, 1);
+            compute_pass.dispatch_workgroups((self.num_ghost_bodies / 64) as u32, 1, 1);
         }
         {
             let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -237,7 +217,7 @@ impl NBody {
             });
             compute_pass.set_bind_group(0, &self.render_ghost_positions_bind_group, &[]);
             compute_pass.set_pipeline(&self.render_ghost_positions_pipeline);
-            compute_pass.dispatch_workgroups(self.num_ghost_bodies as u32, 1, 1);
+            compute_pass.dispatch_workgroups((self.num_ghost_bodies / 64) as u32, 1, 1);
         }
         {
             let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -336,7 +316,9 @@ fn create_texture(hardware: &Hardware, texture_extent: &wgpu::Extent3d) -> wgpu:
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
         format: wgpu::TextureFormat::Rgba32Float,
-        usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_SRC,
+        usage: wgpu::TextureUsages::STORAGE_BINDING
+            | wgpu::TextureUsages::COPY_SRC
+            | wgpu::TextureUsages::RENDER_ATTACHMENT,
         view_formats: &[wgpu::TextureFormat::Rgba32Float],
     })
 }
@@ -355,8 +337,8 @@ fn create_cpu_texture_buffer(hardware: &Hardware, texture_extent: &wgpu::Extent3
 fn create_calculate_ghost_forces_pipeline_and_bind_group(
     hardware: &Hardware,
     settings_buffer: &wgpu::Buffer,
-    ghost_positions: &[wgpu::Buffer; 2],
-    massive_positions: &[wgpu::Buffer; 2],
+    ghost_positions: &wgpu::Buffer,
+    massive_positions: &wgpu::Buffer,
     ghost_forces: &wgpu::Buffer,
 ) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
     let shader_source = include_str!("calculate_ghost_forces.wgsl");
@@ -372,8 +354,8 @@ fn create_calculate_ghost_forces_pipeline_and_bind_group(
         hardware.device(),
         &pipeline,
         settings_buffer,
-        &ghost_positions[0],
-        &massive_positions[0],
+        &ghost_positions,
+        &massive_positions,
         ghost_forces,
     );
 
@@ -383,7 +365,7 @@ fn create_calculate_ghost_forces_pipeline_and_bind_group(
 fn create_calculate_ghost_velocities_pipeline_and_bind_group(
     hardware: &Hardware,
     settings_buffer: &wgpu::Buffer,
-    ghost_velocities: &[wgpu::Buffer; 2],
+    ghost_velocities: &wgpu::Buffer,
     ghost_forces: &wgpu::Buffer,
 ) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
     let shader_source = include_str!("calculate_ghost_velocities.wgsl");
@@ -403,7 +385,7 @@ fn create_calculate_ghost_velocities_pipeline_and_bind_group(
         &pipeline,
         settings_buffer,
         ghost_forces,
-        &ghost_velocities[0],
+        &ghost_velocities,
     );
 
     (pipeline, bind_group)
@@ -412,8 +394,8 @@ fn create_calculate_ghost_velocities_pipeline_and_bind_group(
 fn create_calculate_ghost_positions_pipeline_and_bind_group(
     hardware: &Hardware,
     settings_buffer: &wgpu::Buffer,
-    ghost_positions: &[wgpu::Buffer; 2],
-    ghost_velocities: &[wgpu::Buffer; 2],
+    ghost_positions: &wgpu::Buffer,
+    ghost_velocities: &wgpu::Buffer,
 ) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
     let shader_source = include_str!("calculate_ghost_positions.wgsl");
 
@@ -431,8 +413,8 @@ fn create_calculate_ghost_positions_pipeline_and_bind_group(
         hardware.device(),
         &pipeline,
         settings_buffer,
-        &ghost_velocities[0],
-        &ghost_positions[0],
+        &ghost_velocities,
+        &ghost_positions,
     );
 
     (pipeline, bind_group)
@@ -441,7 +423,7 @@ fn create_calculate_ghost_positions_pipeline_and_bind_group(
 fn create_render_ghost_positions_pipeline_and_bind_group(
     hardware: &Hardware,
     settings_buffer: &wgpu::Buffer,
-    ghost_positions: &[wgpu::Buffer; 2],
+    ghost_positions: &wgpu::Buffer,
     textures: &[wgpu::Texture; 2],
 ) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
     let shader_source = include_str!("render_ghost_positions.wgsl");
@@ -457,7 +439,7 @@ fn create_render_ghost_positions_pipeline_and_bind_group(
         hardware.device(),
         &pipeline,
         settings_buffer,
-        &ghost_positions[0],
+        &ghost_positions,
         &textures[0],
     );
 
@@ -467,7 +449,7 @@ fn create_render_ghost_positions_pipeline_and_bind_group(
 fn create_render_massive_positions_pipeline_and_bind_group(
     hardware: &Hardware,
     settings_buffer: &wgpu::Buffer,
-    massive_positions: &[wgpu::Buffer; 2],
+    massive_positions: &wgpu::Buffer,
     textures: &[wgpu::Texture; 2],
 ) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
     let shader_source = include_str!("render_massive_positions.wgsl");
@@ -486,7 +468,7 @@ fn create_render_massive_positions_pipeline_and_bind_group(
         hardware.device(),
         &pipeline,
         settings_buffer,
-        &massive_positions[0],
+        &massive_positions,
         &textures[0],
     );
 

@@ -22,7 +22,7 @@ var<storage, read> massive_positions: array<vec4<f32>>;
 var<storage, read_write> ghost_forces: array<vec4<f32>>;
 
 @compute
-@workgroup_size(1, 1, 1)
+@workgroup_size(64, 1, 1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let n = global_id.x;
 
