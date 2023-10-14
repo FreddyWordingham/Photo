@@ -12,8 +12,7 @@ pub struct NBody {
     // massive_velocities_b: wgpu::Buffer,
     // massive_forces: wgpu::Buffer,
     // massive_masses: wgpu::Buffer,
-    // ghost_positions_a: wgpu::Buffer,
-    // ghost_positions_b: wgpu::Buffer,
+    ghost_positions: [wgpu::Buffer; 2],
     // ghost_velocities_a: wgpu::Buffer,
     // ghost_velocities_b: wgpu::Buffer,
     // ghost_forces: wgpu::Buffer,
@@ -21,6 +20,8 @@ pub struct NBody {
     textures: [wgpu::Texture; 2],
     cpu_texture_buffer: wgpu::Buffer,
 
+    render_ghost_positions_pipeline: wgpu::ComputePipeline,
+    render_ghost_positions_bind_group: wgpu::BindGroup,
     render_massive_positions_pipeline: wgpu::ComputePipeline,
     render_massive_positions_bind_group: wgpu::BindGroup,
 }
@@ -39,13 +40,54 @@ impl NBody {
         debug_assert!(grav_force > 0.0);
         debug_assert!(zoom > 0.0);
 
+        // Used to determine buffer sizes
         let num_massive_bodies = init_conditions.num_massive_bodies();
         let num_ghost_bodies = init_conditions.num_ghost_bodies();
 
+        // Initialise the GPU
         let hardware = Hardware::new().await;
 
+        // Textures
+        let texture_extent = create_texture_extent(nrows, ncols);
+        let texture_a = create_texture(&hardware, &texture_extent);
+        let texture_b = create_texture(&hardware, &texture_extent);
+        let textures = [texture_a, texture_b];
+        let cpu_texture_buffer = create_cpu_texture_buffer(&hardware, &texture_extent);
+
+        // Settings
         let init_settings = [ncols as f32, nrows as f32, grav_force, zoom];
         let settings_buffer = create_settings_buffer(&hardware, &init_settings);
+
+        // Ghost bodies
+        let ghost_positions_a = create_4d_buffer(
+            &hardware,
+            init_conditions
+                .ghost_positions
+                .iter()
+                .map(|[px, py, pz]| [*px, *py, *pz, 1.0])
+                .collect::<Vec<_>>()
+                .as_slice(),
+        );
+        let ghost_positions_b = create_4d_buffer(
+            &hardware,
+            init_conditions
+                .ghost_positions
+                .iter()
+                .map(|[px, py, pz]| [*px, *py, *pz, 1.0])
+                .collect::<Vec<_>>()
+                .as_slice(),
+        );
+        let ghost_positions = [ghost_positions_a, ghost_positions_b];
+
+        let (render_ghost_positions_pipeline, render_ghost_positions_bind_group) =
+            create_render_ghost_positions_pipeline_and_bind_group(
+                &hardware,
+                &settings_buffer,
+                &ghost_positions,
+                &textures,
+            );
+
+        // Massive bodies
         let massive_positions_a = create_4d_buffer(
             &hardware,
             init_conditions
@@ -68,13 +110,6 @@ impl NBody {
         );
         let massive_positions = [massive_positions_a, massive_positions_b];
 
-        let texture_extent = create_texture_extent(nrows, ncols);
-        let texture_a = create_texture(&hardware, &texture_extent);
-        let texture_b = create_texture(&hardware, &texture_extent);
-        let textures = [texture_a, texture_b];
-
-        let cpu_texture_buffer = create_cpu_texture_buffer(&hardware, &texture_extent);
-
         let (render_massive_positions_pipeline, render_massive_positions_bind_group) =
             create_render_massive_positions_pipeline_and_bind_group(
                 &hardware,
@@ -89,9 +124,12 @@ impl NBody {
             hardware,
             settings_buffer,
             massive_positions,
+            ghost_positions,
             texture_extent,
             textures,
             cpu_texture_buffer,
+            render_ghost_positions_pipeline,
+            render_ghost_positions_bind_group,
             render_massive_positions_pipeline,
             render_massive_positions_bind_group,
         }
@@ -105,20 +143,7 @@ impl NBody {
         );
     }
 
-    pub fn set_massive_positions(&mut self, massive_positions: &[[f32; 4]]) {
-        let massive_positions = massive_positions
-            .iter()
-            .flatten()
-            .copied()
-            .collect::<Vec<_>>();
-        self.hardware.queue().write_buffer(
-            &self.massive_positions[0],
-            0,
-            bytemuck::cast_slice(&massive_positions),
-        );
-    }
-
-    pub async fn render_massive_partices(&self, image: &mut Image) {
+    pub async fn run(&self, image: &mut Image) {
         let mut encoder =
             self.hardware
                 .device()
@@ -128,11 +153,18 @@ impl NBody {
 
         {
             let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some("N-Body - Render Positions"),
+                label: Some("N-Body - Render Ghost Positions"),
+            });
+            compute_pass.set_bind_group(0, &self.render_ghost_positions_bind_group, &[]);
+            compute_pass.set_pipeline(&self.render_ghost_positions_pipeline);
+            compute_pass.dispatch_workgroups(self.num_ghost_bodies as u32, 1, 1);
+        }
+        {
+            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some("N-Body - Render Massive Positions"),
             });
             compute_pass.set_bind_group(0, &self.render_massive_positions_bind_group, &[]);
             compute_pass.set_pipeline(&self.render_massive_positions_pipeline);
-
             compute_pass.dispatch_workgroups(self.num_massive_bodies as u32, 1, 1);
         }
 
@@ -240,6 +272,32 @@ fn create_cpu_texture_buffer(hardware: &Hardware, texture_extent: &wgpu::Extent3
     })
 }
 
+fn create_render_ghost_positions_pipeline_and_bind_group(
+    hardware: &Hardware,
+    settings_buffer: &wgpu::Buffer,
+    ghost_positions: &[wgpu::Buffer; 2],
+    textures: &[wgpu::Texture; 2],
+) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
+    let shader_source = include_str!("render_ghost_positions.wgsl");
+
+    let bind_group_layout = create_render_ghost_positions_bind_group_layout(hardware.device());
+    let shader_module =
+        create_render_ghost_positions_shader_module(hardware.device(), shader_source);
+    let pipeline_layout =
+        create_render_ghost_positions_pipeline_layout(hardware.device(), &bind_group_layout);
+    let pipeline =
+        create_render_ghost_positions_pipeline(hardware.device(), &pipeline_layout, &shader_module);
+    let bind_group = create_render_ghost_particles_bind_group(
+        hardware.device(),
+        &pipeline,
+        settings_buffer,
+        &ghost_positions[0],
+        &textures[0],
+    );
+
+    (pipeline, bind_group)
+}
+
 fn create_render_massive_positions_pipeline_and_bind_group(
     hardware: &Hardware,
     settings_buffer: &wgpu::Buffer,
@@ -267,6 +325,44 @@ fn create_render_massive_positions_pipeline_and_bind_group(
     );
 
     (pipeline, bind_group)
+}
+
+fn create_render_ghost_positions_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
+    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        label: Some("N-Body - Render Ghost Positions - Bind Group Layout"),
+        entries: &[
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    min_binding_size: None,
+                    has_dynamic_offset: false,
+                },
+                count: None,
+            },
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: true },
+                    min_binding_size: None,
+                    has_dynamic_offset: false,
+                },
+                count: None,
+            },
+            wgpu::BindGroupLayoutEntry {
+                binding: 2,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::StorageTexture {
+                    access: wgpu::StorageTextureAccess::WriteOnly,
+                    format: wgpu::TextureFormat::Rgba32Float,
+                    view_dimension: wgpu::TextureViewDimension::D2,
+                },
+                count: None,
+            },
+        ],
+    })
 }
 
 fn create_render_massive_positions_bind_group_layout(
@@ -309,6 +405,16 @@ fn create_render_massive_positions_bind_group_layout(
     })
 }
 
+fn create_render_ghost_positions_shader_module(
+    device: &wgpu::Device,
+    shader_source: &str,
+) -> wgpu::ShaderModule {
+    device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: Some("N-Body - Render Ghost Positions - Shader Module"),
+        source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+    })
+}
+
 fn create_render_massive_positions_shader_module(
     device: &wgpu::Device,
     shader_source: &str,
@@ -316,6 +422,17 @@ fn create_render_massive_positions_shader_module(
     device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: Some("N-Body - Render Massive Positions - Shader Module"),
         source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+    })
+}
+
+fn create_render_ghost_positions_pipeline_layout(
+    device: &wgpu::Device,
+    bind_group_layout: &wgpu::BindGroupLayout,
+) -> wgpu::PipelineLayout {
+    device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: Some("N-Body - Render Ghost Positions - Pipeline Layout"),
+        bind_group_layouts: &[bind_group_layout],
+        push_constant_ranges: &[],
     })
 }
 
@@ -330,6 +447,19 @@ fn create_render_massive_positions_pipeline_layout(
     })
 }
 
+fn create_render_ghost_positions_pipeline(
+    device: &wgpu::Device,
+    pipeline_layout: &wgpu::PipelineLayout,
+    shader_module: &wgpu::ShaderModule,
+) -> wgpu::ComputePipeline {
+    device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+        label: Some("N-Body - Render Ghost Positions - Pipeline"),
+        layout: Some(pipeline_layout),
+        module: shader_module,
+        entry_point: "main",
+    })
+}
+
 fn create_render_massive_positions_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &wgpu::PipelineLayout,
@@ -340,6 +470,35 @@ fn create_render_massive_positions_pipeline(
         layout: Some(pipeline_layout),
         module: shader_module,
         entry_point: "main",
+    })
+}
+
+fn create_render_ghost_particles_bind_group(
+    device: &wgpu::Device,
+    pipeline: &wgpu::ComputePipeline,
+    settings_buffer: &wgpu::Buffer,
+    massive_positions: &wgpu::Buffer,
+    texture: &wgpu::Texture,
+) -> wgpu::BindGroup {
+    device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("N-Body - Render Ghost Positions - Bind Group"),
+        layout: &pipeline.get_bind_group_layout(0),
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: settings_buffer.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: massive_positions.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 2,
+                resource: wgpu::BindingResource::TextureView(
+                    &texture.create_view(&wgpu::TextureViewDescriptor::default()),
+                ),
+            },
+        ],
     })
 }
 
