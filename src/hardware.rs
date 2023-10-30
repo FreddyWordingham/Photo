@@ -1,16 +1,13 @@
-use wgpu::{Device, Queue, Surface, SurfaceConfiguration};
-use winit::window::Window;
-
 pub struct Hardware {
-    pub device: Device,
-    pub queue: Queue,
-    pub config: SurfaceConfiguration,
-    pub surface: Surface,
-    pub window: Window,
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
+    pub config: wgpu::SurfaceConfiguration,
+    pub surface: wgpu::Surface,
+    pub window: winit::window::Window,
 }
 
 impl Hardware {
-    pub async fn new(window: Window) -> Self {
+    pub async fn new(window: winit::window::Window) -> Self {
         // Window size.
         let size = window.inner_size();
 

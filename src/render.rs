@@ -1,5 +1,3 @@
-use winit::window::Window;
-
 use crate::{Camera, Hardware, Memory, Pipelines, Scene, Settings};
 
 pub struct Render {
@@ -16,7 +14,7 @@ impl Render {
         settings: Settings,
         camera: Camera,
         scene: Scene,
-        window: Window,
+        window: winit::window::Window,
     ) -> Self {
         let hardware = Hardware::new(window).await;
         let memory = Memory::new(resolution, &settings, &camera, scene, &hardware.device);

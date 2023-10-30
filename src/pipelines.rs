@@ -1,10 +1,8 @@
 use crate::{Hardware, Memory, Vertex};
 
-use wgpu::{BindGroup, Device, RenderPipeline};
-
 pub struct Pipelines {
     // Display bind group
-    pub display_bind_group: BindGroup,
+    pub display_bind_group: wgpu::BindGroup,
     pub display_pipeline: wgpu::RenderPipeline,
 }
 
@@ -20,10 +18,10 @@ impl Pipelines {
     }
 
     fn init_display_bind_group_and_pipeline(
-        device: &Device,
+        device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
         memory: &Memory,
-    ) -> (BindGroup, RenderPipeline) {
+    ) -> (wgpu::BindGroup, wgpu::RenderPipeline) {
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[
                 wgpu::BindGroupLayoutEntry {
