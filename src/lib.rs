@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod controls;
 pub mod hardware;
 pub mod memory;
 pub mod pipelines;
@@ -8,6 +9,7 @@ pub mod scene;
 pub mod settings;
 
 pub use camera::Camera;
+pub use controls::Controls;
 pub use pipelines::Pipelines;
 pub use scene::Scene;
 pub use settings::Settings;

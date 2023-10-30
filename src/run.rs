@@ -1,6 +1,4 @@
-use crate::{Camera, Render, Scene, Settings};
-
-use winit::event::Event;
+use crate::{Camera, Controls, Render, Scene, Settings};
 
 const PIXEL_SIZE: u32 = 1; // Screen pixels per logical pixel
 
@@ -18,15 +16,41 @@ pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camer
         .unwrap();
 
     let render = Render::new(resolution, settings, camera, scene, window).await;
+    let mut controls = Controls::new();
 
     event_loop
-        .run(move |event, _control_flow| match event {
-            Event::WindowEvent {
+        .run(move |event, control_flow| match event {
+            winit::event::Event::WindowEvent {
                 window_id,
                 ref event,
-            } if window_id == render.hardware.window.id() => {
-                println!("{:?}", event);
-            }
+            } if window_id == render.hardware.window.id() => match event {
+                winit::event::WindowEvent::CloseRequested => {
+                    println!("Window Closed!");
+                    control_flow.exit();
+                }
+                winit::event::WindowEvent::KeyboardInput {
+                    event:
+                        winit::event::KeyEvent {
+                            logical_key:
+                                winit::keyboard::Key::Named(winit::keyboard::NamedKey::Escape),
+                            ..
+                        },
+                    ..
+                } => {
+                    println!("Escape Key Pressed!");
+                    control_flow.exit();
+                }
+                winit::event::WindowEvent::KeyboardInput { event, .. } => {
+                    controls.keyboard_input(&event);
+                }
+                _ => {}
+            },
+            winit::event::Event::DeviceEvent { event, .. } => match event {
+                winit::event::DeviceEvent::MouseMotion { .. } => {
+                    // controls.mouse_moved(delta.0, delta.1);
+                }
+                _ => {}
+            },
             _ => (),
         })
         .expect("Photo ERROR!: Event loop failed!")
