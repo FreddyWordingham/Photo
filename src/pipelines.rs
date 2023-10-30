@@ -8,6 +8,10 @@ pub struct Pipelines {
     // Render background
     pub draw_background_bind_group: wgpu::BindGroup,
     pub draw_background_pipeline: wgpu::ComputePipeline,
+
+    // Render scene
+    pub draw_scene_bind_group: wgpu::BindGroup,
+    pub draw_scene_pipeline: wgpu::ComputePipeline,
 }
 
 impl Pipelines {
@@ -18,11 +22,16 @@ impl Pipelines {
         let (draw_background_pipeline, draw_background_bind_group) =
             Self::init_draw_background_bind_group_and_pipeline(hardware, memory);
 
+        let (draw_scene_pipeline, draw_scene_bind_group) =
+            Self::init_draw_scene_bind_group_and_pipeline(hardware, memory);
+
         Self {
             display_bind_group,
             display_pipeline,
             draw_background_bind_group,
             draw_background_pipeline,
+            draw_scene_bind_group,
+            draw_scene_pipeline,
         }
     }
 
@@ -229,6 +238,127 @@ impl Pipelines {
                     wgpu::BindGroupEntry {
                         binding: 2,
                         resource: wgpu::BindingResource::TextureView(&memory.display_view),
+                    },
+                ],
+            });
+
+        (pipeline, bind_group)
+    }
+
+    fn init_draw_scene_bind_group_and_pipeline(
+        hardware: &Hardware,
+        memory: &Memory,
+    ) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
+        let shader_source = include_str!("shaders/draw_scene.wgsl");
+        let shader_module = hardware
+            .device
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: Some("Draw Scene - Shader Module"),
+                source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+            });
+
+        let bind_group_layout =
+            hardware
+                .device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    label: Some("Draw Scene - Bind Group Layout"),
+                    entries: &[
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Uniform,
+                                min_binding_size: None,
+                                has_dynamic_offset: false,
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 1,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Uniform,
+                                min_binding_size: None,
+                                has_dynamic_offset: false,
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 2,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::StorageTexture {
+                                access: wgpu::StorageTextureAccess::ReadWrite,
+                                format: wgpu::TextureFormat::Rgba8Unorm,
+                                view_dimension: wgpu::TextureViewDimension::D2,
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 3,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 4,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        },
+                    ],
+                });
+
+        let pipeline_layout =
+            hardware
+                .device
+                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                    label: Some("Draw Scene - Pipeline Layout"),
+                    bind_group_layouts: &[&bind_group_layout],
+                    push_constant_ranges: &[],
+                });
+
+        let pipeline = hardware
+            .device
+            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                label: Some("Draw Scene - Pipeline"),
+                layout: Some(&pipeline_layout),
+                module: &shader_module,
+                entry_point: "main",
+            });
+
+        let bind_group = hardware
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Draw Scene - Bind Group"),
+                layout: &pipeline.get_bind_group_layout(0),
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: memory.settings_uniform.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: memory.camera_uniform.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: wgpu::BindingResource::TextureView(&memory.display_view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 3,
+                        resource: memory.scene_triangles_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 4,
+                        resource: memory.scene_indices_buffer.as_entire_binding(),
                     },
                 ],
             });

@@ -48,6 +48,10 @@ pub struct Memory {
     pub offscreen_view: wgpu::TextureView,
     pub display_sampler: wgpu::Sampler,
 
+    // Scene
+    pub scene_triangles_buffer: wgpu::Buffer,
+    pub scene_indices_buffer: wgpu::Buffer,
+
     // Rendering
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
@@ -58,7 +62,7 @@ impl<'a> Memory {
         resolution: [u32; 2],
         settings: &Settings,
         camera: &Camera,
-        _scene: Scene,
+        scene: Scene,
         device: &wgpu::Device,
     ) -> Self {
         let [width, height] = resolution;
@@ -119,6 +123,18 @@ impl<'a> Memory {
             ..Default::default()
         });
 
+        // Scene data
+        let scene_triangles_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Scene Triangles Buffer"),
+            contents: bytemuck::cast_slice(scene.triangles_slice()),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+        let scene_indices_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Scene Indices Buffer"),
+            contents: bytemuck::cast_slice(scene.indices_slice()),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+
         // Rendering data
         let num_indices = INDICES.len() as u32;
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -141,6 +157,8 @@ impl<'a> Memory {
             display_view,
             offscreen_view,
             display_sampler,
+            scene_triangles_buffer,
+            scene_indices_buffer,
             vertex_buffer,
             index_buffer,
         }

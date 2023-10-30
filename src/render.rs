@@ -77,11 +77,25 @@ impl Render {
 
         {
             let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some("Render Background"),
+                label: Some("Draw Background"),
                 timestamp_writes: None,
             });
             compute_pass.set_bind_group(0, &self.pipelines.draw_background_bind_group, &[]);
             compute_pass.set_pipeline(&self.pipelines.draw_background_pipeline);
+            compute_pass.dispatch_workgroups(
+                self.settings.resolution[0],
+                self.settings.resolution[1],
+                1,
+            );
+        }
+
+        {
+            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some("Draw Scene"),
+                timestamp_writes: None,
+            });
+            compute_pass.set_bind_group(0, &self.pipelines.draw_scene_bind_group, &[]);
+            compute_pass.set_pipeline(&self.pipelines.draw_scene_pipeline);
             compute_pass.dispatch_workgroups(
                 self.settings.resolution[0],
                 self.settings.resolution[1],
