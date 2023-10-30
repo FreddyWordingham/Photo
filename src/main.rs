@@ -7,9 +7,10 @@ fn main() {
 }
 
 async fn start() {
+    let resolution = [800, 600];
     let camera = Camera {};
     let scene = Scene {};
     let settings = Settings {};
 
-    run::with_window(settings, camera, scene).await;
+    run::with_window(resolution, settings, camera, scene).await;
 }
