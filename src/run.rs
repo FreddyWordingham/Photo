@@ -20,7 +20,7 @@ pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camer
         .build(&event_loop)
         .unwrap();
 
-    let render = Render::new(resolution, settings, camera, scene, window).await;
+    let mut render = Render::new(resolution, settings, camera, scene, window).await;
     let mut controls = Controls::new();
 
     event_loop
@@ -47,6 +47,10 @@ pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camer
                 }
                 winit::event::WindowEvent::KeyboardInput { event, .. } => {
                     controls.keyboard_input(&event);
+                }
+                winit::event::WindowEvent::Resized(new_size) => {
+                    println!("Resized to {:?}", new_size);
+                    render.resize(*new_size);
                 }
                 _ => {}
             },

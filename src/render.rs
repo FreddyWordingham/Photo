@@ -29,6 +29,16 @@ impl Render {
         }
     }
 
+    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+        if new_size.width > 0 && new_size.height > 0 {
+            self.hardware.config.width = new_size.width;
+            self.hardware.config.height = new_size.height;
+            self.hardware
+                .surface
+                .configure(&self.hardware.device, &self.hardware.config);
+        }
+    }
+
     pub fn update(&self) {
         println!("Updating!");
     }
