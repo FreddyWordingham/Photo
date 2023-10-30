@@ -56,6 +56,16 @@ pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camer
                 }
                 _ => {}
             },
+            winit::event::Event::AboutToWait => {
+                render.update();
+                render.render().expect("Photo ERROR!: Failed to render!");
+            }
+            winit::event::Event::WindowEvent {
+                event: winit::event::WindowEvent::RedrawRequested,
+                ..
+            } => {
+                println!("Redraw Requested!");
+            }
             _ => (),
         })
         .expect("Photo ERROR!: Event loop failed!")

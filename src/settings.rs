@@ -1,12 +1,16 @@
-pub struct Settings {}
+pub struct Settings {
+    pub resolution: [u32; 2],
+}
 
 impl Settings {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(resolution: [u32; 2]) -> Self {
+        debug_assert!(resolution.iter().all(|&x| x > 0));
+
+        Self { resolution }
     }
 
     pub fn is_valid(&self) -> bool {
-        true
+        self.resolution.iter().all(|&x| x > 0)
     }
 
     pub fn as_slice(&self) -> &[u8] {

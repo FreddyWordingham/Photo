@@ -8,7 +8,7 @@ async fn start() {
     let resolution = [800, 600];
     let camera = Camera::new();
     let scene = Scene::new();
-    let settings = Settings::new();
+    let settings = Settings::new(resolution);
 
     run::with_window(resolution, settings, camera, scene).await;
 }

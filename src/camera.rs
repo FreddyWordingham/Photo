@@ -1,12 +1,14 @@
-pub struct Camera {}
+pub struct Camera {
+    zoom: f32,
+}
 
 impl Camera {
     pub fn new() -> Self {
-        Self {}
+        Self { zoom: 1.0 }
     }
 
     pub fn is_valid(&self) -> bool {
-        true
+        self.zoom > 0.0
     }
 
     pub fn as_slice(&self) -> &[u8] {
