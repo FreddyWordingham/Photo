@@ -19,6 +19,8 @@ pub struct NBody {
     calculate_ghost_positions_bind_group: wgpu::BindGroup,
     render_ghost_positions_pipeline: wgpu::ComputePipeline,
     render_ghost_positions_bind_group: wgpu::BindGroup,
+    colour_ghost_positions_pipeline: wgpu::ComputePipeline,
+    colour_ghost_positions_bind_group: wgpu::BindGroup,
 
     calculate_massive_forces_pipeline: wgpu::ComputePipeline,
     calculate_massive_forces_bind_group: wgpu::BindGroup,
@@ -140,6 +142,13 @@ impl NBody {
                 &textures,
             );
 
+        let (colour_ghost_positions_pipeline, colour_ghost_positions_bind_group) =
+            create_colour_ghost_positions_pipeline_and_bind_group(
+                &hardware,
+                &settings_buffer,
+                &textures,
+            );
+
         let (calculate_massive_forces_pipeline, calculate_massive_forces_bind_group) =
             create_calculate_massive_forces_pipeline_and_bind_group(
                 &hardware,
@@ -188,6 +197,8 @@ impl NBody {
             calculate_ghost_positions_bind_group,
             render_ghost_positions_pipeline,
             render_ghost_positions_bind_group,
+            colour_ghost_positions_pipeline,
+            colour_ghost_positions_bind_group,
             calculate_massive_forces_pipeline,
             calculate_massive_forces_bind_group,
             calculate_massive_velocities_pipeline,
@@ -307,6 +318,18 @@ impl NBody {
             compute_pass.set_bind_group(0, &self.render_ghost_positions_bind_group, &[]);
             compute_pass.set_pipeline(&self.render_ghost_positions_pipeline);
             compute_pass.dispatch_workgroups((self.num_ghost_bodies / 64) as u32, 1, 1);
+        }
+        {
+            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some("N-Body - Colour Ghost Positions"),
+            });
+            compute_pass.set_bind_group(0, &self.colour_ghost_positions_bind_group, &[]);
+            compute_pass.set_pipeline(&self.colour_ghost_positions_pipeline);
+            compute_pass.dispatch_workgroups(
+                (self.texture_extent.width) as u32,
+                (self.texture_extent.height) as u32,
+                1,
+            );
         }
         {
             let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -617,6 +640,30 @@ fn create_render_ghost_positions_pipeline_and_bind_group(
         &pipeline,
         settings_buffer,
         &ghost_positions,
+        &textures[0],
+    );
+
+    (pipeline, bind_group)
+}
+
+fn create_colour_ghost_positions_pipeline_and_bind_group(
+    hardware: &Hardware,
+    settings_buffer: &wgpu::Buffer,
+    textures: &[wgpu::Texture; 2],
+) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
+    let shader_source = include_str!("colour_ghost_positions.wgsl");
+
+    let bind_group_layout = create_colour_ghost_positions_bind_group_layout(hardware.device());
+    let shader_module =
+        create_colour_ghost_positions_shader_module(hardware.device(), shader_source);
+    let pipeline_layout =
+        create_colour_ghost_positions_pipeline_layout(hardware.device(), &bind_group_layout);
+    let pipeline =
+        create_colour_ghost_positions_pipeline(hardware.device(), &pipeline_layout, &shader_module);
+    let bind_group = create_colour_ghost_particles_bind_group(
+        hardware.device(),
+        &pipeline,
+        settings_buffer,
         &textures[0],
     );
 
@@ -938,6 +985,34 @@ fn create_render_ghost_positions_bind_group_layout(device: &wgpu::Device) -> wgp
     })
 }
 
+fn create_colour_ghost_positions_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
+    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        label: Some("N-Body - Colour Ghost Positions - Bind Group Layout"),
+        entries: &[
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    min_binding_size: None,
+                    has_dynamic_offset: false,
+                },
+                count: None,
+            },
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::StorageTexture {
+                    access: wgpu::StorageTextureAccess::ReadWrite,
+                    format: wgpu::TextureFormat::Rgba32Float,
+                    view_dimension: wgpu::TextureViewDimension::D2,
+                },
+                count: None,
+            },
+        ],
+    })
+}
+
 fn create_render_massive_positions_bind_group_layout(
     device: &wgpu::Device,
 ) -> wgpu::BindGroupLayout {
@@ -1048,6 +1123,16 @@ fn create_render_ghost_positions_shader_module(
     })
 }
 
+fn create_colour_ghost_positions_shader_module(
+    device: &wgpu::Device,
+    shader_source: &str,
+) -> wgpu::ShaderModule {
+    device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: Some("N-Body - Colour Ghost Positions - Shader Module"),
+        source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+    })
+}
+
 fn create_render_massive_positions_shader_module(
     device: &wgpu::Device,
     shader_source: &str,
@@ -1130,6 +1215,17 @@ fn create_render_ghost_positions_pipeline_layout(
 ) -> wgpu::PipelineLayout {
     device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: Some("N-Body - Render Ghost Positions - Pipeline Layout"),
+        bind_group_layouts: &[bind_group_layout],
+        push_constant_ranges: &[],
+    })
+}
+
+fn create_colour_ghost_positions_pipeline_layout(
+    device: &wgpu::Device,
+    bind_group_layout: &wgpu::BindGroupLayout,
+) -> wgpu::PipelineLayout {
+    device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: Some("N-Body - Colour Ghost Positions - Pipeline Layout"),
         bind_group_layouts: &[bind_group_layout],
         push_constant_ranges: &[],
     })
@@ -1231,6 +1327,19 @@ fn create_render_ghost_positions_pipeline(
 ) -> wgpu::ComputePipeline {
     device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
         label: Some("N-Body - Render Ghost Positions - Pipeline"),
+        layout: Some(pipeline_layout),
+        module: shader_module,
+        entry_point: "main",
+    })
+}
+
+fn create_colour_ghost_positions_pipeline(
+    device: &wgpu::Device,
+    pipeline_layout: &wgpu::PipelineLayout,
+    shader_module: &wgpu::ShaderModule,
+) -> wgpu::ComputePipeline {
+    device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+        label: Some("N-Body - Colour Ghost Positions - Pipeline"),
         layout: Some(pipeline_layout),
         module: shader_module,
         entry_point: "main",
@@ -1438,6 +1547,30 @@ fn create_render_ghost_particles_bind_group(
             },
             wgpu::BindGroupEntry {
                 binding: 2,
+                resource: wgpu::BindingResource::TextureView(
+                    &texture.create_view(&wgpu::TextureViewDescriptor::default()),
+                ),
+            },
+        ],
+    })
+}
+
+fn create_colour_ghost_particles_bind_group(
+    device: &wgpu::Device,
+    pipeline: &wgpu::ComputePipeline,
+    settings_buffer: &wgpu::Buffer,
+    texture: &wgpu::Texture,
+) -> wgpu::BindGroup {
+    device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("N-Body - Colour Ghost Positions - Bind Group"),
+        layout: &pipeline.get_bind_group_layout(0),
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: settings_buffer.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
                 resource: wgpu::BindingResource::TextureView(
                     &texture.create_view(&wgpu::TextureViewDescriptor::default()),
                 ),

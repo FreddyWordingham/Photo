@@ -33,15 +33,45 @@ fn init_n_body() -> photo::simulation::NBodyInit {
 
     let mut n_body = photo::simulation::NBodyInit::default();
     n_body.add_massive_particle([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 1.0e2);
-    n_body.add_massive_particle([0.0, -5.0, 0.0], [-4.5, 0.0, 0.0], 0.01);
+    // n_body.add_massive_particle([0.0, -5.0, 0.0], [-4.5, 0.0, 0.0], 0.01);
+
+    n_body.add_massive_disk(
+        &mut rng,
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+        16.0,   // radius
+        64 * 6, // number of particles
+        10.0,   // speed
+        1.0e-1, // total mass
+    );
+    n_body.add_massive_disk(
+        &mut rng,
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+        16.0,   // radius
+        64 * 6, // number of particles
+        10.0,   // speed
+        1.0e-1, // total mass
+    );
+    n_body.add_massive_bar(
+        &mut rng,
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+        16.0,   // radius
+        16.0,   // Half-width
+        2.0,    // Half-height
+        64 * 6, // number of particles
+        10.0,   // speed
+        1.0e-1, // total mass
+    );
 
     n_body.add_ghost_disk(
         &mut rng,
         [0.0, 0.0, 0.0],
         [0.0, 0.0, 0.0],
-        16.0,
-        64 * 64 * 64 * 15,
-        10.0,
+        16.0,              // radius
+        64 * 64 * 64 * 15, // number of ghosts
+        10.0,              // speed
     );
 
     n_body

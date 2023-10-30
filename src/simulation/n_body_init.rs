@@ -49,13 +49,14 @@ impl NBodyInit {
         &mut self,
         rng: &mut R,
         centre: [f32; 3],
+        drift: [f32; 3],
         radius: f32,
         num: usize,
+        speed: f32,
         total_mass: f32,
     ) {
         debug_assert!(radius > 0.0);
         debug_assert!(num > 0);
-        debug_assert!(total_mass > 0.0);
 
         self.massive_positions.reserve_exact(num);
         self.massive_velocities.reserve_exact(num);
@@ -70,8 +71,60 @@ impl NBodyInit {
                 dy = rng.gen_range(-radius..radius);
             }
 
+            let r = (dx * dx + dy * dy).sqrt();
+            let theta = dy.atan2(dx);
+
+            let angular_velocity = speed / r.sqrt();
+            let vx = angular_velocity * theta.sin();
+            let vy = angular_velocity * -theta.cos();
+
             let position = [centre[0] + dx, centre[1] + dy, centre[2]];
-            let velocity = [0.0, 0.0, 0.0];
+            let velocity = [vx + drift[0], vy + drift[1], drift[2]];
+
+            self.massive_positions.push(position);
+            self.massive_velocities.push(velocity);
+            self.massive_masses.push(total_mass / num as f32);
+        }
+    }
+
+    pub fn add_massive_bar<R: Rng>(
+        &mut self,
+        rng: &mut R,
+        centre: [f32; 3],
+        drift: [f32; 3],
+        radius: f32,
+        half_width: f32,
+        half_height: f32,
+        num: usize,
+        speed: f32,
+        total_mass: f32,
+    ) {
+        debug_assert!(half_width > 0.0);
+        debug_assert!(half_height > 0.0);
+        debug_assert!(num > 0);
+
+        self.massive_positions.reserve_exact(num);
+        self.massive_velocities.reserve_exact(num);
+        self.massive_masses.reserve_exact(num);
+
+        for _ in 0..num {
+            let mut dx = rng.gen_range(-half_width..half_width);
+            let mut dy = rng.gen_range(-half_height..half_height);
+
+            while (dx * dx + dy * dy) > radius * radius {
+                dx = rng.gen_range(-half_width..half_width);
+                dy = rng.gen_range(-half_height..half_height);
+            }
+
+            let r = (dx * dx + dy * dy).sqrt();
+            let theta = dy.atan2(dx);
+
+            let angular_velocity = speed / r.sqrt();
+            let vx = angular_velocity * theta.sin();
+            let vy = angular_velocity * -theta.cos();
+
+            let position = [centre[0] + dx, centre[1] + dy, centre[2]];
+            let velocity = [vx + drift[0], vy + drift[1], drift[2]];
 
             self.massive_positions.push(position);
             self.massive_velocities.push(velocity);

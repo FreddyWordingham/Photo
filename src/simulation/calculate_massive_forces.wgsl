@@ -34,7 +34,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         let dx = pos.x - massive_positions[n].x;
         let dy = pos.y - massive_positions[n].y;
         let dz = pos.z - massive_positions[n].z;
-        let r2 = (dx * dx + dy * dy + dz * dz);
+        let r2 = (dx * dx + dy * dy + dz * dz) + 0.01;
         let r = sqrt(r2);
         let f = settings.grav_force * massive_positions[n].w * massive_positions[i].w / r2;
 
