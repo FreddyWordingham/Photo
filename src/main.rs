@@ -1,16 +1,14 @@
 use photo::{run, Camera, Scene, Settings};
 
 fn main() {
-    println!("Hello, world!");
-
     pollster::block_on(start());
 }
 
 async fn start() {
     let resolution = [800, 600];
-    let camera = Camera {};
-    let scene = Scene {};
-    let settings = Settings {};
+    let camera = Camera::new();
+    let scene = Scene::new();
+    let settings = Settings::new();
 
     run::with_window(resolution, settings, camera, scene).await;
 }

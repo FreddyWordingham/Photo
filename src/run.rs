@@ -3,6 +3,11 @@ use crate::{Camera, Controls, Render, Scene, Settings};
 const PIXEL_SIZE: u32 = 1; // Screen pixels per logical pixel
 
 pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camera, scene: Scene) {
+    debug_assert!(resolution.iter().all(|&x| x > 0));
+    debug_assert!(settings.is_valid());
+    debug_assert!(camera.is_valid());
+    debug_assert!(scene.is_valid());
+
     let [width, height] = resolution;
 
     let event_loop = winit::event_loop::EventLoop::new().unwrap();
