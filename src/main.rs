@@ -1,5 +1,15 @@
-use photo;
+use photo::{run, Camera, Scene, Settings};
 
 fn main() {
     println!("Hello, world!");
+
+    pollster::block_on(start());
+}
+
+async fn start() {
+    let camera = Camera {};
+    let scene = Scene {};
+    let settings = Settings {};
+
+    run::with_window(settings, camera, scene).await;
 }
