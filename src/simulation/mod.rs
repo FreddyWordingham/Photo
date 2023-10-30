@@ -1,7 +1,0 @@
-pub mod camera;
-pub mod n_body;
-pub mod n_body_init;
-
-pub use camera::Camera;
-pub use n_body::NBody;
-pub use n_body_init::NBodyInit;
