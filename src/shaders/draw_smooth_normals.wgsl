@@ -69,8 +69,8 @@ fn intersect_mesh_normal(pos: vec3<f32>, dir: vec3<f32>) -> vec3<f32> {
         let v1 = normals[normal_indices[n].y];
         let v2 = normals[normal_indices[n].z];
 
-        let normal = intersect_triangle_normal(pos, dir, p0, p1, p2);
-        // let normal = intersect_triangle_smooth_normal(pos, dir, p0, p1, p2, v0, v1, v2);
+        // let normal = intersect_triangle_normal(pos, dir, p0, p1, p2);
+        let normal = intersect_triangle_smooth_normal(pos, dir, p0, p1, p2, v0, v1, v2);
 
         if normal.x != 0.0 || normal.y != 0.0 || normal.z != 0.0 {
             return normal;

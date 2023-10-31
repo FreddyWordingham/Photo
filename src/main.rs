@@ -5,7 +5,7 @@ fn main() {
 }
 
 async fn start() {
-    let resolution = [800, 600];
+    let resolution = [320, 240];
     let camera = Camera::new();
 
     let mut scene = Scene::new();
