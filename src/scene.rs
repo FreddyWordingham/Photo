@@ -17,25 +17,25 @@ impl Scene {
         self.meshes.push(Mesh::load(path));
     }
 
-    pub fn positions_data(&self) -> Vec<f32> {
+    pub fn positions_buffer(&self) -> Vec<f32> {
         let tag = 0.0;
-        self.meshes[0].positions_data(tag)
+        self.meshes[0].positions_buffer(tag)
     }
 
-    pub fn position_indices_data(&self) -> Vec<u32> {
+    pub fn position_indices_buffer(&self) -> Vec<u32> {
         let tag = 0;
         let offset = 0;
-        self.meshes[0].position_indices_data(tag, offset)
+        self.meshes[0].position_indices_buffer(tag, offset)
     }
 
-    pub fn normals_data(&self) -> Vec<f32> {
+    pub fn normals_buffer(&self) -> Vec<f32> {
         let tag = 0.0;
-        self.meshes[0].normals_data(tag)
+        self.meshes[0].normals_buffer(tag)
     }
 
-    pub fn normal_indices_data(&self) -> Vec<u32> {
+    pub fn normal_indices_buffer(&self) -> Vec<u32> {
         let tag = 0;
         let offset = 0;
-        self.meshes[0].normal_indices_data(tag, offset)
+        self.meshes[0].normal_indices_buffer(tag, offset)
     }
 }

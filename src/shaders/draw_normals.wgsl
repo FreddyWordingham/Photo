@@ -1,9 +1,21 @@
 struct Settings {
     width: u32,
     height: u32,
+    _padding: vec2<u32>,
 };
 
 struct Camera {
+    eye_position_x: f32,
+    eye_position_y: f32,
+    eye_position_z: f32,
+    target_position_x: f32,
+    target_position_y: f32,
+    target_position_z: f32,
+    up_direction_x: f32,
+    up_direction_y: f32,
+    up_direction_z: f32,
+    aspect_ratio: f32,
+    fov_y: f32,
     zoom: f32,
 };
 
@@ -40,26 +52,33 @@ var<storage, read> normal_indices: array<vec3<u32>>;
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let n = global_id.x;
     let m = global_id.y;
+    let pixel = vec2<i32>(i32(n), i32(m));
 
-    let px = ((f32(n) / f32(settings.width)) - 0.5) / camera.zoom;
-    let py = -1.0;
-    let pz = ((f32(m) / f32(settings.height)) - 0.5) / camera.zoom;
+    let eye_pos = vec3<f32>(camera.eye_position_x, camera.eye_position_y, camera.eye_position_z);
+    let target_pos = vec3<f32>(camera.target_position_x, camera.target_position_y, camera.target_position_z);
+    let forward_dir = normalize(target_pos - eye_pos);
+    let right_dir = normalize(cross(forward_dir, vec3<f32>(camera.up_direction_x, camera.up_direction_y, camera.up_direction_z)));
+    let up_dir = normalize(cross(right_dir, forward_dir));
+    let fov_x = camera.aspect_ratio * camera.fov_y;
 
-    let pos = vec3<f32>(px, py, pz);
-    let dir = vec3<f32>(0.0, 1.0, 0.0);
+    let ray_pos = eye_pos;
 
-    let normal = intersect_mesh_normal(pos, dir);
+    let ray_dir = normalize(
+        forward_dir * camera.zoom + right_dir * (2.0 * (f32(pixel.x) / f32(settings.width)) - 1.0) * tan(fov_x / 2.0) + up_dir * (2.0 * (f32(pixel.y) / f32(settings.height)) - 1.0) * tan(camera.fov_y / 2.0)
+    );
 
+    let normal = intersect_mesh_normal_and_distance(ray_pos, ray_dir);
     if normal.x != 0.0 || normal.y != 0.0 || normal.z != 0.0 {
-        let pixel = vec2<i32>(i32(n), i32(m));
-        let new_colour = vec4<f32>(abs(normal), 0.5);
-        textureStore(texture, pixel, new_colour);
+        let new_colour = vec4<f32>(normal.x, normal.y, normal.z, 1.0);
+        textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y + 1), new_colour);
     }
 }
 
-fn intersect_mesh_normal(pos: vec3<f32>, dir: vec3<f32>) -> vec3<f32> {
+fn intersect_mesh_normal_and_distance(pos: vec3<f32>, dir: vec3<f32>) -> vec4<f32> {
 
     let num_triangles = arrayLength(&position_indices);
+    var nearest = vec4<f32>(0.0, 0.0, 0.0, 1.0e9);
+
     for (var n = 0u; n < num_triangles; n = n + 1u) {
         let p0 = positions[position_indices[n].x].xyz;
         let p1 = positions[position_indices[n].y].xyz;
@@ -69,17 +88,17 @@ fn intersect_mesh_normal(pos: vec3<f32>, dir: vec3<f32>) -> vec3<f32> {
         let v1 = normals[normal_indices[n].y].xyz;
         let v2 = normals[normal_indices[n].z].xyz;
 
-        let normal = intersect_triangle_normal(pos, dir, p0, p1, p2);
+        let normal = intersect_triangle_normal_and_distance(pos, dir, p0, p1, p2);
 
-        if normal.x != 0.0 || normal.y != 0.0 || normal.z != 0.0 {
-            return normal;
+        if (normal.w < nearest.w) && (normal.x != 0.0 || normal.y != 0.0 || normal.z != 0.0) {
+            nearest = normal;
         }
     }
 
-    return vec3<f32>(0.0, 0.0, 0.0);
+    return nearest;
 }
 
-fn intersect_triangle_normal(pos: vec3<f32>, dir: vec3<f32>, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>) -> vec3<f32> {
+fn intersect_triangle_normal_and_distance(pos: vec3<f32>, dir: vec3<f32>, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>) -> vec4<f32> {
     let e1 = p1 - p0;
     let e2 = p2 - p0;
 
@@ -87,7 +106,7 @@ fn intersect_triangle_normal(pos: vec3<f32>, dir: vec3<f32>, p0: vec3<f32>, p1: 
     let a = dot(e1, h);
 
     if a > -0.00001 && a < 0.00001 {
-        return vec3<f32>(0.0, 0.0, 0.0);
+        return vec4<f32>(0.0, 0.0, 0.0, -1.0);
     }
 
     let f = 1.0 / a;
@@ -95,21 +114,21 @@ fn intersect_triangle_normal(pos: vec3<f32>, dir: vec3<f32>, p0: vec3<f32>, p1: 
     let u = f * dot(s, h);
 
     if u < 0.0 || u > 1.0 {
-        return vec3<f32>(0.0, 0.0, 0.0);
+        return vec4<f32>(0.0, 0.0, 0.0, -1.0);
     }
 
     let q = cross(s, e1);
     let v = f * dot(dir, q);
 
     if v < 0.0 || u + v > 1.0 {
-        return vec3<f32>(0.0, 0.0, 0.0);
+        return vec4<f32>(0.0, 0.0, 0.0, -1.0);
     }
 
     let t = f * dot(e2, q);
 
     if t > 0.00001 {
-        return normalize(cross(e1, e2));
+        return vec4<f32>(normalize(cross(e1, e2)), t);
     }
 
-    return vec3<f32>(0.0, 0.0, 0.0);
+    return vec4<f32>(0.0, 0.0, 0.0, -1.0);
 }

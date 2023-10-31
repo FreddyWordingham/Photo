@@ -1,9 +1,21 @@
 struct Settings {
     width: u32,
     height: u32,
+    _padding: vec2<u32>,
 };
 
 struct Camera {
+    eye_position_x: f32,
+    eye_position_y: f32,
+    eye_position_z: f32,
+    target_position_x: f32,
+    target_position_y: f32,
+    target_position_z: f32,
+    up_direction_x: f32,
+    up_direction_y: f32,
+    up_direction_z: f32,
+    aspect_ratio: f32,
+    fov_y: f32,
     zoom: f32,
 };
 
@@ -40,19 +52,25 @@ var<storage, read> normal_indices: array<vec3<u32>>;
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let n = global_id.x;
     let m = global_id.y;
+    let pixel = vec2<i32>(i32(n), i32(m));
 
-    let px = ((f32(n) / f32(settings.width)) - 0.5) / camera.zoom;
-    let py = -1.0;
-    let pz = ((f32(m) / f32(settings.height)) - 0.5) / camera.zoom;
+    let eye_pos = vec3<f32>(camera.eye_position_x, camera.eye_position_y, camera.eye_position_z);
+    let target_pos = vec3<f32>(camera.target_position_x, camera.target_position_y, camera.target_position_z);
+    let forward_dir = normalize(target_pos - eye_pos);
+    let right_dir = normalize(cross(forward_dir, vec3<f32>(camera.up_direction_x, camera.up_direction_y, camera.up_direction_z)));
+    let up_dir = normalize(cross(right_dir, forward_dir));
+    let fov_x = camera.aspect_ratio * camera.fov_y;
 
-    let pos = vec3<f32>(px, py, pz);
-    let dir = vec3<f32>(0.0, 1.0, 0.0);
+    let ray_pos = eye_pos;
 
-    if intersect_mesh(pos, dir) {
-        let pixel = vec2<i32>(i32(n), i32(m));
-        let old_colour = textureLoad(texture, pixel);
-        let new_colour = vec4<f32>(1.0, 0.0, 0.0, 0.5);
-        textureStore(texture, pixel, old_colour * 0.5 + new_colour * 0.5);
+    let ray_dir = normalize(
+        forward_dir * camera.zoom + right_dir * (2.0 * (f32(pixel.x) / f32(settings.width)) - 1.0) * tan(fov_x / 2.0) + up_dir * (2.0 * (f32(pixel.y) / f32(settings.height)) - 1.0) * tan(camera.fov_y / 2.0)
+    );
+
+
+    if intersect_mesh(ray_pos, ray_dir) {
+        let new_colour = vec4<f32>(0.3, 0.1, 0.3, 1.0);
+        textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y + 1), new_colour);
     }
 }
 

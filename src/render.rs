@@ -40,14 +40,13 @@ impl Render {
     }
 
     pub fn update(&self) {
-        println!("Updating!");
     }
 
-    pub fn render(&self) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&self, draw_scene_pipeline_index: usize) -> Result<(), wgpu::SurfaceError> {
         self.hardware.queue.write_buffer(
             &self.memory.camera_uniform,
             0,
-            bytemuck::cast_slice(&self.camera.as_slice()),
+            bytemuck::cast_slice(&self.camera.as_buffer()),
         );
 
         let output = self.hardware.surface.get_current_texture()?;
@@ -105,7 +104,7 @@ impl Render {
                 timestamp_writes: None,
             });
             compute_pass.set_bind_group(0, &self.pipelines.draw_scene_bind_group, &[]);
-            compute_pass.set_pipeline(&self.pipelines.draw_scene_pipeline);
+            compute_pass.set_pipeline(&self.pipelines.draw_scene_pipelines[draw_scene_pipeline_index]);
             compute_pass.dispatch_workgroups(
                 self.settings.resolution[0],
                 self.settings.resolution[1],

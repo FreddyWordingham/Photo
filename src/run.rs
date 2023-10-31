@@ -46,7 +46,7 @@ pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camer
                     control_flow.exit();
                 }
                 winit::event::WindowEvent::KeyboardInput { event, .. } => {
-                    controls.keyboard_input(&event);
+                    controls.keyboard_input(&event, &render);
                 }
                 winit::event::WindowEvent::Resized(new_size) => {
                     println!("Resized to {:?}", new_size);
@@ -62,13 +62,11 @@ pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camer
             },
             winit::event::Event::AboutToWait => {
                 render.update();
-                render.render().expect("Photo ERROR!: Failed to render!");
-            }
-            winit::event::Event::WindowEvent {
-                event: winit::event::WindowEvent::RedrawRequested,
-                ..
-            } => {
-                println!("Redraw Requested!");
+                controls.update_camera(&mut render.camera);
+                render.render(controls.draw_scene_pipeline_index).expect("Photo ERROR!: Failed to render!");
+
+                // Request redraw
+                render.hardware.window.request_redraw();
             }
             _ => (),
         })

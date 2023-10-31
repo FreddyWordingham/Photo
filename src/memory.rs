@@ -71,12 +71,12 @@ impl<'a> Memory {
 
         let settings_uniform = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Settings Uniform"),
-            contents: bytemuck::cast_slice(settings.as_slice()),
+            contents: bytemuck::cast_slice(&settings.as_buffer()),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
         let camera_uniform = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Uniform"),
-            contents: bytemuck::cast_slice(&camera.as_slice()),
+            contents: bytemuck::cast_slice(&camera.as_buffer()),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
@@ -128,24 +128,24 @@ impl<'a> Memory {
         // Scene data
         let scene_positions_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Scene Positions Buffer"),
-            contents: bytemuck::cast_slice(&scene.positions_data()),
+            contents: bytemuck::cast_slice(&scene.positions_buffer()),
             usage: wgpu::BufferUsages::STORAGE,
         });
         let scene_position_indices_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Scene Position Indices Buffer"),
-                contents: bytemuck::cast_slice(&scene.position_indices_data()),
+                contents: bytemuck::cast_slice(&scene.position_indices_buffer()),
                 usage: wgpu::BufferUsages::STORAGE,
             });
         let scene_normals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Scene Normals Buffer"),
-            contents: bytemuck::cast_slice(&scene.normals_data()),
+            contents: bytemuck::cast_slice(&scene.normals_buffer()),
             usage: wgpu::BufferUsages::STORAGE,
         });
         let scene_normal_indices_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Scene Normal Indices Buffer"),
-                contents: bytemuck::cast_slice(&scene.normal_indices_data()),
+                contents: bytemuck::cast_slice(&scene.normal_indices_buffer()),
                 usage: wgpu::BufferUsages::STORAGE,
             });
 

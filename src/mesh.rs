@@ -2,10 +2,10 @@ pub struct Mesh {
     positions: Vec<[f32; 3]>,
     normals: Vec<[f32; 3]>,
     coordinates: Vec<[f32; 2]>,
-    faces: Vec<Face>,
+    faces: Vec<Triangle>,
 }
 
-struct Face {
+struct Triangle {
     positions_indices: [u32; 3],
     coordinate_indices: [u32; 3],
     normal_indices: [u32; 3],
@@ -83,7 +83,7 @@ impl Mesh {
         normals
     }
 
-    fn init_faces(string: &str) -> Vec<Face> {
+    fn init_faces(string: &str) -> Vec<Triangle> {
         let mut faces = Vec::new();
 
         for line in string.lines() {
@@ -98,7 +98,7 @@ impl Mesh {
                     })
                     .collect();
 
-                faces.push(Face {
+                faces.push(Triangle {
                     positions_indices: [indices[0][0], indices[1][0], indices[2][0]],
                     coordinate_indices: [indices[0][1], indices[1][1], indices[2][1]],
                     normal_indices: [indices[0][2], indices[1][2], indices[2][2]],
@@ -140,7 +140,7 @@ impl Mesh {
             && *max_normal_index == (self.normals.len() as u32 - 1)
     }
 
-    pub fn positions_data(&self, tag: f32) -> Vec<f32> {
+    pub fn positions_buffer(&self, tag: f32) -> Vec<f32> {
         debug_assert!(self.is_valid());
 
         self.positions
@@ -150,7 +150,7 @@ impl Mesh {
             .collect()
     }
 
-    pub fn position_indices_data(&self, tag: u32, offset: u32) -> Vec<u32> {
+    pub fn position_indices_buffer(&self, tag: u32, offset: u32) -> Vec<u32> {
         debug_assert!(self.is_valid());
 
         self.faces
@@ -161,7 +161,7 @@ impl Mesh {
             .collect()
     }
 
-    pub fn normals_data(&self, tag: f32) -> Vec<f32> {
+    pub fn normals_buffer(&self, tag: f32) -> Vec<f32> {
         debug_assert!(self.is_valid());
 
         self.normals
@@ -171,7 +171,7 @@ impl Mesh {
             .collect()
     }
 
-    pub fn normal_indices_data(&self, tag: u32, offset: u32) -> Vec<u32> {
+    pub fn normal_indices_buffer(&self, tag: u32, offset: u32) -> Vec<u32> {
         debug_assert!(self.is_valid());
 
         self.faces
