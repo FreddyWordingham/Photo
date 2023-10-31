@@ -5,11 +5,13 @@ fn main() {
 }
 
 async fn start() {
-    let resolution = [320, 240];
+    let resolution = [800, 800];
     let camera = Camera::new();
 
     let mut scene = Scene::new();
     scene.load_mesh("assets/meshes/icosphere.obj");
+    // scene.load_mesh("assets/meshes/cube.obj");
+    // scene.load_mesh("assets/meshes/torus.obj");
 
     let settings = Settings::new(resolution);
 

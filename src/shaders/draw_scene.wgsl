@@ -21,11 +21,11 @@ var texture: texture_storage_2d<rgba8unorm, read_write>;
 
 @group(0)
 @binding(3)
-var<storage, read> positions: array<vec3<f32>>;
+var<storage, read> positions: array<vec4<f32>>;
 
 @group(0)
 @binding(4)
-var<storage, read> normals: array<vec3<f32>>;
+var<storage, read> normals: array<vec4<f32>>;
 
 @group(0)
 @binding(5)
@@ -60,9 +60,9 @@ fn intersect_mesh(pos: vec3<f32>, dir: vec3<f32>) -> bool {
 
     let num_triangles = arrayLength(&position_indices);
     for (var n = 0u; n < num_triangles; n = n + 1u) {
-        let p0 = positions[position_indices[n].x];
-        let p1 = positions[position_indices[n].y];
-        let p2 = positions[position_indices[n].z];
+        let p0 = positions[position_indices[n].x].xyz;
+        let p1 = positions[position_indices[n].y].xyz;
+        let p2 = positions[position_indices[n].z].xyz;
 
         if intersect_triangle(pos, dir, p0, p1, p2) {
             return true;

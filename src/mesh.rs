@@ -140,44 +140,44 @@ impl Mesh {
             && *max_normal_index == (self.normals.len() as u32 - 1)
     }
 
-    pub fn positions_data(&self) -> Vec<f32> {
+    pub fn positions_data(&self, tag: f32) -> Vec<f32> {
         debug_assert!(self.is_valid());
 
         self.positions
             .iter()
-            .map(|[px, py, pz]| [*px, *py, *pz, 0.0])
+            .map(|[px, py, pz]| [*px, *py, *pz, tag])
             .flatten()
             .collect()
     }
 
-    pub fn position_indices_data(&self) -> Vec<u32> {
+    pub fn position_indices_data(&self, tag: u32, offset: u32) -> Vec<u32> {
         debug_assert!(self.is_valid());
 
         self.faces
             .iter()
             .map(|f| f.positions_indices)
-            .map(|[px, py, pz]| [px, py, pz, 0])
+            .map(|[px, py, pz]| [offset + px, offset + py, offset + pz, tag])
             .flatten()
             .collect()
     }
 
-    pub fn normals_data(&self) -> Vec<f32> {
+    pub fn normals_data(&self, tag: f32) -> Vec<f32> {
         debug_assert!(self.is_valid());
 
         self.normals
             .iter()
-            .map(|[nx, ny, nz]| [*nx, *ny, *nz, 0.0])
+            .map(|[nx, ny, nz]| [*nx, *ny, *nz, tag])
             .flatten()
             .collect()
     }
 
-    pub fn normal_indices_data(&self) -> Vec<u32> {
+    pub fn normal_indices_data(&self, tag: u32, offset: u32) -> Vec<u32> {
         debug_assert!(self.is_valid());
 
         self.faces
             .iter()
             .map(|f| f.normal_indices)
-            .map(|[nx, ny, nz]| [nx, ny, nz, 0])
+            .map(|[nx, ny, nz]| [offset + nx, offset + ny, offset + nz, tag])
             .flatten()
             .collect()
     }
