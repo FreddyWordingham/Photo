@@ -48,15 +48,16 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let pos = vec3<f32>(px, py, pz);
     let dir = vec3<f32>(0.0, 1.0, 0.0);
 
-    if intersect_mesh(pos, dir) {
+    let normal = intersect_mesh_normal(pos, dir);
+
+    if normal.x != 0.0 || normal.y != 0.0 || normal.z != 0.0 {
         let pixel = vec2<i32>(i32(n), i32(m));
-        let old_colour = textureLoad(texture, pixel);
-        let new_colour = vec4<f32>(1.0, 0.0, 0.0, 0.5);
-        textureStore(texture, pixel, old_colour * 0.5 + new_colour * 0.5);
+        let new_colour = vec4<f32>(abs(normal), 0.5);
+        textureStore(texture, pixel, new_colour);
     }
 }
 
-fn intersect_mesh(pos: vec3<f32>, dir: vec3<f32>) -> bool {
+fn intersect_mesh_normal(pos: vec3<f32>, dir: vec3<f32>) -> vec3<f32> {
 
     let num_triangles = arrayLength(&position_indices);
     for (var n = 0u; n < num_triangles; n = n + 1u) {
@@ -64,22 +65,25 @@ fn intersect_mesh(pos: vec3<f32>, dir: vec3<f32>) -> bool {
         let p1 = positions[position_indices[n].y];
         let p2 = positions[position_indices[n].z];
 
-        if intersect_triangle(pos, dir, p0, p1, p2) {
-            return true;
+        let normal = intersect_triangle_normal(pos, dir, p0, p1, p2);
+
+        if normal.x != 0.0 || normal.y != 0.0 || normal.z != 0.0 {
+            return normal;
         }
     }
 
-    return false;
+    return vec3<f32>(0.0, 0.0, 0.0);
 }
 
-fn intersect_triangle(pos: vec3<f32>, dir: vec3<f32>, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>) -> bool {
-    let e2 = p2 - p0;
+fn intersect_triangle_normal(pos: vec3<f32>, dir: vec3<f32>, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>) -> vec3<f32> {
     let e1 = p1 - p0;
+    let e2 = p2 - p0;
+
     let h = cross(dir, e2);
     let a = dot(e1, h);
 
     if a > -0.00001 && a < 0.00001 {
-        return false;
+        return vec3<f32>(0.0, 0.0, 0.0);
     }
 
     let f = 1.0 / a;
@@ -87,21 +91,21 @@ fn intersect_triangle(pos: vec3<f32>, dir: vec3<f32>, p0: vec3<f32>, p1: vec3<f3
     let u = f * dot(s, h);
 
     if u < 0.0 || u > 1.0 {
-        return false;
+        return vec3<f32>(0.0, 0.0, 0.0);
     }
 
     let q = cross(s, e1);
     let v = f * dot(dir, q);
 
     if v < 0.0 || u + v > 1.0 {
-        return false;
+        return vec3<f32>(0.0, 0.0, 0.0);
     }
 
     let t = f * dot(e2, q);
 
     if t > 0.00001 {
-        return true;
+        return normalize(cross(e1, e2));
     }
 
-    return false;
+    return vec3<f32>(0.0, 0.0, 0.0);
 }

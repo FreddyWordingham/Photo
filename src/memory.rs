@@ -49,8 +49,10 @@ pub struct Memory {
     pub display_sampler: wgpu::Sampler,
 
     // Scene
-    pub scene_triangles_buffer: wgpu::Buffer,
-    pub scene_indices_buffer: wgpu::Buffer,
+    pub scene_positions_buffer: wgpu::Buffer,
+    pub scene_position_indices_buffer: wgpu::Buffer,
+    pub scene_normals_buffer: wgpu::Buffer,
+    pub scene_normal_indices_buffer: wgpu::Buffer,
 
     // Rendering
     pub vertex_buffer: wgpu::Buffer,
@@ -124,16 +126,28 @@ impl<'a> Memory {
         });
 
         // Scene data
-        let scene_triangles_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Scene Triangles Buffer"),
-            contents: bytemuck::cast_slice(scene.triangles_slice()),
+        let scene_positions_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Scene Positions Buffer"),
+            contents: bytemuck::cast_slice(&scene.positions_data()),
             usage: wgpu::BufferUsages::STORAGE,
         });
-        let scene_indices_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Scene Indices Buffer"),
-            contents: bytemuck::cast_slice(scene.indices_slice()),
+        let scene_position_indices_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Scene Position Indices Buffer"),
+                contents: bytemuck::cast_slice(&scene.position_indices_data()),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
+        let scene_normals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Scene Normals Buffer"),
+            contents: bytemuck::cast_slice(&scene.normals_data()),
             usage: wgpu::BufferUsages::STORAGE,
         });
+        let scene_normal_indices_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Scene Normal Indices Buffer"),
+                contents: bytemuck::cast_slice(&scene.normal_indices_data()),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
 
         // Rendering data
         let num_indices = INDICES.len() as u32;
@@ -157,8 +171,10 @@ impl<'a> Memory {
             display_view,
             offscreen_view,
             display_sampler,
-            scene_triangles_buffer,
-            scene_indices_buffer,
+            scene_positions_buffer,
+            scene_position_indices_buffer,
+            scene_normals_buffer,
+            scene_normal_indices_buffer,
             vertex_buffer,
             index_buffer,
         }

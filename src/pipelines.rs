@@ -249,7 +249,7 @@ impl Pipelines {
         hardware: &Hardware,
         memory: &Memory,
     ) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
-        let shader_source = include_str!("shaders/draw_scene.wgsl");
+        let shader_source = include_str!("shaders/draw_normals.wgsl");
         let shader_module = hardware
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -313,6 +313,26 @@ impl Pipelines {
                             },
                             count: None,
                         },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 5,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 6,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        },
                     ],
                 });
 
@@ -354,11 +374,19 @@ impl Pipelines {
                     },
                     wgpu::BindGroupEntry {
                         binding: 3,
-                        resource: memory.scene_triangles_buffer.as_entire_binding(),
+                        resource: memory.scene_positions_buffer.as_entire_binding(),
                     },
                     wgpu::BindGroupEntry {
                         binding: 4,
-                        resource: memory.scene_indices_buffer.as_entire_binding(),
+                        resource: memory.scene_normals_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 5,
+                        resource: memory.scene_position_indices_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 6,
+                        resource: memory.scene_normal_indices_buffer.as_entire_binding(),
                     },
                 ],
             });

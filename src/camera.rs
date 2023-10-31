@@ -4,7 +4,7 @@ pub struct Camera {
 
 impl Camera {
     pub fn new() -> Self {
-        Self { zoom: 1.0 }
+        Self { zoom: 0.5 }
     }
 
     pub fn is_valid(&self) -> bool {
