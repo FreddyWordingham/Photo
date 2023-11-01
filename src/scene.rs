@@ -18,24 +18,83 @@ impl Scene {
     }
 
     pub fn positions_buffer(&self) -> Vec<f32> {
-        let tag = 0.0;
-        self.meshes[0].positions_buffer(tag)
+        let mut buffer = Vec::new();
+
+        for (n, mesh) in self.meshes.iter().enumerate() {
+            let mut positions = mesh.positions_buffer(n as f32);
+            buffer.append(&mut positions);
+        }
+
+        buffer
     }
 
     pub fn position_indices_buffer(&self) -> Vec<u32> {
-        let tag = 0;
-        let offset = 0;
-        self.meshes[0].position_indices_buffer(tag, offset)
+        let mut buffer = Vec::new();
+
+        fn max_of_buffer(buffer: &[u32]) -> i32 {
+            let mut max: i32 = -1;
+            for (n, i) in buffer.iter().enumerate() {
+                if n % 4 == 0 {
+                    continue;
+                }
+
+                if *i as i32 > max {
+                    max = *i as i32;
+                }
+            }
+            max
+        }
+
+        for (n, mesh) in self.meshes.iter().enumerate() {
+            let mut offset = max_of_buffer(&buffer) + 1;
+            if offset < 0 {
+                offset = 0;
+            }
+            let mut indices = mesh.position_indices_buffer(n as u32, offset as u32);
+
+            buffer.append(&mut indices);
+        }
+
+        buffer
     }
 
     pub fn normals_buffer(&self) -> Vec<f32> {
-        let tag = 0.0;
-        self.meshes[0].normals_buffer(tag)
+        let mut buffer = Vec::new();
+
+        for (n, mesh) in self.meshes.iter().enumerate() {
+            let mut indices = mesh.normals_buffer(n as f32);
+            buffer.append(&mut indices);
+        }
+
+        buffer
     }
 
     pub fn normal_indices_buffer(&self) -> Vec<u32> {
-        let tag = 0;
-        let offset = 0;
-        self.meshes[0].normal_indices_buffer(tag, offset)
+        let mut buffer = Vec::new();
+
+        fn max_of_buffer(buffer: &[u32]) -> i32 {
+            let mut max: i32 = -1;
+            for (n, i) in buffer.iter().enumerate() {
+                if n % 4 == 0 {
+                    continue;
+                }
+
+                if *i as i32 > max {
+                    max = *i as i32;
+                }
+            }
+            max
+        }
+
+        for (n, mesh) in self.meshes.iter().enumerate() {
+            let mut offset = max_of_buffer(&buffer) + 1;
+            if offset < 0 {
+                offset = 0;
+            }
+            let mut indices = mesh.normal_indices_buffer(n as u32, offset as u32);
+            buffer.append(&mut indices);
+        }
+
+        buffer
     }
 }

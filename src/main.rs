@@ -24,10 +24,13 @@ async fn start() {
     );
 
     let mut scene = Scene::new();
-    scene.load_mesh("assets/meshes/cube.obj");
+    // scene.load_mesh("assets/meshes/triangle.obj");
+    // scene.load_mesh("assets/meshes/square.obj");
+    // scene.load_mesh("assets/meshes/circle.obj");
+    // scene.load_mesh("assets/meshes/cube.obj");
     // scene.load_mesh("assets/meshes/icosphere.obj");
     scene.load_mesh("assets/meshes/torus.obj");
-    // scene.load_mesh("assets/meshes/cone.obj");
+    scene.load_mesh("assets/meshes/cone.obj");
 
     let settings = Settings::new(resolution);
 
