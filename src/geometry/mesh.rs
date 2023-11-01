@@ -1,4 +1,4 @@
-use crate::AABB;
+use crate::geometry::{Triangle, AABB};
 
 pub struct Mesh {
     aabb: AABB,
@@ -6,12 +6,6 @@ pub struct Mesh {
     normals: Vec<[f32; 3]>,
     coordinates: Vec<[f32; 2]>,
     faces: Vec<Triangle>,
-}
-
-struct Triangle {
-    positions_indices: [u32; 3],
-    coordinate_indices: [u32; 3],
-    normal_indices: [u32; 3],
 }
 
 impl Mesh {
@@ -144,6 +138,12 @@ impl Mesh {
         faces
     }
 
+    pub fn aabb(&self) -> AABB {
+        debug_assert!(self.is_valid());
+
+        self.aabb
+    }
+
     pub fn is_valid(&self) -> bool {
         let max_position_index = self
             .faces
@@ -173,12 +173,6 @@ impl Mesh {
             && *max_position_index == (self.positions.len() as u32 - 1)
             && *max_coordinate_index == (self.coordinates.len() as u32 - 1)
             && *max_normal_index == (self.normals.len() as u32 - 1)
-    }
-
-    pub fn aabb(&self) -> AABB {
-        debug_assert!(self.is_valid());
-
-        self.aabb
     }
 
     pub fn positions_buffer(&self, tag: f32) -> Vec<f32> {
@@ -222,31 +216,4 @@ impl Mesh {
             .flatten()
             .collect()
     }
-
-    // pub fn bvh(&self) -> Vec<f32> {
-    //     debug_assert!(self.is_valid());
-
-    //     for face in self.faces.iter() {
-    //         let [p1x, p1y, p1z] = self.positions[face.positions_indices[0] as usize];
-    //         let [p2x, p2y, p2z] = self.positions[face.positions_indices[1] as usize];
-    //         let [p3x, p3y, p3z] = self.positions[face.positions_indices[2] as usize];
-
-    //         let [nx, ny, nz] = self.normals[face.normal_indices[0] as usize];
-
-    //         bvh.push(p1x);
-    //         bvh.push(p1y);
-    //         bvh.push(p1z);
-    //         bvh.push(p2x);
-    //         bvh.push(p2y);
-    //         bvh.push(p2z);
-    //         bvh.push(p3x);
-    //         bvh.push(p3y);
-    //         bvh.push(p3z);
-    //         bvh.push(nx);
-    //         bvh.push(ny);
-    //         bvh.push(nz);
-    //     }
-
-    //     bvh
-    // }
 }

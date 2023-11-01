@@ -1,4 +1,4 @@
-use crate::{Camera, Controls, Render, Scene, Settings};
+use crate::{geometry::Scene, Camera, Controls, Render, Settings};
 
 const PIXEL_SIZE: u32 = 1; // Screen pixels per logical pixel
 
@@ -63,7 +63,9 @@ pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camer
             winit::event::Event::AboutToWait => {
                 render.update();
                 controls.update_camera(&mut render.camera);
-                render.render(controls.draw_scene_pipeline_index).expect("Photo ERROR!: Failed to render!");
+                render
+                    .render(controls.draw_scene_pipeline_index)
+                    .expect("Photo ERROR!: Failed to render!");
 
                 // Request redraw
                 render.hardware.window.request_redraw();

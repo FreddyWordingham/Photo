@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::{Camera, Scene, Settings};
+use crate::{geometry::Scene, Camera, Settings};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]

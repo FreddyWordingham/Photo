@@ -1,4 +1,4 @@
-use crate::{Mesh, AABB};
+use crate::geometry::{Mesh, AABB};
 
 pub struct Scene {
     aabb: AABB,
@@ -13,10 +13,6 @@ impl Scene {
         }
     }
 
-    pub fn is_valid(&self) -> bool {
-        self.meshes.iter().all(|mesh| mesh.is_valid())
-    }
-
     pub fn load_mesh(&mut self, path: &str) {
         let mesh = Mesh::load(path);
         self.aabb.expand_to_accommodate(&mesh.aabb());
@@ -25,6 +21,10 @@ impl Scene {
 
     pub fn aabb(&self) -> AABB {
         self.aabb
+    }
+
+    pub fn is_valid(&self) -> bool {
+        self.meshes.iter().all(|mesh| mesh.is_valid())
     }
 
     pub fn positions_buffer(&self) -> Vec<f32> {

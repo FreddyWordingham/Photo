@@ -1,4 +1,4 @@
-use crate::{Camera, Hardware, Memory, Pipelines, Scene, Settings};
+use crate::{geometry::Scene, Camera, Hardware, Memory, Pipelines, Settings};
 
 pub struct Render {
     pub hardware: Hardware,
@@ -39,8 +39,7 @@ impl Render {
         }
     }
 
-    pub fn update(&self) {
-    }
+    pub fn update(&self) {}
 
     pub fn render(&self, draw_scene_pipeline_index: usize) -> Result<(), wgpu::SurfaceError> {
         self.hardware.queue.write_buffer(
@@ -104,7 +103,8 @@ impl Render {
                 timestamp_writes: None,
             });
             compute_pass.set_bind_group(0, &self.pipelines.draw_scene_bind_group, &[]);
-            compute_pass.set_pipeline(&self.pipelines.draw_scene_pipelines[draw_scene_pipeline_index]);
+            compute_pass
+                .set_pipeline(&self.pipelines.draw_scene_pipelines[draw_scene_pipeline_index]);
             compute_pass.dispatch_workgroups(
                 self.settings.resolution[0],
                 self.settings.resolution[1],

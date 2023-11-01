@@ -1,4 +1,4 @@
-use photo::{run, Camera, Scene, Settings};
+use photo::{geometry::Scene, run, Camera, Settings};
 
 fn main() {
     pollster::block_on(start());
