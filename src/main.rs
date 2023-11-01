@@ -24,7 +24,7 @@ async fn start() {
     );
 
     let mut scene = Scene::new();
-    // scene.load_mesh("assets/meshes/cube.obj");
+    scene.load_mesh("assets/meshes/cube.obj");
     // scene.load_mesh("assets/meshes/icosphere.obj");
     scene.load_mesh("assets/meshes/torus.obj");
     // scene.load_mesh("assets/meshes/cone.obj");
