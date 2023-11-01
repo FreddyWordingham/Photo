@@ -21,9 +21,16 @@ impl Mesh {
         let string = std::fs::read_to_string(path).unwrap();
 
         let (aabb, positions) = Self::init_positions(&string);
+        debug_assert!(!positions.is_empty());
+
         let normals = Self::init_normals(&string);
+        debug_assert!(!normals.is_empty());
+
         let coordinates = Self::init_coordinates(&string);
+        debug_assert!(!coordinates.is_empty());
+
         let faces = Self::init_faces(&string);
+        debug_assert!(!faces.is_empty());
 
         Mesh {
             aabb,
@@ -168,6 +175,12 @@ impl Mesh {
             && *max_normal_index == (self.normals.len() as u32 - 1)
     }
 
+    pub fn aabb(&self) -> AABB {
+        debug_assert!(self.is_valid());
+
+        self.aabb
+    }
+
     pub fn positions_buffer(&self, tag: f32) -> Vec<f32> {
         debug_assert!(self.is_valid());
 
@@ -209,4 +222,31 @@ impl Mesh {
             .flatten()
             .collect()
     }
+
+    // pub fn bvh(&self) -> Vec<f32> {
+    //     debug_assert!(self.is_valid());
+
+    //     for face in self.faces.iter() {
+    //         let [p1x, p1y, p1z] = self.positions[face.positions_indices[0] as usize];
+    //         let [p2x, p2y, p2z] = self.positions[face.positions_indices[1] as usize];
+    //         let [p3x, p3y, p3z] = self.positions[face.positions_indices[2] as usize];
+
+    //         let [nx, ny, nz] = self.normals[face.normal_indices[0] as usize];
+
+    //         bvh.push(p1x);
+    //         bvh.push(p1y);
+    //         bvh.push(p1z);
+    //         bvh.push(p2x);
+    //         bvh.push(p2y);
+    //         bvh.push(p2z);
+    //         bvh.push(p3x);
+    //         bvh.push(p3y);
+    //         bvh.push(p3z);
+    //         bvh.push(nx);
+    //         bvh.push(ny);
+    //         bvh.push(nz);
+    //     }
+
+    //     bvh
+    // }
 }

@@ -1,12 +1,16 @@
-use crate::Mesh;
+use crate::{Mesh, AABB};
 
 pub struct Scene {
+    aabb: AABB,
     meshes: Vec<Mesh>,
 }
 
 impl Scene {
     pub fn new() -> Self {
-        Self { meshes: Vec::new() }
+        Self {
+            aabb: AABB::new([0.0, 0.0, 0.0], [0.0, 0.0, 0.0]),
+            meshes: Vec::new(),
+        }
     }
 
     pub fn is_valid(&self) -> bool {
@@ -14,7 +18,13 @@ impl Scene {
     }
 
     pub fn load_mesh(&mut self, path: &str) {
-        self.meshes.push(Mesh::load(path));
+        let mesh = Mesh::load(path);
+        self.aabb.expand_to_accommodate(&mesh.aabb());
+        self.meshes.push(mesh);
+    }
+
+    pub fn aabb(&self) -> AABB {
+        self.aabb
     }
 
     pub fn positions_buffer(&self) -> Vec<f32> {

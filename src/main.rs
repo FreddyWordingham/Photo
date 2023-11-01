@@ -24,13 +24,21 @@ async fn start() {
     );
 
     let mut scene = Scene::new();
+    println!("Outer AABB mins: {:?}", scene.aabb().mins());
+    println!("Outer AABB maxs: {:?}", scene.aabb().maxs());
+
     // scene.load_mesh("assets/meshes/triangle.obj");
     // scene.load_mesh("assets/meshes/square.obj");
     // scene.load_mesh("assets/meshes/circle.obj");
     // scene.load_mesh("assets/meshes/cube.obj");
     // scene.load_mesh("assets/meshes/icosphere.obj");
     scene.load_mesh("assets/meshes/torus.obj");
+    println!("Outer AABB mins: {:?}", scene.aabb().mins());
+    println!("Outer AABB maxs: {:?}", scene.aabb().maxs());
+
     scene.load_mesh("assets/meshes/cone.obj");
+    println!("Outer AABB mins: {:?}", scene.aabb().mins());
+    println!("Outer AABB maxs: {:?}", scene.aabb().maxs());
 
     let settings = Settings::new(resolution);
 
