@@ -1,4 +1,7 @@
+use crate::AABB;
+
 pub struct Mesh {
+    aabb: AABB,
     positions: Vec<[f32; 3]>,
     normals: Vec<[f32; 3]>,
     coordinates: Vec<[f32; 2]>,
@@ -17,12 +20,13 @@ impl Mesh {
 
         let string = std::fs::read_to_string(path).unwrap();
 
-        let positions = Self::init_positions(&string);
+        let (aabb, positions) = Self::init_positions(&string);
         let normals = Self::init_normals(&string);
         let coordinates = Self::init_coordinates(&string);
         let faces = Self::init_faces(&string);
 
         Mesh {
+            aabb,
             positions,
             normals,
             coordinates,
@@ -30,7 +34,10 @@ impl Mesh {
         }
     }
 
-    fn init_positions(string: &str) -> Vec<[f32; 3]> {
+    fn init_positions(string: &str) -> (AABB, Vec<[f32; 3]>) {
+        let mut mins = [std::f32::MAX; 3];
+        let mut maxs = [-std::f32::MAX; 3];
+
         let mut positions = Vec::new();
 
         for line in string.lines() {
@@ -42,10 +49,31 @@ impl Mesh {
                 let z = iter.next().unwrap().parse::<f32>().unwrap();
 
                 positions.push([x, y, z]);
+
+                if x < mins[0] {
+                    mins[0] = x;
+                }
+                if x > maxs[0] {
+                    maxs[0] = x;
+                }
+
+                if y < mins[1] {
+                    mins[1] = y;
+                }
+                if y > maxs[1] {
+                    maxs[1] = y;
+                }
+
+                if z < mins[2] {
+                    mins[2] = z;
+                }
+                if z > maxs[2] {
+                    maxs[2] = z;
+                }
             }
         }
 
-        positions
+        (AABB::new(mins, maxs), positions)
     }
 
     fn init_normals(string: &str) -> Vec<[f32; 3]> {
