@@ -25,7 +25,7 @@ impl Pipelines {
         let (draw_scene_pipelines, draw_scene_bind_group) =
             Self::init_draw_bind_group_and_pipelines(
                 &[
-                    ("scene", ShaderProgram::draw_scene()),
+                    // ("scene",c ShaderProgram::draw_scene()),
                     ("objects", ShaderProgram::draw_objects()),
                     ("normals", ShaderProgram::draw_normals()),
                     ("smooth_normals", ShaderProgram::draw_smooth_normals()),

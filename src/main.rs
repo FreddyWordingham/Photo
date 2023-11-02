@@ -9,7 +9,7 @@ fn main() {
 }
 
 async fn start() {
-    let resolution = [200, 200];
+    let resolution = [400, 400];
 
     let eye_position = [0.0, 5.0, 3.0];
     let look_at = [0.0, 0.0, 0.0];
@@ -28,13 +28,13 @@ async fn start() {
     );
 
     // let mesh_icosphere = Mesh::load("assets/meshes/icosphere.obj");
-    let mesh_a = Mesh::load("assets/meshes/a.obj");
-    let mesh_b = Mesh::load("assets/meshes/b.obj");
+    // let mesh_a = Mesh::load("assets/meshes/a.obj");
+    // let mesh_b = Mesh::load("assets/meshes/b.obj");
     // let mesh_c = Mesh::load("assets/meshes/c.obj");
     let mesh_cone = Mesh::load("assets/meshes/cone.obj");
-    // let mesh_cubes = Mesh::load("assets/meshes/cubes.obj");
+    let mesh_cubes = Mesh::load("assets/meshes/cubes.obj");
     let mesh_torus = Mesh::load("assets/meshes/torus.obj");
-    let scene = Scene::new(vec![mesh_a, mesh_b, mesh_torus, mesh_cone]);
+    let scene = Scene::new(vec![mesh_cone, mesh_cubes, mesh_torus]);
 
     let settings = Settings::new(resolution);
 

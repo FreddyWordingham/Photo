@@ -4,7 +4,7 @@ use crate::{
     Controls, Render,
 };
 
-const PIXEL_SIZE: u32 = 4; // Screen pixels per logical pixel
+const PIXEL_SIZE: u32 = 2; // Screen pixels per logical pixel
 
 pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camera, scene: Scene) {
     debug_assert!(resolution.iter().all(|&x| x > 0));

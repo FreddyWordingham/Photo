@@ -4,6 +4,8 @@ struct Sample {
     index: u32,
 }
 
+const SUN_POSITION: vec3<f32> = vec3<f32>(1.0e3, 2.0e3, 10.0e3);
+
 @compute
 @workgroup_size(1, 1, 1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
@@ -15,9 +17,24 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let sample = trace(ray);
 
     if sample.hit {
+        let hit_pos = ray.origin + (ray.direction * (sample.distance - 0.0001));
+        let sun_dir = normalize(SUN_POSITION - hit_pos);
+        let light_ray = Ray(hit_pos, sun_dir);
+
+        let light_sample = trace(light_ray);
+        var lightness = 1.0;
+
+        if light_sample.hit {
+            var colour = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+            if light_sample.distance < 2.0 {
+                lightness = (light_sample.distance / 2.0) * (light_sample.distance / 2.0);
+            }
+        }
+
         let hue = f32(sample.index) / 10.0;
-        let hsva = vec4<f32>(hue, 1.0, 0.5, 1.0);
+        let hsva = vec4<f32>(hue, 1.0, lightness, 1.0);
         let new_colour = hsva_to_rgba(hsva);
+
         textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y - 1), new_colour);
     }
 }

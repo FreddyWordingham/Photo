@@ -71,6 +71,8 @@ impl BVHBuilder {
         self.subdivide(0);
 
         self.nodes.truncate(self.nodes_used);
+
+        println!("{} nodes", self.nodes_used);
     }
 
     fn update_bounds(&mut self, index: usize) {
