@@ -1,11 +1,11 @@
-use crate::{Camera, Render};
+use crate::{uniforms::Camera, Render};
 
 pub struct Controls {
     pub azimuthal_rotation_rate: f32,
     pub polar_rotation_rate: f32,
     pub magnification_rate: f32,
 
-    pub draw_scene_pipeline_index: usize
+    pub draw_scene_pipeline_index: usize,
 }
 
 impl Controls {
@@ -14,7 +14,7 @@ impl Controls {
             azimuthal_rotation_rate: 0.0,
             polar_rotation_rate: 0.0,
             magnification_rate: 1.0,
-            draw_scene_pipeline_index: 0
+            draw_scene_pipeline_index: 0,
         }
     }
 
@@ -56,7 +56,8 @@ impl Controls {
                 self.magnification_rate -= 0.01;
             }
             winit::keyboard::KeyCode::KeyX => {
-                self.draw_scene_pipeline_index = (self.draw_scene_pipeline_index + 1) % render.pipelines.draw_scene_pipelines.len();
+                self.draw_scene_pipeline_index = (self.draw_scene_pipeline_index + 1)
+                    % render.pipelines.draw_scene_pipelines.len();
             }
             _ => {
                 println!("Unknown Key: {:?}", code);

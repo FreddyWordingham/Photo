@@ -2,7 +2,7 @@ use wgpu::util::DeviceExt;
 
 use crate::{
     geometry::{BVHBuilder, Scene},
-    Camera, Settings,
+    uniforms::{Camera, Settings},
 };
 
 #[repr(C)]

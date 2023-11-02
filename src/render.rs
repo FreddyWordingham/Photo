@@ -1,4 +1,8 @@
-use crate::{geometry::Scene, Camera, Hardware, Memory, Pipelines, Settings};
+use crate::{
+    geometry::Scene,
+    gpu::{Hardware, Memory, Pipelines},
+    uniforms::{Camera, Settings},
+};
 
 pub struct Render {
     pub hardware: Hardware,

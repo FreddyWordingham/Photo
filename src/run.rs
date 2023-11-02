@@ -1,4 +1,8 @@
-use crate::{geometry::Scene, Camera, Controls, Render, Settings};
+use crate::{
+    geometry::Scene,
+    uniforms::{Camera, Settings},
+    Controls, Render,
+};
 
 const PIXEL_SIZE: u32 = 1; // Screen pixels per logical pixel
 

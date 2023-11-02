@@ -1,6 +1,7 @@
 use photo::{
     geometry::{Mesh, Scene},
-    run, Camera, Settings,
+    run,
+    uniforms::{Camera, Settings},
 };
 
 fn main() {

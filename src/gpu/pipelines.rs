@@ -1,4 +1,4 @@
-use crate::{Hardware, Memory, Shader, Vertex};
+use crate::gpu::{Hardware, Memory, Shader};
 
 pub struct Pipelines {
     // Display bind group
@@ -90,8 +90,7 @@ impl Pipelines {
             });
 
         let vertex_buffer_layout = wgpu::VertexBufferLayout {
-            // TODO! Maybe move this into Memory struct?
-            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+            array_stride: std::mem::size_of::<[f32; 5]>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Vertex,
             attributes: &[
                 wgpu::VertexAttribute {
@@ -107,9 +106,13 @@ impl Pipelines {
             ],
         };
 
+        let shader_source = Shader::display_shader();
         let shader_module = hardware
             .device
-            .create_shader_module(wgpu::include_wgsl!("shaders/display.wgsl"));
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: Some("Display - Shader Module - display"),
+                source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+            });
 
         let pipeline_layout =
             hardware
@@ -164,7 +167,7 @@ impl Pipelines {
         hardware: &Hardware,
         memory: &Memory,
     ) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
-        let shader_source = include_str!("shaders/draw_background.wgsl");
+        let shader_source = Shader::draw_background();
         let shader_module = hardware
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
