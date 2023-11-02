@@ -1,4 +1,4 @@
-use crate::gpu::{Hardware, Memory, Shader};
+use crate::gpu::{Hardware, Memory, ShaderProgram};
 
 pub struct Pipelines {
     // Display bind group
@@ -25,9 +25,10 @@ impl Pipelines {
         let (draw_scene_pipelines, draw_scene_bind_group) =
             Self::init_draw_bind_group_and_pipelines(
                 &[
-                    ("scene", Shader::draw_scene()),
-                    ("normals", Shader::draw_normals()),
-                    ("smooth_normals", Shader::draw_smooth_normals()),
+                    ("scene", ShaderProgram::draw_scene()),
+                    ("objects", ShaderProgram::draw_objects()),
+                    ("normals", ShaderProgram::draw_normals()),
+                    ("smooth_normals", ShaderProgram::draw_smooth_normals()),
                 ],
                 hardware,
                 memory,
@@ -106,7 +107,7 @@ impl Pipelines {
             ],
         };
 
-        let shader_source = Shader::display_shader();
+        let shader_source = ShaderProgram::display_shader();
         let shader_module = hardware
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -167,7 +168,7 @@ impl Pipelines {
         hardware: &Hardware,
         memory: &Memory,
     ) -> (wgpu::ComputePipeline, wgpu::BindGroup) {
-        let shader_source = Shader::draw_background();
+        let shader_source = ShaderProgram::draw_background();
         let shader_module = hardware
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
