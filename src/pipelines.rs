@@ -249,7 +249,14 @@ impl Pipelines {
         hardware: &Hardware,
         memory: &Memory,
     ) -> (Vec<wgpu::ComputePipeline>, wgpu::BindGroup) {
-        let shader_source_a = include_str!("shaders/draw_scene.wgsl");
+        let shader_source_a_parts = [
+            include_str!("shaders/bvh/node.wgsl"),
+            include_str!("shaders/uniforms/settings.wgsl"),
+            include_str!("shaders/uniforms/camera.wgsl"),
+            include_str!("shaders/bindings/draw.wgsl"),
+            include_str!("shaders/draw_scene.wgsl"),
+        ];
+        let shader_source_a = shader_source_a_parts.join("\n");
         let shader_module_a = hardware
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -257,7 +264,14 @@ impl Pipelines {
                 source: wgpu::ShaderSource::Wgsl(shader_source_a.into()),
             });
 
-        let shader_source_b = include_str!("shaders/draw_normals.wgsl");
+        let shader_source_b_parts = [
+            include_str!("shaders/bvh/node.wgsl"),
+            include_str!("shaders/uniforms/settings.wgsl"),
+            include_str!("shaders/uniforms/camera.wgsl"),
+            include_str!("shaders/bindings/draw.wgsl"),
+            include_str!("shaders/draw_normals.wgsl"),
+        ];
+        let shader_source_b = shader_source_b_parts.join("\n");
         let shader_module_b = hardware
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -265,7 +279,14 @@ impl Pipelines {
                 source: wgpu::ShaderSource::Wgsl(shader_source_b.into()),
             });
 
-        let shader_source_c = include_str!("shaders/draw_smooth_normals.wgsl");
+        let shader_source_c_parts = [
+            include_str!("shaders/bvh/node.wgsl"),
+            include_str!("shaders/uniforms/settings.wgsl"),
+            include_str!("shaders/uniforms/camera.wgsl"),
+            include_str!("shaders/bindings/draw.wgsl"),
+            include_str!("shaders/draw_smooth_normals.wgsl"),
+        ];
+        let shader_source_c = shader_source_c_parts.join("\n");
         let shader_module_c = hardware
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
