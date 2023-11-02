@@ -20,7 +20,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
     if intersect_mesh(ray_pos, ray_dir) {
         let new_colour = vec4<f32>(0.3, 0.1, 0.3, 1.0);
-        textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y), new_colour);
+        textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y - 1), new_colour);
     }
 }
 

@@ -20,10 +20,9 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
     let state = trace(ray_pos, ray_dir);
     if (state.hit) {
-        textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y), vec4<f32>(state.colour, 1.0));
+        textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y - 1), vec4<f32>(state.colour, 1.0));
     }
 }
-
 
 struct RenderState {
     t: f32,

@@ -21,12 +21,11 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let normal = intersect_mesh_smooth_normal_and_distance(ray_pos, ray_dir);
     if normal.x != 0.0 || normal.y != 0.0 || normal.z != 0.0 {
         let new_colour = vec4<f32>(abs(normal.x), abs(normal.y), abs(normal.z), 1.0);
-        textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y), new_colour);
+        textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y - 1), new_colour);
     }
 }
 
 fn intersect_mesh_smooth_normal_and_distance(pos: vec3<f32>, dir: vec3<f32>) -> vec4<f32> {
-
     let num_triangles = arrayLength(&position_indices);
     var nearest = vec4<f32>(0.0, 0.0, 0.0, 1.0e9);
 
@@ -85,11 +84,9 @@ fn intersect_triangle_smooth_normal_and_distance(pos: vec3<f32>, dir: vec3<f32>,
     return vec4<f32>(0.0, 0.0, 0.0, -1.0);
 }
 
-
 //
 
 fn intersect_mesh_normal_and_distance(pos: vec3<f32>, dir: vec3<f32>) -> vec4<f32> {
-
     let num_triangles = arrayLength(&position_indices);
     var nearest = vec4<f32>(0.0, 0.0, 0.0, 1.0e9);
 
