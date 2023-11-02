@@ -74,11 +74,15 @@ impl BVHBuilder {
     }
 
     fn update_bounds(&mut self, index: usize) {
-        self.nodes[index].mins = [999999.0, 999999.0, 999999.0];
-        self.nodes[index].maxs = [-999999.0, -999999.0, -999999.0];
+        self.nodes[index].mins = [std::f32::INFINITY, std::f32::INFINITY, std::f32::INFINITY];
+        self.nodes[index].maxs = [
+            -std::f32::INFINITY,
+            -std::f32::INFINITY,
+            -std::f32::INFINITY,
+        ];
 
         for i in 0..self.nodes[index].count {
-            let triangle = self.triangles[self.triangle_indices[i]];
+            let triangle = self.triangles[self.triangle_indices[self.nodes[index].left_child + i]];
 
             for point in triangle.positions() {
                 for (n, &value) in point.iter().enumerate() {

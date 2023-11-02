@@ -26,12 +26,14 @@ async fn start() {
         zoom,
     );
 
+    // let mesh_icosphere = Mesh::load("assets/meshes/icosphere.obj");
     let mesh_a = Mesh::load("assets/meshes/a.obj");
     let mesh_b = Mesh::load("assets/meshes/b.obj");
-    let mesh_c = Mesh::load("assets/meshes/c.obj");
+    // let mesh_c = Mesh::load("assets/meshes/c.obj");
     let mesh_cone = Mesh::load("assets/meshes/cone.obj");
+    // let mesh_cubes = Mesh::load("assets/meshes/cubes.obj");
     let mesh_torus = Mesh::load("assets/meshes/torus.obj");
-    let scene = Scene::new(vec![mesh_a, mesh_b, mesh_c, mesh_cone, mesh_torus]);
+    let scene = Scene::new(vec![mesh_a, mesh_b, mesh_torus, mesh_cone]);
 
     let settings = Settings::new(resolution);
 
