@@ -1,4 +1,4 @@
-use crate::{Hardware, Memory, Vertex};
+use crate::{Hardware, Memory, Shader, Vertex};
 
 pub struct Pipelines {
     // Display bind group
@@ -23,7 +23,15 @@ impl Pipelines {
             Self::init_draw_background_bind_group_and_pipeline(hardware, memory);
 
         let (draw_scene_pipelines, draw_scene_bind_group) =
-            Self::init_draw_scene_bind_group_and_pipelines(hardware, memory);
+            Self::init_draw_bind_group_and_pipelines(
+                &[
+                    ("scene", Shader::draw_scene()),
+                    ("normals", Shader::draw_normals()),
+                    ("smooth_normals", Shader::draw_smooth_normals()),
+                ],
+                hardware,
+                memory,
+            );
 
         Self {
             display_bind_group,
@@ -245,54 +253,22 @@ impl Pipelines {
         (pipeline, bind_group)
     }
 
-    fn init_draw_scene_bind_group_and_pipelines(
+    fn init_draw_bind_group_and_pipelines(
+        shader_codes: &[(&str, String)],
         hardware: &Hardware,
         memory: &Memory,
     ) -> (Vec<wgpu::ComputePipeline>, wgpu::BindGroup) {
-        let shader_source_a_parts = [
-            include_str!("shaders/bvh/node.wgsl"),
-            include_str!("shaders/uniforms/settings.wgsl"),
-            include_str!("shaders/uniforms/camera.wgsl"),
-            include_str!("shaders/bindings/draw.wgsl"),
-            include_str!("shaders/draw_scene.wgsl"),
-        ];
-        let shader_source_a = shader_source_a_parts.join("\n");
-        let shader_module_a = hardware
-            .device
-            .create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("Draw Scene - Shader Module A"),
-                source: wgpu::ShaderSource::Wgsl(shader_source_a.into()),
-            });
-
-        let shader_source_b_parts = [
-            include_str!("shaders/bvh/node.wgsl"),
-            include_str!("shaders/uniforms/settings.wgsl"),
-            include_str!("shaders/uniforms/camera.wgsl"),
-            include_str!("shaders/bindings/draw.wgsl"),
-            include_str!("shaders/draw_normals.wgsl"),
-        ];
-        let shader_source_b = shader_source_b_parts.join("\n");
-        let shader_module_b = hardware
-            .device
-            .create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("Draw Scene - Shader Module B"),
-                source: wgpu::ShaderSource::Wgsl(shader_source_b.into()),
-            });
-
-        let shader_source_c_parts = [
-            include_str!("shaders/bvh/node.wgsl"),
-            include_str!("shaders/uniforms/settings.wgsl"),
-            include_str!("shaders/uniforms/camera.wgsl"),
-            include_str!("shaders/bindings/draw.wgsl"),
-            include_str!("shaders/draw_smooth_normals.wgsl"),
-        ];
-        let shader_source_c = shader_source_c_parts.join("\n");
-        let shader_module_c = hardware
-            .device
-            .create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("Draw Scene - Shader Module C"),
-                source: wgpu::ShaderSource::Wgsl(shader_source_c.into()),
-            });
+        let shader_modules = shader_codes
+            .iter()
+            .map(|(shader_name, shader_code)| {
+                hardware
+                    .device
+                    .create_shader_module(wgpu::ShaderModuleDescriptor {
+                        label: Some(&format!("Draw - Shader Module - {}", shader_name)),
+                        source: wgpu::ShaderSource::Wgsl(shader_code.into()),
+                    })
+            })
+            .collect::<Vec<_>>();
 
         let bind_group_layout =
             hardware
@@ -402,39 +378,26 @@ impl Pipelines {
                     push_constant_ranges: &[],
                 });
 
-        let pipeline_a =
-            hardware
-                .device
-                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                    label: Some("Draw Scene - Pipeline A"),
-                    layout: Some(&pipeline_layout),
-                    module: &shader_module_a,
-                    entry_point: "main",
-                });
-        let pipeline_b =
-            hardware
-                .device
-                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                    label: Some("Draw Scene - Pipeline B"),
-                    layout: Some(&pipeline_layout),
-                    module: &shader_module_b,
-                    entry_point: "main",
-                });
-        let pipeline_c =
-            hardware
-                .device
-                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                    label: Some("Draw Scene - Pipeline C"),
-                    layout: Some(&pipeline_layout),
-                    module: &shader_module_c,
-                    entry_point: "main",
-                });
+        let pipelines = shader_codes
+            .iter()
+            .zip(shader_modules.iter())
+            .map(|((shader_name, _), shader_module)| {
+                hardware
+                    .device
+                    .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                        label: Some(&format!("Draw Scene - Pipeline - {}", shader_name)),
+                        layout: Some(&pipeline_layout),
+                        module: shader_module,
+                        entry_point: "main",
+                    })
+            })
+            .collect::<Vec<_>>();
 
         let bind_group = hardware
             .device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some("Draw Scene - Bind Group"),
-                layout: &pipeline_a.get_bind_group_layout(0),
+                layout: &pipelines[0].get_bind_group_layout(0),
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
@@ -475,6 +438,6 @@ impl Pipelines {
                 ],
             });
 
-        (vec![pipeline_a, pipeline_b, pipeline_c], bind_group)
+        (pipelines, bind_group)
     }
 }

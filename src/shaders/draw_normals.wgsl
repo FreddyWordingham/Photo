@@ -18,8 +18,10 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         forward_dir * camera.zoom + right_dir * (2.0 * (f32(pixel.x) / f32(settings.width)) - 1.0) * tan(fov_x / 2.0) + up_dir * (2.0 * (f32(pixel.y) / f32(settings.height)) - 1.0) * tan(camera.fov_y / 2.0)
     );
 
-    let colour = trace(ray_pos, ray_dir);
-    textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y), vec4<f32>(colour, 1.0));
+    let state = trace(ray_pos, ray_dir);
+    if (state.hit) {
+        textureStore(texture, vec2<i32>(pixel.x, i32(settings.height) - pixel.y), vec4<f32>(state.colour, 1.0));
+    }
 }
 
 
@@ -29,7 +31,7 @@ struct RenderState {
     hit: bool,
 }
 
-fn trace(ray_pos: vec3<f32>, ray_dir: vec3<f32>) -> vec3<f32> {
+fn trace(ray_pos: vec3<f32>, ray_dir: vec3<f32>) -> RenderState {
     var colour = vec3<f32>(0.2, 0.2, 0.2);
 
     var nearest_hit: f32 = 9999.0;
@@ -114,7 +116,7 @@ fn trace(ray_pos: vec3<f32>, ray_dir: vec3<f32>) -> vec3<f32> {
     if (hit_something) {
         colour = render_state.colour;
     }
-    return colour;
+    return RenderState(nearest_hit, colour, hit_something);
 }
 
 
