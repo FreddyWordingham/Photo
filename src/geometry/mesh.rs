@@ -1,17 +1,22 @@
 use crate::geometry::{Triangle, AABB};
 
+#[derive(Debug, Clone, Copy)]
+struct TriangleData {
+    positions_indices: [u32; 3],
+    coordinate_indices: [u32; 3],
+    normal_indices: [u32; 3],
+}
+
 pub struct Mesh {
     aabb: AABB,
     positions: Vec<[f32; 3]>,
     normals: Vec<[f32; 3]>,
     coordinates: Vec<[f32; 2]>,
-    faces: Vec<Triangle>,
+    faces: Vec<TriangleData>,
 }
 
 impl Mesh {
     pub fn load(path: &str) -> Self {
-        println!("Reading mesh...: {}", path);
-
         let string = std::fs::read_to_string(path).unwrap();
 
         let (aabb, positions) = Self::init_positions(&string);
@@ -112,7 +117,7 @@ impl Mesh {
         normals
     }
 
-    fn init_faces(string: &str) -> Vec<Triangle> {
+    fn init_faces(string: &str) -> Vec<TriangleData> {
         let mut faces = Vec::new();
 
         for line in string.lines() {
@@ -127,7 +132,7 @@ impl Mesh {
                     })
                     .collect();
 
-                faces.push(Triangle {
+                faces.push(TriangleData {
                     positions_indices: [indices[0][0], indices[1][0], indices[2][0]],
                     coordinate_indices: [indices[0][1], indices[1][1], indices[2][1]],
                     normal_indices: [indices[0][2], indices[1][2], indices[2][2]],
@@ -142,6 +147,58 @@ impl Mesh {
         debug_assert!(self.is_valid());
 
         self.aabb
+    }
+
+    pub fn create_triangle(&self, index: usize) -> Triangle {
+        debug_assert!(self.is_valid());
+        debug_assert!(index < self.faces.len());
+
+        let face = &self.faces[index];
+
+        let positions = [
+            self.positions[face.positions_indices[0] as usize],
+            self.positions[face.positions_indices[1] as usize],
+            self.positions[face.positions_indices[2] as usize],
+        ];
+        let normals = [
+            self.normals[face.normal_indices[0] as usize],
+            self.normals[face.normal_indices[1] as usize],
+            self.normals[face.normal_indices[2] as usize],
+        ];
+        let coordinates = [
+            self.coordinates[face.coordinate_indices[0] as usize],
+            self.coordinates[face.coordinate_indices[1] as usize],
+            self.coordinates[face.coordinate_indices[2] as usize],
+        ];
+
+        Triangle::new(positions, coordinates, normals)
+    }
+
+    pub fn create_triangles(&self) -> Vec<Triangle> {
+        debug_assert!(self.is_valid());
+
+        let mut triangles = Vec::with_capacity(self.faces.len());
+        for face in &self.faces {
+            let positions = [
+                self.positions[face.positions_indices[0] as usize],
+                self.positions[face.positions_indices[1] as usize],
+                self.positions[face.positions_indices[2] as usize],
+            ];
+            let normals = [
+                self.normals[face.normal_indices[0] as usize],
+                self.normals[face.normal_indices[1] as usize],
+                self.normals[face.normal_indices[2] as usize],
+            ];
+            let coordinates = [
+                self.coordinates[face.coordinate_indices[0] as usize],
+                self.coordinates[face.coordinate_indices[1] as usize],
+                self.coordinates[face.coordinate_indices[2] as usize],
+            ];
+
+            triangles.push(Triangle::new(positions, coordinates, normals));
+        }
+
+        triangles
     }
 
     pub fn is_valid(&self) -> bool {

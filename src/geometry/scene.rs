@@ -6,17 +6,33 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn new() -> Self {
-        Self {
-            aabb: AABB::new([0.0, 0.0, 0.0], [0.0, 0.0, 0.0]),
-            meshes: Vec::new(),
-        }
-    }
+    pub fn new(meshes: Vec<Mesh>) -> Self {
+        debug_assert!(!meshes.is_empty());
+        debug_assert!(meshes.iter().all(|mesh| mesh.is_valid()));
 
-    pub fn load_mesh(&mut self, path: &str) {
-        let mesh = Mesh::load(path);
-        self.aabb.expand_to_accommodate(&mesh.aabb());
-        self.meshes.push(mesh);
+        let mut mins = [std::f32::MAX; 3];
+        let mut maxs = [-std::f32::MAX; 3];
+        for mesh in &meshes {
+            let mesh_mins = mesh.aabb().mins();
+            let mesh_maxs = mesh.aabb().maxs();
+
+            for (n, min) in mins.iter_mut().enumerate() {
+                if mesh_mins[n] < *min {
+                    *min = mesh_mins[n];
+                }
+            }
+
+            for (n, max) in maxs.iter_mut().enumerate() {
+                if mesh_maxs[n] > *max {
+                    *max = mesh_maxs[n];
+                }
+            }
+        }
+
+        Self {
+            aabb: AABB::new(mins, maxs),
+            meshes,
+        }
     }
 
     pub fn aabb(&self) -> AABB {
@@ -24,7 +40,7 @@ impl Scene {
     }
 
     pub fn is_valid(&self) -> bool {
-        self.meshes.iter().all(|mesh| mesh.is_valid())
+        self.aabb.is_valid() && self.meshes.iter().all(|mesh| mesh.is_valid())
     }
 
     pub fn positions_buffer(&self) -> Vec<f32> {
