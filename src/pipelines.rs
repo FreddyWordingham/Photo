@@ -349,6 +349,26 @@ impl Pipelines {
                             },
                             count: None,
                         },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 7,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 8,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        },
                     ],
                 });
 
@@ -361,30 +381,33 @@ impl Pipelines {
                     push_constant_ranges: &[],
                 });
 
-        let pipeline_a = hardware
-            .device
-            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                label: Some("Draw Scene - Pipeline A"),
-                layout: Some(&pipeline_layout),
-                module: &shader_module_a,
-                entry_point: "main",
-            });
-        let pipeline_b = hardware
-            .device
-            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                label: Some("Draw Scene - Pipeline B"),
-                layout: Some(&pipeline_layout),
-                module: &shader_module_b,
-                entry_point: "main",
-            });
-        let pipeline_c = hardware
-            .device
-            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                label: Some("Draw Scene - Pipeline C"),
-                layout: Some(&pipeline_layout),
-                module: &shader_module_c,
-                entry_point: "main",
-            });
+        let pipeline_a =
+            hardware
+                .device
+                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                    label: Some("Draw Scene - Pipeline A"),
+                    layout: Some(&pipeline_layout),
+                    module: &shader_module_a,
+                    entry_point: "main",
+                });
+        let pipeline_b =
+            hardware
+                .device
+                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                    label: Some("Draw Scene - Pipeline B"),
+                    layout: Some(&pipeline_layout),
+                    module: &shader_module_b,
+                    entry_point: "main",
+                });
+        let pipeline_c =
+            hardware
+                .device
+                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                    label: Some("Draw Scene - Pipeline C"),
+                    layout: Some(&pipeline_layout),
+                    module: &shader_module_c,
+                    entry_point: "main",
+                });
 
         let bind_group = hardware
             .device
@@ -419,6 +442,14 @@ impl Pipelines {
                     wgpu::BindGroupEntry {
                         binding: 6,
                         resource: memory.scene_normal_indices_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 7,
+                        resource: memory.bvh_data.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 8,
+                        resource: memory.bvh_indices.as_entire_binding(),
                     },
                 ],
             });

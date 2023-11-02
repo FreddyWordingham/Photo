@@ -19,6 +19,13 @@ struct Camera {
     zoom: f32,
 };
 
+struct Node {
+    mins: vec3<f32>,
+    left_child: f32,
+    maxs: vec3<f32>,
+    count: f32,
+}
+
 @group(0)
 @binding(0)
 var<uniform> settings: Settings;
@@ -46,6 +53,14 @@ var<storage, read> position_indices: array<vec3<u32>>;
 @group(0)
 @binding(6)
 var<storage, read> normal_indices: array<vec3<u32>>;
+
+@group(0)
+@binding(7)
+var<storage, read> bvh_data: array<Node>;
+
+@group(0)
+@binding(8)
+var<storage, read> bvh_indices: array<u32>;
 
 @compute
 @workgroup_size(1, 1, 1)

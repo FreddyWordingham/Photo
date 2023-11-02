@@ -32,6 +32,10 @@ impl BVHBuilder {
         data
     }
 
+    pub fn bvh_indices(&self) -> Vec<u32> {
+        self.triangle_indices.iter().map(|&i| i as u32).collect()
+    }
+
     pub fn new(scene: &Scene) -> Self {
         let triangles = scene.create_triangles();
         let triangle_count: usize = triangles.len();

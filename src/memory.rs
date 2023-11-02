@@ -1,6 +1,9 @@
 use wgpu::util::DeviceExt;
 
-use crate::{geometry::Scene, Camera, Settings};
+use crate::{
+    geometry::{BVHBuilder, Scene},
+    Camera, Settings,
+};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -53,6 +56,10 @@ pub struct Memory {
     pub scene_position_indices_buffer: wgpu::Buffer,
     pub scene_normals_buffer: wgpu::Buffer,
     pub scene_normal_indices_buffer: wgpu::Buffer,
+
+    // BVH
+    pub bvh_data: wgpu::Buffer,
+    pub bvh_indices: wgpu::Buffer,
 
     // Rendering
     pub vertex_buffer: wgpu::Buffer,
@@ -149,6 +156,23 @@ impl<'a> Memory {
                 usage: wgpu::BufferUsages::STORAGE,
             });
 
+        // BVH data
+        let mut bvh = BVHBuilder::new(&scene);
+        bvh.build();
+        let bvh_data = bvh.bvh_data();
+        let bvh_indices = bvh.bvh_indices();
+
+        let bvh_data = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("BVH Data"),
+            contents: bytemuck::cast_slice(&bvh_data),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+        let bvh_indices = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("BVH Indices"),
+            contents: bytemuck::cast_slice(&bvh_indices),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+
         // Rendering data
         let num_indices = INDICES.len() as u32;
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -175,6 +199,8 @@ impl<'a> Memory {
             scene_position_indices_buffer,
             scene_normals_buffer,
             scene_normal_indices_buffer,
+            bvh_data,
+            bvh_indices,
             vertex_buffer,
             index_buffer,
         }

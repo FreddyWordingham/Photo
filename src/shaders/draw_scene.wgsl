@@ -19,6 +19,13 @@ struct Camera {
     zoom: f32,
 };
 
+struct Node {
+    mins: vec3<f32>,
+    left_child: f32,
+    maxs: vec3<f32>,
+    count: f32,
+}
+
 @group(0)
 @binding(0)
 var<uniform> settings: Settings;
@@ -47,6 +54,14 @@ var<storage, read> position_indices: array<vec3<u32>>;
 @binding(6)
 var<storage, read> normal_indices: array<vec3<u32>>;
 
+@group(0)
+@binding(7)
+var<storage, read> bvh_data: array<Node>;
+
+@group(0)
+@binding(8)
+var<storage, read> bvh_indices: array<u32>;
+
 @compute
 @workgroup_size(1, 1, 1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
@@ -66,7 +81,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let ray_dir = normalize(
         forward_dir * camera.zoom + right_dir * (2.0 * (f32(pixel.x) / f32(settings.width)) - 1.0) * tan(fov_x / 2.0) + up_dir * (2.0 * (f32(pixel.y) / f32(settings.height)) - 1.0) * tan(camera.fov_y / 2.0)
     );
-
 
     if intersect_mesh(ray_pos, ray_dir) {
         let new_colour = vec4<f32>(0.3, 0.1, 0.3, 1.0);
