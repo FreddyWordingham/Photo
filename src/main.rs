@@ -1,5 +1,5 @@
 use photo::{
-    geometry::{Mesh, Scene, AABB},
+    geometry::{BVHBuilder, Mesh, Scene},
     run, Camera, Settings,
 };
 
@@ -27,7 +27,12 @@ async fn start() {
     );
 
     let mesh_a = Mesh::load("assets/meshes/a.obj");
-    let scene = Scene::new(vec![mesh_a]);
+    let mesh_b = Mesh::load("assets/meshes/b.obj");
+    let mesh_c = Mesh::load("assets/meshes/c.obj");
+    let scene = Scene::new(vec![mesh_a, mesh_b, mesh_c]);
+    let mut bvh = BVHBuilder::new(&scene);
+    bvh.build();
+    println!("bvh data: {:?}", bvh.bvh_data());
 
     let settings = Settings::new(resolution);
 

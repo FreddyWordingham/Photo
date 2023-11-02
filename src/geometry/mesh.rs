@@ -149,6 +149,12 @@ impl Mesh {
         self.aabb
     }
 
+    pub fn num_triangles(&self) -> usize {
+        debug_assert!(self.is_valid());
+
+        self.faces.len()
+    }
+
     pub fn create_triangle(&self, index: usize) -> Triangle {
         debug_assert!(self.is_valid());
         debug_assert!(index < self.faces.len());

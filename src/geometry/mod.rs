@@ -5,7 +5,7 @@ pub mod scene;
 pub mod triangle;
 
 pub use axis_aligned_bounding_box::AABB;
-pub use bounding_view_hierarchy::BVH;
+pub use bounding_view_hierarchy::BVHBuilder;
 pub use mesh::Mesh;
 pub use scene::Scene;
 pub use triangle::Triangle;

@@ -1,4 +1,4 @@
-use crate::geometry::{Mesh, AABB};
+use crate::geometry::{Mesh, Triangle, AABB};
 
 pub struct Scene {
     aabb: AABB,
@@ -37,6 +37,19 @@ impl Scene {
 
     pub fn aabb(&self) -> AABB {
         self.aabb
+    }
+
+    pub fn meshes(&self) -> &[Mesh] {
+        &self.meshes
+    }
+
+    pub fn create_triangles(&self) -> Vec<Triangle> {
+        debug_assert!(self.is_valid());
+
+        self.meshes
+            .iter()
+            .flat_map(|mesh| mesh.create_triangles())
+            .collect()
     }
 
     pub fn is_valid(&self) -> bool {

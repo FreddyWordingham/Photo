@@ -3,8 +3,8 @@ use crate::geometry::AABB;
 #[derive(Debug, Clone, Copy)]
 pub struct Triangle {
     positions: [[f32; 3]; 3],
-    coordinates: [[f32; 2]; 3],
-    normals: [[f32; 3]; 3],
+    _coordinates: [[f32; 2]; 3],
+    _normals: [[f32; 3]; 3],
 }
 
 impl Triangle {
@@ -15,9 +15,21 @@ impl Triangle {
     ) -> Self {
         Self {
             positions,
-            coordinates,
-            normals,
+            _coordinates: coordinates,
+            _normals: normals,
         }
+    }
+
+    pub fn positions(&self) -> &[[f32; 3]; 3] {
+        &self.positions
+    }
+
+    pub fn centre(&self) -> [f32; 3] {
+        [
+            (self.positions[0][0] + self.positions[1][0] + self.positions[2][0]) / 3.0,
+            (self.positions[0][1] + self.positions[1][1] + self.positions[2][1]) / 3.0,
+            (self.positions[0][2] + self.positions[1][2] + self.positions[2][2]) / 3.0,
+        ]
     }
 
     fn edges(&self) -> [[f32; 3]; 3] {
