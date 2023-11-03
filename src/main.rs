@@ -9,7 +9,7 @@ fn main() {
 }
 
 async fn start() {
-    let resolution = [128, 128];
+    let resolution = [512, 512];
 
     let eye_position = [0.0, 5.0, 3.0];
     let look_at = [0.0, 0.0, 0.0];

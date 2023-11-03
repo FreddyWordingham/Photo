@@ -1,5 +1,6 @@
 struct Sample {
     hit: bool,
+    normal: vec3<f32>,
     distance: f32,
     index: u32,
 }
@@ -22,12 +23,12 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         let light_ray = Ray(hit_pos, sun_dir);
 
         let light_sample = trace(light_ray);
-        var lightness = 1.0;
+        var lightness = dot(light_ray.direction, sample.normal);
 
         if light_sample.hit {
             var colour = vec4<f32>(0.0, 0.0, 0.0, 1.0);
             if light_sample.distance < 2.0 {
-                lightness = (light_sample.distance / 2.0) * (light_sample.distance / 2.0);
+                lightness *= (light_sample.distance / 2.0) * (light_sample.distance / 2.0);
             }
         }
 
@@ -43,7 +44,7 @@ fn trace(ray: Ray) -> Sample {
     var nearest_hit: f32 = 9999.0;
     var hit_something: bool = false;
 
-    var sample = Sample(false, 0.0, 0u);
+    var sample = Sample(false, vec3<f32>(0.0, 0.0, 0.0), 0.0, 0u);
 
     var node: BVHNode = bvh_data[0];
     var stack: array<BVHNode, 15>;
@@ -134,11 +135,9 @@ fn hit_aabb(ray: Ray, node: BVHNode) -> f32 {
     var t_max: f32 = min(min(tMax.x, tMax.y), tMax.z);
 
     if (t_min > t_max || t_max < 0.0) {
-        return 99999.0;
+        return 9999.0;
     }
-    else {
-        return t_min;
-    }
+    return t_min;
 }
 
 fn hit_triangle(ray: Ray, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>, index: u32) -> Sample {
@@ -148,8 +147,7 @@ fn hit_triangle(ray: Ray, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>, index: u3
     let a = dot(e1, h);
 
     if a > -0.00001 && a < 0.00001 {
-        let s = Sample(false, 0.0, 0u);
-        return s;
+        return Sample(false, vec3<f32>(0.0, 0.0, 0.0), 0.0, 0u);
     }
 
     let f = 1.0 / a;
@@ -157,21 +155,22 @@ fn hit_triangle(ray: Ray, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>, index: u3
     let u = f * dot(s, h);
 
     if u < 0.0 || u > 1.0 {
-        return Sample(false, 0.0, 0u);
+        return Sample(false, vec3<f32>(0.0, 0.0, 0.0), 0.0, 0u);
     }
 
     let q = cross(s, e1);
     let v = f * dot(ray.direction, q);
 
     if v < 0.0 || u + v > 1.0 {
-        return Sample(false, 0.0, 0u);
+        return Sample(false, vec3<f32>(0.0, 0.0, 0.0), 0.0, 0u);
     }
 
     let t = f * dot(e2, q);
 
     if t > 0.00001 {
-        return Sample(true, t, index);
+        let normal = normalize(cross(e1, e2));
+        return Sample(true, normal, t, index);
     }
 
-    return Sample(false, 0.0, 0u);
+    return Sample(false, vec3<f32>(0.0, 0.0, 0.0), 0.0, 0u);
 }
