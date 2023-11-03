@@ -2,6 +2,8 @@
 name = "photo"
 version = "0.1.1"
 edition = "2021"
+description = "Wavefront OBJ viewer"
+license = "MIT"
 
 [dependencies]
 bytemuck = { version = "1.14", features = ["derive"] }
