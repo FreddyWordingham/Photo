@@ -26,6 +26,10 @@ impl Pipelines {
             Self::init_draw_bind_group_and_pipelines(
                 &[
                     // ("scene",c ShaderProgram::draw_scene()),
+                    (
+                        "reflective objects",
+                        ShaderProgram::draw_reflective_objects(),
+                    ),
                     ("objects", ShaderProgram::draw_objects()),
                     ("normals", ShaderProgram::draw_normals()),
                     ("smooth_normals", ShaderProgram::draw_smooth_normals()),

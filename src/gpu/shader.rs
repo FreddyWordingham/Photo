@@ -12,6 +12,7 @@ const DISPLAY_MAIN: &str = include_str!("../shaders/display.wgsl");
 const BACKGROUND_MAIN: &str = include_str!("../shaders/draw_background.wgsl");
 const SCENE_MAIN: &str = include_str!("../shaders/draw_scene.wgsl");
 const OBJECTS_MAIN: &str = include_str!("../shaders/draw_objects.wgsl");
+const REFLECTIVE_OBJECTS_MAIN: &str = include_str!("../shaders/draw_reflective_objects.wgsl");
 const NORMALS_MAIN: &str = include_str!("../shaders/draw_normals.wgsl");
 const SMOOTH_NORMALS_MAIN: &str = include_str!("../shaders/draw_smooth_normals.wgsl");
 
@@ -41,6 +42,19 @@ impl ShaderProgram {
             SETTINGS_UNIFORM,
             CAMERA_UNIFORM,
             SCENE_MAIN,
+        ]
+        .join("\n")
+    }
+
+    pub fn draw_reflective_objects() -> String {
+        [
+            BINDINGS_DRAW,
+            COLOURS_UTILS,
+            BVH_NODE,
+            RAY,
+            SETTINGS_UNIFORM,
+            CAMERA_UNIFORM,
+            REFLECTIVE_OBJECTS_MAIN,
         ]
         .join("\n")
     }
