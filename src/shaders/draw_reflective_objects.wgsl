@@ -140,11 +140,17 @@ fn trace(ray: Ray) -> Sample {
             for (var i: u32 = 0u; i < count; i++) {
                 let tri_index: vec3<u32> = position_indices[bvh_indices[contents + i]];
 
+                let norms = normal_indices[bvh_indices[contents + i]];
+                let n0 = normals[norms.x].xyz;
+                let n1 = normals[norms.y].xyz;
+                let n2 = normals[norms.z].xyz;
+
                 var new_sample = hit_triangle(
                     ray,
                     vec3<f32>(positions[tri_index.x].xyz),
                     vec3<f32>(positions[tri_index.y].xyz),
                     vec3<f32>(positions[tri_index.z].xyz),
+                    n0,n1,n2,
                     u32(positions[tri_index.x].w)
                 );
 
@@ -188,7 +194,7 @@ fn hit_aabb(ray: Ray, node: BVHNode) -> f32 {
     return t_min;
 }
 
-fn hit_triangle(ray: Ray, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>, index: u32) -> Sample {
+fn hit_triangle(ray: Ray, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>, n0: vec3<f32>, n1: vec3<f32>, n2: vec3<f32>, index: u32) -> Sample {
     let e2 = p2 - p0;
     let e1 = p1 - p0;
     let h = cross(ray.direction, e2);
@@ -216,8 +222,9 @@ fn hit_triangle(ray: Ray, p0: vec3<f32>, p1: vec3<f32>, p2: vec3<f32>, index: u3
     let t = f * dot(e2, q);
 
     if t > 0.00001 {
-        let normal = normalize(cross(e1, e2));
-        return Sample(true, normal, t, index);
+        // let normal = normalize(cross(e1, e2));
+        let n = n0 * (1.0 - u - v) + n1 * u + n2 * v;
+        return Sample(true, normalize(n), t, index);
     }
 
     return Sample(false, vec3<f32>(0.0, 0.0, 0.0), 0.0, 0u);
