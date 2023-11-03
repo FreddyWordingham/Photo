@@ -11,7 +11,7 @@ var<uniform> camera: Camera;
 var texture: texture_storage_2d<rgba8unorm, read_write>;
 
 @compute
-@workgroup_size(1, 1, 1)
+@workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let n = global_id.x;
     let m = global_id.y;

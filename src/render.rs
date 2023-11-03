@@ -95,8 +95,8 @@ impl Render {
             compute_pass.set_bind_group(0, &self.pipelines.draw_background_bind_group, &[]);
             compute_pass.set_pipeline(&self.pipelines.draw_background_pipeline);
             compute_pass.dispatch_workgroups(
-                self.settings.resolution[0],
-                self.settings.resolution[1],
+                self.settings.resolution[0] / 8,
+                self.settings.resolution[1] / 8,
                 1,
             );
         }
@@ -110,8 +110,8 @@ impl Render {
             compute_pass
                 .set_pipeline(&self.pipelines.draw_scene_pipelines[draw_scene_pipeline_index]);
             compute_pass.dispatch_workgroups(
-                self.settings.resolution[0],
-                self.settings.resolution[1],
+                self.settings.resolution[0] / 8,
+                self.settings.resolution[1] / 8,
                 1,
             );
         }
