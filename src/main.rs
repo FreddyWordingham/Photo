@@ -9,7 +9,7 @@ fn main() {
 }
 
 async fn start() {
-    let resolution = [64 * 12, 64 * 12];
+    let resolution = [64 * 8, 64 * 8];
 
     let eye_position = [0.0, 5.0, 3.0];
     let look_at = [0.0, 0.0, 0.0];
@@ -27,16 +27,17 @@ async fn start() {
         zoom,
     );
 
-    // let mesh_icosphere = Mesh::load("assets/meshes/icosphere.obj");
+    let mesh_icosphere = Mesh::load("assets/meshes/icosphere.obj");
     // let mesh_a = Mesh::load("assets/meshes/a.obj");
     // let mesh_b = Mesh::load("assets/meshes/b.obj");
     // let mesh_c = Mesh::load("assets/meshes/c.obj");
-    let mesh_cone = Mesh::load("assets/meshes/cone.obj");
+    // let mesh_cone = Mesh::load("assets/meshes/cone.obj");
     // let mesh_cubes = Mesh::load("assets/meshes/cubes.obj");
+    let mesh_ground = Mesh::load("assets/meshes/ground.obj");
     let mesh_torus = Mesh::load("assets/meshes/torus.obj");
     // let mesh_planet = Mesh::load("assets/meshes/planet.obj");
-    // let mesh_tree = Mesh::load("assets/meshes/tree.obj");
-    let scene = Scene::new(vec![mesh_torus, mesh_cone]);
+    let mesh_tree = Mesh::load("assets/meshes/tree.obj");
+    let scene = Scene::new(vec![mesh_icosphere, mesh_torus, mesh_ground, mesh_tree]);
 
     let settings = Settings::new(resolution);
 

@@ -68,6 +68,11 @@ impl BVHBuilder {
         self.nodes_used = 1;
 
         self.update_bounds(0);
+        println!("{} triangles", self.triangle_count);
+        println!("{} nodes", self.nodes_used);
+        println!("{:?}", self.nodes[0].mins);
+        println!("{:?}", self.nodes[0].maxs);
+
         self.subdivide(0);
 
         self.nodes.truncate(self.nodes_used);

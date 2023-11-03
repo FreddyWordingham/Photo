@@ -1,6 +1,6 @@
 pub struct Settings {
     pub resolution: [u32; 2],
-    padding: [u32; 2],
+    pub offsets: [u32; 2],
 }
 
 impl Settings {
@@ -9,7 +9,7 @@ impl Settings {
 
         Self {
             resolution,
-            padding: [0; 2],
+            offsets: [0; 2],
         }
     }
 
@@ -19,7 +19,7 @@ impl Settings {
 
     pub fn as_buffer(&self) -> Vec<u32> {
         let mut buffer = self.resolution.to_vec();
-        buffer.append(self.padding.to_vec().as_mut());
+        buffer.extend_from_slice(&self.offsets);
 
         buffer
     }

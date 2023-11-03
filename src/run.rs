@@ -66,6 +66,17 @@ pub async fn with_window(resolution: [u32; 2], settings: Settings, camera: Camer
             },
             winit::event::Event::AboutToWait => {
                 render.update();
+
+                render.settings.offsets[0] += 1;
+                if render.settings.offsets[0] >= 8 {
+                    render.settings.offsets[0] = 0;
+                    render.settings.offsets[1] += 1;
+                    if render.settings.offsets[1] >= 8 {
+                        render.settings.offsets[1] = 0;
+                    }
+                }
+                println!("Offsets: {:?}", render.settings.offsets);
+
                 controls.update_camera(&mut render.camera);
                 render
                     .render(controls.draw_scene_pipeline_index)

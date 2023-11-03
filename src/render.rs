@@ -45,7 +45,13 @@ impl Render {
 
     pub fn update(&self) {}
 
-    pub fn render(&self, draw_scene_pipeline_index: usize) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self, draw_scene_pipeline_index: usize) -> Result<(), wgpu::SurfaceError> {
+        self.hardware.queue.write_buffer(
+            &self.memory.settings_uniform,
+            0,
+            bytemuck::cast_slice(&self.settings.as_buffer()),
+        );
+
         self.hardware.queue.write_buffer(
             &self.memory.camera_uniform,
             0,
@@ -65,41 +71,41 @@ impl Render {
                     label: Some("Render Encoder"),
                 });
 
-        {
-            encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Clear Texture"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &self.memory.display_view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.0,
-                            g: 0.0,
-                            b: 0.0,
-                            a: 1.0,
-                        }),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
-                occlusion_query_set: None,
-                timestamp_writes: None,
-            });
-        }
+        // {
+        //     encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        //         label: Some("Clear Texture"),
+        //         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+        //             view: &self.memory.display_view,
+        //             resolve_target: None,
+        //             ops: wgpu::Operations {
+        //                 load: wgpu::LoadOp::Clear(wgpu::Color {
+        //                     r: 0.0,
+        //                     g: 0.0,
+        //                     b: 0.0,
+        //                     a: 1.0,
+        //                 }),
+        //                 store: wgpu::StoreOp::Store,
+        //             },
+        //         })],
+        //         depth_stencil_attachment: None,
+        //         occlusion_query_set: None,
+        //         timestamp_writes: None,
+        //     });
+        // }
 
-        {
-            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some("Draw Background"),
-                timestamp_writes: None,
-            });
-            compute_pass.set_bind_group(0, &self.pipelines.draw_background_bind_group, &[]);
-            compute_pass.set_pipeline(&self.pipelines.draw_background_pipeline);
-            compute_pass.dispatch_workgroups(
-                self.settings.resolution[0] / 8,
-                self.settings.resolution[1] / 8,
-                1,
-            );
-        }
+        // {
+        //     let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+        //         label: Some("Draw Background"),
+        //         timestamp_writes: None,
+        //     });
+        //     compute_pass.set_bind_group(0, &self.pipelines.draw_background_bind_group, &[]);
+        //     compute_pass.set_pipeline(&self.pipelines.draw_background_pipeline);
+        //     compute_pass.dispatch_workgroups(
+        //         self.settings.resolution[0] / 8,
+        //         self.settings.resolution[1] / 8,
+        //         1,
+        //     );
+        // }
 
         {
             let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -110,8 +116,8 @@ impl Render {
             compute_pass
                 .set_pipeline(&self.pipelines.draw_scene_pipelines[draw_scene_pipeline_index]);
             compute_pass.dispatch_workgroups(
-                self.settings.resolution[0] / 8,
-                self.settings.resolution[1] / 8,
+                self.settings.resolution[0] / 64,
+                self.settings.resolution[1] / 64,
                 1,
             );
         }
