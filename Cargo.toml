@@ -1,14 +1,8 @@
 [package]
 name = "photo"
-version = "0.1.1"
+version = "1.0.0"
 edition = "2021"
-description = "Wavefront OBJ viewer"
+description = "Render high quality images from a scene description"
 license = "MIT"
 
 [dependencies]
-bytemuck = { version = "1.14", features = ["derive"] }
-nalgebra = "0.32.3"
-pollster = "0.3"
-raw-window-handle = "0.6"
-wgpu = "0.18"
-winit = { version = "0.29", features = ["rwh_05"] }
