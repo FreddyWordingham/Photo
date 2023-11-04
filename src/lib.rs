@@ -1,11 +1,9 @@
+mod sample;
+mod scene;
 mod settings;
+mod tile;
 
+pub use sample::Sample;
+pub use scene::Scene;
 pub use settings::Settings;
-
-pub fn run(settings: &Settings) {
-    debug_assert!(settings.are_valid());
-
-    println!("Hello, world!");
-
-    println!("Settings: {:?}", settings);
-}
+pub use tile::Tile;
