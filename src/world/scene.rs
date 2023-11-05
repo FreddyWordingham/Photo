@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter, Result};
+
 /// Scene to be rendered.
 pub struct Scene {}
 
@@ -13,8 +15,8 @@ impl Scene {
     }
 }
 
-impl std::fmt::Display for Scene {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for Scene {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "valid:                         {}", self.is_valid())
     }
 }

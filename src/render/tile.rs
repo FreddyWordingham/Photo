@@ -1,6 +1,11 @@
+use image::{ImageBuffer, Rgba};
 use ndarray::prelude::*;
+use std::{
+    fmt::{Display, Formatter, Result},
+    path::Path,
+};
 
-use crate::{render::Sample, utility};
+use crate::{render::Sample, utility::terminal};
 
 /// A tile is a rectangular region of the total image.
 pub struct Tile {
@@ -24,7 +29,7 @@ impl Tile {
         }
     }
 
-    pub fn save(&self, output_directory: &std::path::Path) {
+    pub fn save(&self, output_directory: &Path) {
         let image_name = format!(
             "tile_{:03}_{:03}.png",
             self.tile_index[0], self.tile_index[1]
@@ -41,7 +46,7 @@ impl Tile {
             .collect();
 
         // Write image with image library.
-        let image = image::ImageBuffer::<image::Rgba<u8>, _>::from_raw(
+        let image = ImageBuffer::<Rgba<u8>, _>::from_raw(
             self.data.dim().1 as u32,
             self.data.dim().0 as u32,
             raw_data,
@@ -52,8 +57,8 @@ impl Tile {
     }
 }
 
-impl std::fmt::Display for Tile {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for Tile {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let (rows, columns) = self.data.dim();
         for row in 0..rows {
             writeln!(f, "").unwrap();
@@ -61,7 +66,7 @@ impl std::fmt::Display for Tile {
                 write!(
                     f,
                     "{}",
-                    utility::terminal::colour_text("██", self.data[(row, column)].colour)
+                    terminal::colour_text("██", self.data[(row, column)].colour)
                 )
                 .unwrap();
             }

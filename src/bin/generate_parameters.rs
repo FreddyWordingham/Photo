@@ -8,6 +8,7 @@ use photo::{
 fn main() {
     let settings_filepath = setup::read_command_line_arguments();
 
+    let print_tiles_to_terminal = false;
     let resolution = [1080, 1920]; // [rows, columns]
     let tile_resolution = [108, 192]; // [rows, columns
     let cameras = vec![CameraSettings {
@@ -17,7 +18,12 @@ fn main() {
         field_of_view: 90.0,          // [degrees]
     }];
 
-    let settings = Settings::new(resolution, tile_resolution, cameras);
+    let settings = Settings::new(
+        print_tiles_to_terminal,
+        resolution,
+        tile_resolution,
+        cameras,
+    );
 
     if !settings.is_valid() {
         panic!("ERROR! Refusal to generate settings file due to invalid settings.");

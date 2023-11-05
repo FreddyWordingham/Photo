@@ -1,3 +1,6 @@
+use indicatif::ProgressBar;
+use std::path::Path;
+
 use crate::{
     input::Settings,
     render::{Sample, Tile},
@@ -5,18 +8,14 @@ use crate::{
 };
 
 /// Render the image in an array of tiles.
-pub fn render_image_in_tiles(
-    scene: &Scene,
-    settings: &Settings,
-    output_directory: &std::path::Path,
-) {
+pub fn render_image_in_tiles(scene: &Scene, settings: &Settings, output_directory: &Path) {
     debug_assert!(scene.is_valid());
     debug_assert!(settings.is_valid());
 
     let total_num_tiles = settings.total_num_tiles();
     let num_tile_rows = settings.num_tiles()[0];
 
-    let pb = indicatif::ProgressBar::new(total_num_tiles as u64);
+    let pb = ProgressBar::new(total_num_tiles as u64);
     pb.inc(0);
     (0..total_num_tiles).into_iter().for_each(|n| {
         let row = n % num_tile_rows;
@@ -24,7 +23,6 @@ pub fn render_image_in_tiles(
         let tile = render_tile(scene, settings, [row, column]);
         tile.save(output_directory);
         pb.inc(1);
-        std::thread::sleep(std::time::Duration::from_millis(100));
     });
     pb.finish_with_message("Render complete");
 }
@@ -38,7 +36,9 @@ fn render_tile(scene: &Scene, settings: &Settings, tile_index: [usize; 2]) -> Ti
     tile.data
         .par_mapv_inplace(|sample| run_sample(settings, scene, tile_index, sample));
 
-    println!("{}", tile);
+    if settings.print_tiles_to_terminal() {
+        println!("{}", tile);
+    }
 
     tile
 }

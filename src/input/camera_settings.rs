@@ -1,9 +1,10 @@
 use nalgebra::Vector3;
+use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 
 use crate::world::Camera;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CameraSettings {
     /// Name of the camera.
     pub name: String,
@@ -18,12 +19,23 @@ pub struct CameraSettings {
 impl CameraSettings {
     /// Check that the current combination of values are valid.
     pub fn is_valid(&self) -> bool {
-        self.field_of_view > 0.0 && self.field_of_view < 180.0
+        self.position.iter().all(|p| p.is_finite())
+            && self.target.iter().all(|t| t.is_finite())
+            && self
+                .position
+                .iter()
+                .zip(self.target.iter())
+                .fold(0.0, |acc, (p, t)| acc + (p - t).powi(2))
+                > 0.0
+            && self.field_of_view > 0.0
+            && self.field_of_view < 180.0
     }
 
     /// Build a camera from the current settings.
     pub fn build_camera(&self) -> Camera {
-        crate::world::Camera::new(
+        debug_assert!(self.is_valid());
+
+        Camera::new(
             self.name.clone(),
             Vector3::from_row_slice(&self.position),
             Vector3::from_row_slice(&self.target),

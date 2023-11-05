@@ -1,8 +1,13 @@
+use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter, Result};
+
 use crate::input::CameraSettings;
 
 /// Runtime rendering settings.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
+    /// Whether to print the tiles to the terminal as they are rendered.
+    print_tiles_to_terminal: bool,
     /// The resolution of the image in pixels. [rows, columns]
     resolution: [usize; 2],
     /// The resolution of each tile in pixels. [rows, columns]
@@ -14,6 +19,7 @@ pub struct Settings {
 impl Settings {
     /// Construct a new Settings object.
     pub fn new(
+        print_tiles_to_terminal: bool,
         resolution: [usize; 2],
         tile_resolution: [usize; 2],
         cameras: Vec<CameraSettings>,
@@ -25,8 +31,10 @@ impl Settings {
         debug_assert!(resolution[0] % tile_resolution[0] == 0);
         debug_assert!(resolution[1] % tile_resolution[1] == 0);
         debug_assert!(!cameras.is_empty());
+        debug_assert!(cameras.iter().all(|c| c.is_valid()));
 
         Self {
+            print_tiles_to_terminal,
             resolution,
             tile_resolution,
             cameras,
@@ -42,6 +50,12 @@ impl Settings {
             && self.resolution[0] % self.tile_resolution[0] == 0
             && self.resolution[1] % self.tile_resolution[1] == 0
             && !self.cameras.is_empty()
+            && self.cameras.iter().all(|c| c.is_valid())
+    }
+
+    /// Get whether to print the tiles to the terminal as they are rendered.
+    pub fn print_tiles_to_terminal(&self) -> bool {
+        self.print_tiles_to_terminal
     }
 
     /// Calculate the number of tiles in each dimension.
@@ -69,9 +83,15 @@ impl Settings {
     }
 }
 
-impl std::fmt::Display for Settings {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for Settings {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         writeln!(f, "valid:                         {}", self.is_valid())?;
+
+        writeln!(
+            f,
+            "print tiles to terminal:       {}",
+            self.print_tiles_to_terminal
+        )?;
 
         writeln!(
             f,
@@ -88,35 +108,18 @@ impl std::fmt::Display for Settings {
         )?;
 
         let [num_x_tiles, num_y_tiles] = self.num_tiles();
-        write!(
+        writeln!(
             f,
             "number of tiles: {:>11} = {} tiles",
             format!("[{}, {}]", num_x_tiles, num_y_tiles),
             num_x_tiles * num_y_tiles
         )?;
 
-        for camera in &self.cameras {
-            writeln!(f)?;
-            writeln!(f, "camera: {}", camera.name)?;
-            writeln!(
-                f,
-                "    position:  {:>16} = {}",
-                format!(
-                    "[{}, {}, {}]",
-                    camera.position[0], camera.position[1], camera.position[2]
-                ),
-                nalgebra::Vector3::from_row_slice(&camera.position)
-            )?;
-            writeln!(
-                f,
-                "    target:    {:>16}",
-                format!(
-                    "[{}, {}, {}]",
-                    camera.target[0], camera.target[1], camera.target[2]
-                ),
-            )?;
-            writeln!(f, "    fov:       {} degrees", camera.field_of_view)?;
-        }
+        write!(
+            f,
+            "number of cameras:     {:>9} cameras",
+            self.cameras.len()
+        )?;
 
         Ok(())
     }
