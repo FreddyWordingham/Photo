@@ -1,5 +1,4 @@
 use ndarray::prelude::*;
-use std::fmt::Display;
 
 use crate::Sample;
 
@@ -53,7 +52,7 @@ impl Tile {
     }
 }
 
-impl Display for Tile {
+impl std::fmt::Display for Tile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let (rows, columns) = self.data.dim();
         for row in 0..rows {

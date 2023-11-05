@@ -1,8 +1,8 @@
 resolution:
-  - 8
-  - 24
+  - 80
+  - 240
 tile_resolution:
   - 4
-  - 12
+  - 8
 
 display_in_terminal: false

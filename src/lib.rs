@@ -1,6 +1,8 @@
+pub mod run;
 mod sample;
 mod scene;
 mod settings;
+pub mod setup;
 mod tile;
 
 pub use sample::Sample;

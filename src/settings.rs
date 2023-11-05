@@ -1,8 +1,5 @@
-use serde::{Deserialize, Serialize};
-use std::fmt::Display;
-
 /// Runtime rendering settings.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     /// The resolution of the image in pixels. [rows, columns]
     pub resolution: [usize; 2],
@@ -68,7 +65,7 @@ impl Settings {
     }
 }
 
-impl Display for Settings {
+impl std::fmt::Display for Settings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "valid:                         {}", self.is_valid())?;
 
