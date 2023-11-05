@@ -1,12 +1,20 @@
 print_tiles_to_terminal: false
-resolution: [600, 800]
-tile_resolution: [25, 50]
 cameras:
-  - name: Camera 1
-    position: [10.0, 7.0, 5.0]
+  camera 0:
+    position: [10.0, 5.0, 7.0]
     target: [0.0, 0.0, 0.0]
     field_of_view: 90.0
-  - name: Camera 2
-    position: [-20.0, 0.0, 0.0]
+    resolution: [1080, 1920]
+    tile_resolution: [108, 192]
+  camera 1:
+    position: [10.0, 0.0, 0.0]
     target: [0.0, 0.0, 0.0]
     field_of_view: 90.0
+    resolution: [1080, 1920]
+    tile_resolution: [108, 192]
+  camera 2:
+    position: [10.0, 0.0, 20.0]
+    target: [0.0, 0.0, 0.0]
+    field_of_view: 90.0
+    resolution: [1080, 1920]
+    tile_resolution: [108, 192]

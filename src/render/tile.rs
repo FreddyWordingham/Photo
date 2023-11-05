@@ -17,19 +17,19 @@ pub struct Tile {
 
 impl Tile {
     /// Construct a new Tile object.
-    pub fn new(tile_index: [usize; 2], resolution: [usize; 2]) -> Self {
+    pub fn _new(tile_index: [usize; 2], resolution: [usize; 2]) -> Self {
         debug_assert!(resolution[0] > 0);
         debug_assert!(resolution[1] > 0);
 
         Self {
             tile_index,
             data: Array2::<Sample>::from_shape_fn(resolution, |sample_index| {
-                Sample::new(sample_index.into())
+                Sample::_new(sample_index.into())
             }),
         }
     }
 
-    pub fn save(&self, output_directory: &Path) {
+    pub fn _save(&self, output_directory: &Path) {
         let image_name = format!(
             "tile_{:03}_{:03}.png",
             self.tile_index[0], self.tile_index[1]
