@@ -1,0 +1,17 @@
+resolution:
+- 1080
+- 1920
+tile_resolution:
+- 108
+- 192
+cameras:
+- name: Camera 1
+  position:
+  - 0.0
+  - 0.0
+  - 0.0
+  target:
+  - 0.0
+  - 0.0
+  - 0.0
+  field_of_view: 90.0

@@ -1,8 +1,7 @@
-resolution:
-  - 80
-  - 240
-tile_resolution:
-  - 4
-  - 8
-
-display_in_terminal: false
+resolution: [600, 800]
+tile_resolution: [25, 50]
+cameras:
+  - name: Camera 1
+    position: [0.0, 0.0, 0.0]
+    target: [0.0, 0.0, 0.0]
+    field_of_view: 90.0

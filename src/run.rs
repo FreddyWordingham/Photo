@@ -1,7 +1,7 @@
 use crate::{
+    input::Settings,
     render::{Sample, Tile},
     world::Scene,
-    Settings,
 };
 
 /// Render the image in an array of tiles.
@@ -24,7 +24,9 @@ pub fn render_image_in_tiles(
         let tile = render_tile(scene, settings, [row, column]);
         tile.save(output_directory);
         pb.inc(1);
+        std::thread::sleep(std::time::Duration::from_millis(100));
     });
+    pb.finish_with_message("Render complete");
 }
 
 /// Render a single tile.
@@ -36,9 +38,7 @@ fn render_tile(scene: &Scene, settings: &Settings, tile_index: [usize; 2]) -> Ti
     tile.data
         .par_mapv_inplace(|sample| run_sample(settings, scene, tile_index, sample));
 
-    if settings.display_in_terminal {
-        println!("{}", tile);
-    }
+    println!("{}", tile);
 
     tile
 }
@@ -53,13 +53,13 @@ fn run_sample(
     debug_assert!(scene.is_valid());
     debug_assert!(settings.is_valid());
 
-    let pixel_x = sample.sample_index[1] + (tile_index[1] * settings.tile_resolution[1]);
-    let pixel_y = sample.sample_index[0] + (tile_index[0] * settings.tile_resolution[0]);
+    let row = sample.sample_index[0] + (tile_index[0] * settings.tile_resolution()[0]);
+    let column = sample.sample_index[1] + (tile_index[1] * settings.tile_resolution()[1]);
 
-    if pixel_x == pixel_y {
+    if row == column {
         sample.colour.blue = 1.0;
         sample.colour.alpha = 1.0;
-    } else if pixel_x == (2 * pixel_y) {
+    } else if row == (2 * column) {
         sample.colour.green = 1.0;
         sample.colour.alpha = 1.0;
     } else {

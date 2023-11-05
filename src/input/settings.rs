@@ -1,20 +1,22 @@
+use crate::input::CameraSettings;
+
 /// Runtime rendering settings.
-#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     /// The resolution of the image in pixels. [rows, columns]
-    pub resolution: [usize; 2],
+    resolution: [usize; 2],
     /// The resolution of each tile in pixels. [rows, columns]
-    pub tile_resolution: [usize; 2],
-    /// Display the tiles in the terminal as they are rendered.
-    pub display_in_terminal: bool,
+    tile_resolution: [usize; 2],
+    /// List of cameras to render from.
+    cameras: Vec<CameraSettings>,
 }
 
 impl Settings {
     /// Construct a new Settings object.
-    pub const fn new(
+    pub fn new(
         resolution: [usize; 2],
         tile_resolution: [usize; 2],
-        display_in_terminal: bool,
+        cameras: Vec<CameraSettings>,
     ) -> Self {
         debug_assert!(resolution[0] > 0);
         debug_assert!(resolution[1] > 0);
@@ -22,11 +24,12 @@ impl Settings {
         debug_assert!(tile_resolution[1] > 0);
         debug_assert!(resolution[0] % tile_resolution[0] == 0);
         debug_assert!(resolution[1] % tile_resolution[1] == 0);
+        debug_assert!(!cameras.is_empty());
 
         Self {
             resolution,
             tile_resolution,
-            display_in_terminal,
+            cameras,
         }
     }
 
@@ -38,6 +41,7 @@ impl Settings {
             && self.tile_resolution[1] > 0
             && self.resolution[0] % self.tile_resolution[0] == 0
             && self.resolution[1] % self.tile_resolution[1] == 0
+            && !self.cameras.is_empty()
     }
 
     /// Calculate the number of tiles in each dimension.
@@ -89,6 +93,31 @@ impl std::fmt::Display for Settings {
             "number of tiles: {:>11} = {} tiles",
             format!("[{}, {}]", num_x_tiles, num_y_tiles),
             num_x_tiles * num_y_tiles
-        )
+        )?;
+
+        for camera in &self.cameras {
+            writeln!(f)?;
+            writeln!(f, "camera: {}", camera.name)?;
+            writeln!(
+                f,
+                "    position:  {:>16} = {}",
+                format!(
+                    "[{}, {}, {}]",
+                    camera.position[0], camera.position[1], camera.position[2]
+                ),
+                nalgebra::Vector3::from_row_slice(&camera.position)
+            )?;
+            writeln!(
+                f,
+                "    target:    {:>16}",
+                format!(
+                    "[{}, {}, {}]",
+                    camera.target[0], camera.target[1], camera.target[2]
+                ),
+            )?;
+            writeln!(f, "    fov:       {} degrees", camera.field_of_view)?;
+        }
+
+        Ok(())
     }
 }

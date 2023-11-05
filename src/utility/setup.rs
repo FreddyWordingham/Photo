@@ -1,4 +1,4 @@
-use crate::Settings;
+use crate::input::Settings;
 
 /// Read the command line arguments.
 /// Specifically, read the path to the settings file.
@@ -27,6 +27,13 @@ pub fn load_settings(settings_filepath: &std::path::Path) -> Settings {
     }
 
     settings
+}
+
+pub fn save_settings(settings: &Settings, settings_filepath: &std::path::Path) {
+    let file_string =
+        serde_yaml::to_string(&settings).expect("Unable to serialise settings to string");
+
+    std::fs::write(settings_filepath, file_string).expect("Unable to write settings file");
 }
 
 /// Create the output directory if it does not already exist.
