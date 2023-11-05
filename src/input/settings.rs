@@ -7,7 +7,7 @@ use std::{
     process::exit,
 };
 
-use crate::input::{CameraSettings, LightingSettings, SceneSettings};
+use crate::input::{CameraBuilder, LightingBuilder, SceneBuilder};
 
 /// Runtime rendering settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,20 +15,20 @@ pub struct Settings {
     /// Whether to print the tiles to the terminal as they are rendered.
     print_tiles_to_terminal: bool,
     /// Scene settings.
-    scene: SceneSettings,
+    scene: SceneBuilder,
     /// Lighting settings.
-    lighting: LightingSettings,
+    lighting: LightingBuilder,
     /// List of cameras to render from.
-    cameras: HashMap<String, CameraSettings>,
+    cameras: HashMap<String, CameraBuilder>,
 }
 
 impl Settings {
-    /// Construct a new Settings object.
+    /// Construct a new instance.
     pub fn new(
         print_tiles_to_terminal: bool,
-        scene: SceneSettings,
-        lighting: LightingSettings,
-        cameras: HashMap<String, CameraSettings>,
+        scene: SceneBuilder,
+        lighting: LightingBuilder,
+        cameras: HashMap<String, CameraBuilder>,
     ) -> Self {
         debug_assert!(scene.is_valid());
         debug_assert!(lighting.is_valid());
@@ -77,7 +77,7 @@ impl Settings {
     }
 
     /// Get the dictionary of cameras.
-    pub fn cameras(&self) -> &HashMap<String, CameraSettings> {
+    pub fn cameras(&self) -> &HashMap<String, CameraBuilder> {
         &self.cameras
     }
 }

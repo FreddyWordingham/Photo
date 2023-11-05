@@ -2,13 +2,13 @@ use serde::{Deserialize, Serialize};
 
 /// Runtime lighting settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LightingSettings {
+pub struct LightingBuilder {
     /// The position of the sun. [x, y, z] (meters)
     sun_position: [f64; 3],
 }
 
-impl LightingSettings {
-    /// Construct a new LightingSettings object.
+impl LightingBuilder {
+    /// Construct a new instance.
     pub fn new(sun_position: [f64; 3]) -> Self {
         debug_assert!(sun_position.iter().all(|p| p.is_finite()));
 

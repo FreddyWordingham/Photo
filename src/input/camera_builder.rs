@@ -6,20 +6,55 @@ use crate::world::Camera;
 
 /// Runtime camera settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CameraSettings {
+pub struct CameraBuilder {
     /// The position of the camera. [x, y, z]
-    pub position: [f64; 3],
+    position: [f64; 3],
     /// The target of the camera. [x, y, z]
-    pub target: [f64; 3],
+    target: [f64; 3],
     /// Horizontal field of view of the camera. [degrees].
-    pub field_of_view: f64,
+    field_of_view: f64,
     /// The resolution of the image in pixels. [rows, columns]
-    pub resolution: [usize; 2],
+    resolution: [usize; 2],
     /// The resolution of each tile in pixels. [rows, columns]
-    pub tile_resolution: [usize; 2],
+    tile_resolution: [usize; 2],
 }
 
-impl CameraSettings {
+impl CameraBuilder {
+    /// Construct a new instance.
+    pub fn new(
+        position: [f64; 3],
+        target: [f64; 3],
+        field_of_view: f64,
+        resolution: [usize; 2],
+        tile_resolution: [usize; 2],
+    ) -> Self {
+        debug_assert!(position.iter().all(|p| p.is_finite()));
+        debug_assert!(target.iter().all(|t| t.is_finite()));
+        debug_assert!(
+            position
+                .iter()
+                .zip(target.iter())
+                .fold(0.0, |acc, (p, t)| acc + (p - t).abs())
+                > 0.0
+        );
+        debug_assert!(field_of_view > 0.0);
+        debug_assert!(field_of_view < 180.0);
+        debug_assert!(resolution[0] > 0);
+        debug_assert!(resolution[1] > 0);
+        debug_assert!(tile_resolution[0] > 0);
+        debug_assert!(tile_resolution[1] > 0);
+        debug_assert!(resolution[0] % tile_resolution[0] == 0);
+        debug_assert!(resolution[1] % tile_resolution[1] == 0);
+
+        Self {
+            position,
+            target,
+            field_of_view,
+            resolution,
+            tile_resolution,
+        }
+    }
+
     /// Check that the current combination of values are valid.
     pub fn is_valid(&self) -> bool {
         self.position.iter().all(|p| p.is_finite())

@@ -1,9 +1,9 @@
-mod camera_settings;
-mod lighting_settings;
-mod scene_settings;
+mod camera_builder;
+mod lighting_builder;
+mod scene_builder;
 mod settings;
 
-pub use camera_settings::CameraSettings;
-pub use lighting_settings::LightingSettings;
-pub use scene_settings::SceneSettings;
+pub use camera_builder::CameraBuilder;
+pub use lighting_builder::LightingBuilder;
+pub use scene_builder::SceneBuilder;
 pub use settings::Settings;

@@ -4,9 +4,9 @@ use crate::world::Scene;
 
 /// Runtime scene settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SceneSettings {}
+pub struct SceneBuilder {}
 
-impl SceneSettings {
+impl SceneBuilder {
     /// Check that the current combination of values are valid.
     pub fn is_valid(&self) -> bool {
         true

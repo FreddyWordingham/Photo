@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use photo::{
-    input::{CameraSettings, LightingSettings, SceneSettings, Settings},
+    input::{CameraBuilder, LightingBuilder, SceneBuilder, Settings},
     utility::setup,
 };
 
@@ -17,23 +17,21 @@ fn main() {
     let settings_filepath = setup::read_command_line_arguments();
 
     let print_tiles_to_terminal = false;
-    let resolution = [1080, 1920]; // [rows, columns]
-    let tile_resolution = [108, 192]; // [rows, columns
 
     let cameras = hashmap!(
-        "camera 0".to_string() => CameraSettings {
-            position: [10.0, 5.0, 7.0], // [x, y, z]
-            target: [0.0, 0.0, 0.0],   // [x, y, z]
-            field_of_view: 90.0,       // [degrees]
-            resolution,                // [rows, columns]
-            tile_resolution,           // [rows, columns]
-        }
+        "camera 0".to_string() => CameraBuilder::new(
+            [10.0, 5.0, 7.0],   // [x, y, z]
+            [0.0, 0.0, 0.0],    // [x, y, z]
+            90.0,               // [degrees]
+            [1080, 1920],       // [rows, columns]
+            [108, 192]          // [rows, columns]
+        )
     );
 
-    let scene = SceneSettings {};
+    let scene = SceneBuilder {};
 
     let sun_position = [-40.0, 70.0, 100.0]; // [x, y, z]
-    let lighting = LightingSettings::new(sun_position);
+    let lighting = LightingBuilder::new(sun_position);
 
     let settings = Settings::new(print_tiles_to_terminal, scene, lighting, cameras);
 
