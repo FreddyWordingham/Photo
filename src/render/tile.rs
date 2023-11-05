@@ -1,6 +1,6 @@
 use ndarray::prelude::*;
 
-use crate::Sample;
+use crate::{render::Sample, utility};
 
 /// A tile is a rectangular region of the total image.
 pub struct Tile {
@@ -58,18 +58,15 @@ impl std::fmt::Display for Tile {
         for row in 0..rows {
             writeln!(f, "").unwrap();
             for column in 0..columns {
-                write!(f, "{}", colour_text("██", self.data[(row, column)].colour)).unwrap();
+                write!(
+                    f,
+                    "{}",
+                    utility::terminal::colour_text("██", self.data[(row, column)].colour)
+                )
+                .unwrap();
             }
         }
 
         Ok(())
     }
-}
-
-fn colour_text(text: &str, color: palette::Srgba) -> String {
-    let rgba: [u8; 4] = palette::Srgba::into_format(color).into();
-    format!(
-        "\x1B[38;2;{};{};{}m{}\x1B[0m",
-        rgba[0], rgba[1], rgba[2], text
-    )
 }

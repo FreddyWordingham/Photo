@@ -1,13 +1,8 @@
-mod camera;
+mod render;
 pub mod run;
-mod sample;
-mod scene;
 mod settings;
-pub mod setup;
-mod tile;
+pub mod utility;
+mod world;
 
-pub use camera::Camera;
-pub use sample::Sample;
-pub use scene::Scene;
 pub use settings::Settings;
-pub use tile::Tile;
+pub use world::Scene;

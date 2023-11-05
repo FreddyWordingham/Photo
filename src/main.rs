@@ -1,4 +1,4 @@
-use photo::{run, setup, Scene};
+use photo::{run, utility::setup, Scene};
 
 fn main() {
     let settings_filepath = setup::read_command_line_arguments();

@@ -10,22 +10,22 @@ pub struct Camera {
 
 impl Camera {
     /// Constructs a new camera instance.
-    pub fn new(position: Vector3<f64>, target: Vector3<f64>) -> Self {
+    pub fn _new(position: Vector3<f64>, target: Vector3<f64>) -> Self {
         Self { position, target }
     }
 
     /// Get the forwards direction of the camera.
-    pub fn forwards(&self) -> Unit<Vector3<f64>> {
+    pub fn _forwards(&self) -> Unit<Vector3<f64>> {
         Unit::new_normalize(self.target - self.position)
     }
 
     /// Get the right direction of the camera.
-    pub fn right(&self) -> Unit<Vector3<f64>> {
-        Unit::new_normalize(Vector3::z_axis().cross(&self.forwards()))
+    pub fn _right(&self) -> Unit<Vector3<f64>> {
+        Unit::new_normalize(Vector3::z_axis().cross(&self._forwards()))
     }
 
     /// Get the up direction of the camera.
-    pub fn up(&self) -> Unit<Vector3<f64>> {
-        Unit::new_normalize(self.forwards().cross(&self.right()))
+    pub fn _up(&self) -> Unit<Vector3<f64>> {
+        Unit::new_normalize(self._forwards().cross(&self._right()))
     }
 }

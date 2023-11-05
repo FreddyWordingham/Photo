@@ -1,4 +1,8 @@
-use crate::{Sample, Scene, Settings, Tile};
+use crate::{
+    render::{Sample, Tile},
+    world::Scene,
+    Settings,
+};
 
 /// Render the image in an array of tiles.
 pub fn render_image_in_tiles(
