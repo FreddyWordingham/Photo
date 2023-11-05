@@ -4,12 +4,12 @@ use std::fmt::Display;
 /// Runtime rendering settings.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Settings {
-    /// The resolution of the image in pixels.
+    /// The resolution of the image in pixels. [rows, columns]
     pub resolution: [usize; 2],
-    /// The resolution of each tile in pixels.
+    /// The resolution of each tile in pixels. [rows, columns]
     pub tile_resolution: [usize; 2],
-    /// Display the tiles as they are rendered.
-    pub display_tiles: bool,
+    /// Display the tiles in the terminal as they are rendered.
+    pub display_in_terminal: bool,
 }
 
 impl Settings {
@@ -17,7 +17,7 @@ impl Settings {
     pub const fn new(
         resolution: [usize; 2],
         tile_resolution: [usize; 2],
-        display_tiles: bool,
+        display_in_terminal: bool,
     ) -> Self {
         debug_assert!(resolution[0] > 0);
         debug_assert!(resolution[1] > 0);
@@ -29,11 +29,11 @@ impl Settings {
         Self {
             resolution,
             tile_resolution,
-            display_tiles,
+            display_in_terminal,
         }
     }
 
-    /// Check that the current combination of values is valid.
+    /// Check that the current combination of values are valid.
     pub fn is_valid(&self) -> bool {
         self.resolution[0] > 0
             && self.resolution[1] > 0
@@ -45,8 +45,6 @@ impl Settings {
 
     /// Calculate the number of tiles in each dimension.
     pub fn num_tiles(&self) -> [usize; 2] {
-        debug_assert!(self.is_valid());
-
         [
             self.resolution[0] / self.tile_resolution[0],
             self.resolution[1] / self.tile_resolution[1],
@@ -55,41 +53,35 @@ impl Settings {
 
     /// Calculate the total number of tiles.
     pub fn total_num_tiles(&self) -> usize {
-        debug_assert!(self.is_valid());
-
         (self.resolution[0] / self.tile_resolution[0])
             * (self.resolution[1] / self.tile_resolution[1])
     }
 
     /// Get the resolution of each tile.
     pub fn tile_resolution(&self) -> [usize; 2] {
-        debug_assert!(self.is_valid());
-
         self.tile_resolution
     }
 
     /// Calculate the total number of pixels per tile.
     pub fn total_num_tile_pixels(&self) -> usize {
-        debug_assert!(self.is_valid());
-
         self.tile_resolution[0] * self.tile_resolution[1]
     }
 }
 
 impl Display for Settings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "valid:                         {}\n", self.is_valid())?;
+        writeln!(f, "valid:                         {}", self.is_valid())?;
 
-        write!(
+        writeln!(
             f,
-            "resolution: {:>16} = {}\n",
+            "resolution: {:>16} = {} pixels",
             format!("[{}, {}]", self.resolution[0], self.resolution[1]),
             self.resolution[0] * self.resolution[1]
         )?;
 
-        write!(
+        writeln!(
             f,
-            "tile resolution: {:>11} = {}\n",
+            "tile resolution: {:>11} = {} pixels",
             format!("[{}, {}]", self.tile_resolution[0], self.tile_resolution[1]),
             self.tile_resolution[0] * self.tile_resolution[1]
         )?;
@@ -97,7 +89,7 @@ impl Display for Settings {
         let [num_x_tiles, num_y_tiles] = self.num_tiles();
         write!(
             f,
-            "number of tiles: {:>11} = {}",
+            "number of tiles: {:>11} = {} tiles",
             format!("[{}, {}]", num_x_tiles, num_y_tiles),
             num_x_tiles * num_y_tiles
         )

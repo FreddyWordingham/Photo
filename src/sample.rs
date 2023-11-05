@@ -3,16 +3,16 @@ use palette::Srgba;
 /// Sample data for a single ray.
 #[derive(Debug, Clone)]
 pub struct Sample {
-    pub index: (usize, usize),
+    pub sample_index: [usize; 2],
     pub colour: Srgba,
 }
 
 impl Sample {
     /// Construct a new Sample object.
-    pub fn new(index: (usize, usize)) -> Self {
+    pub fn new(sample_index: [usize; 2]) -> Self {
         Self {
-            index,
-            colour: Srgba::new(0.0, 0.0, 0.0, 0.0),
+            colour: Srgba::new(0.0, 0.0, 0.0, 1.0),
+            sample_index,
         }
     }
 }

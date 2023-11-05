@@ -1,13 +1,13 @@
-use ndarray::Array2;
+use ndarray::prelude::*;
 use std::fmt::Display;
 
 use crate::Sample;
 
 /// A tile is a rectangular region of the total image.
 pub struct Tile {
-    /// Index of the tile in the image.
+    /// Index of the tile in the image. [row, column]
     pub tile_index: [usize; 2],
-    /// Data
+    /// Tile pixel data. [rows, columns]
     pub data: Array2<Sample>,
 }
 
@@ -19,47 +19,47 @@ impl Tile {
 
         Self {
             tile_index,
-            data: Array2::<Sample>::from_shape_fn(resolution, |index| Sample::new(index)),
+            data: Array2::<Sample>::from_shape_fn(resolution, |sample_index| {
+                Sample::new(sample_index.into())
+            }),
         }
     }
 
-    /// Save the tile to disk.
-    pub fn save(&self) {
-        use image::{ImageBuffer, Rgba, RgbaImage};
-
-        let colours = self.data.map(|sample| sample.colour);
-
-        let (width, height) = colours.dim();
-        let mut img_buffer: RgbaImage = ImageBuffer::new(width as u32, height as u32);
-
-        for (x, y, pixel) in img_buffer.enumerate_pixels_mut() {
-            let palette_pixel = colours[(x as usize, y as usize)];
-            let data: [u8; 4] = palette::Srgba::into_format(palette_pixel).into();
-            *pixel = Rgba(data);
-        }
-
-        let filename = format!(
-            "output/tile_{:03}-{:03}.png",
+    pub fn save(&self, output_directory: &std::path::Path) {
+        let image_name = format!(
+            "tile_{:03}_{:03}.png",
             self.tile_index[0], self.tile_index[1]
         );
-        img_buffer.save(filename).unwrap();
+        let image_path = output_directory.join(image_name);
+
+        let raw_data: Vec<_> = self
+            .data
+            .iter()
+            .flat_map(|sample| {
+                let raw: [u8; 4] = sample.colour.into_format().into();
+                raw
+            })
+            .collect();
+
+        // Write image with image library.
+        let image = image::ImageBuffer::<image::Rgba<u8>, _>::from_raw(
+            self.data.dim().1 as u32,
+            self.data.dim().0 as u32,
+            raw_data,
+        )
+        .unwrap();
+
+        image.save(image_path).unwrap();
     }
 }
 
 impl Display for Tile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (width, height) = self.data.dim();
-        for y in 0..height {
-            if y > 0 {
-                write!(f, "\n").unwrap();
-            }
-            for x in 0..width {
-                write!(
-                    f,
-                    "{}",
-                    colour_text("██", self.data[(x, height - y - 1)].colour)
-                )
-                .unwrap();
+        let (rows, columns) = self.data.dim();
+        for row in 0..rows {
+            writeln!(f, "").unwrap();
+            for column in 0..columns {
+                write!(f, "{}", colour_text("██", self.data[(row, column)].colour)).unwrap();
             }
         }
 

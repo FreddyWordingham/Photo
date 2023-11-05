@@ -1,15 +1,18 @@
+#![allow(dead_code)]
+
 use photo::{Sample, Scene, Settings, Tile};
 
 fn main() {
     let settings_filepath = read_command_line_arguments();
     let settings = load_settings(&settings_filepath);
-    println!("-- Settings -----------------------\n{}", settings);
+    let output_directory = create_output_directory(&settings);
+    println!("-- Settings --------------------------\n{}", settings);
 
     let scene = Scene::new();
-    println!("-- Scene --------------------------\n{}", scene);
+    println!("-- Scene -----------------------------\n{}", scene);
 
-    render_image_in_tiles(&scene, &settings);
-    println!("-- Complete -----------------------");
+    // render_image_in_tiles(&scene, &settings);
+    // println!("-- Complete --------------------------");
 }
 
 /// Read the command line arguments.
@@ -41,6 +44,17 @@ fn load_settings(settings_filepath: &std::path::Path) -> Settings {
     settings
 }
 
+/// Create the output directory if it does not already exist.
+fn create_output_directory(_settings: &Settings) -> std::path::PathBuf {
+    let output_directory = std::path::PathBuf::from("output");
+
+    if !output_directory.exists() {
+        std::fs::create_dir(&output_directory).expect("Unable to create output directory");
+    }
+
+    output_directory
+}
+
 /// Render the image in an array of tiles.
 fn render_image_in_tiles(scene: &Scene, settings: &Settings) {
     debug_assert!(scene.is_valid());
@@ -55,7 +69,7 @@ fn render_image_in_tiles(scene: &Scene, settings: &Settings) {
         let x = n % num_x_tile;
         let y = n / num_x_tile;
         let tile = render_tile(scene, settings, [x, y]);
-        tile.save();
+        // tile.save();
         pb.inc(1);
     });
 }
@@ -69,7 +83,7 @@ fn render_tile(scene: &Scene, settings: &Settings, tile_index: [usize; 2]) -> Ti
     tile.data
         .par_mapv_inplace(|sample| run_sample(settings, scene, tile_index, sample));
 
-    if settings.display_tiles {
+    if settings.display_in_terminal {
         println!("{}", tile);
     }
 
@@ -86,8 +100,8 @@ fn run_sample(
     debug_assert!(scene.is_valid());
     debug_assert!(settings.is_valid());
 
-    let pixel_x = sample.index.0 + (tile_index[0] * settings.tile_resolution[0]);
-    let pixel_y = sample.index.1 + (tile_index[1] * settings.tile_resolution[1]);
+    let pixel_x = sample.sample_index[1] + (tile_index[1] * settings.tile_resolution[1]);
+    let pixel_y = sample.sample_index[0] + (tile_index[0] * settings.tile_resolution[0]);
 
     if pixel_x == pixel_y {
         sample.colour.blue = 1.0;
