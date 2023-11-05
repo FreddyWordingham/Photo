@@ -1,4 +1,10 @@
 print_tiles_to_terminal: false
+scene: {}
+lighting:
+  sun_position:
+  - -40.0
+  - 70.0
+  - 100.0
 cameras:
   camera 0:
     position:

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use photo::{
-    input::{CameraSettings, Settings},
+    input::{CameraSettings, LightingSettings, SceneSettings, Settings},
     utility::setup,
 };
 
@@ -30,12 +30,17 @@ fn main() {
         }
     );
 
-    let settings = Settings::new(print_tiles_to_terminal, cameras);
+    let scene = SceneSettings {};
+
+    let sun_position = [-40.0, 70.0, 100.0]; // [x, y, z]
+    let lighting = LightingSettings::new(sun_position);
+
+    let settings = Settings::new(print_tiles_to_terminal, scene, lighting, cameras);
 
     if !settings.is_valid() {
         panic!("ERROR! Refusal to generate settings file due to invalid settings.");
     }
 
     println!("Generating settings file...");
-    setup::save_settings(&settings, &settings_filepath);
+    settings.save(&settings_filepath);
 }

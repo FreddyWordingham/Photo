@@ -4,6 +4,7 @@ use std::f64::consts::PI;
 
 use crate::world::Camera;
 
+/// Runtime camera settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CameraSettings {
     /// The position of the camera. [x, y, z]

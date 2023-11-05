@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result};
 
-/// Scene to be rendered.
+/// Description of the geometry to render.
 pub struct Scene {}
 
 impl Scene {
