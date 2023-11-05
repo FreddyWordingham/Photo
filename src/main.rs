@@ -3,13 +3,13 @@ use photo::{Sample, Scene, Settings, Tile};
 fn main() {
     let settings_filepath = read_command_line_arguments();
     let settings = load_settings(&settings_filepath);
-    println!("-- Settings --\n{}", settings);
+    println!("-- Settings -----------------------\n{}", settings);
 
     let scene = Scene::new();
-    println!("-- Scene --\n{}", scene);
+    println!("-- Scene --------------------------\n{}", scene);
 
-    // render_image_in_tiles(&scene, &settings);
-    // println!("Done!");
+    render_image_in_tiles(&scene, &settings);
+    println!("-- Complete -----------------------");
 }
 
 /// Read the command line arguments.
@@ -41,41 +41,66 @@ fn load_settings(settings_filepath: &std::path::Path) -> Settings {
     settings
 }
 
-fn _render_image_in_tiles(scene: &Scene, settings: &Settings) {
+/// Render the image in an array of tiles.
+fn render_image_in_tiles(scene: &Scene, settings: &Settings) {
     debug_assert!(scene.is_valid());
     debug_assert!(settings.is_valid());
 
     let total_num_tiles = settings.total_num_tiles();
     let num_x_tile = settings.num_tiles()[0];
-    // (0..total_num_tiles).into_par_iter().for_each(|n| {
+
+    let pb = indicatif::ProgressBar::new(total_num_tiles as u64);
+    pb.inc(0);
     (0..total_num_tiles).into_iter().for_each(|n| {
         let x = n % num_x_tile;
         let y = n / num_x_tile;
-        let _tile = _render_tile(scene, settings, [x, y]);
+        let tile = render_tile(scene, settings, [x, y]);
+        tile.save();
+        pb.inc(1);
     });
 }
 
-fn _render_tile(scene: &Scene, settings: &Settings, tile_index: [usize; 2]) -> Tile {
+/// Render a single tile.
+fn render_tile(scene: &Scene, settings: &Settings, tile_index: [usize; 2]) -> Tile {
     debug_assert!(scene.is_valid());
     debug_assert!(settings.is_valid());
 
-    let tile = Tile::new(tile_index, settings.tile_resolution());
-    // data.par_mapv_inplace(|sample| run_sample(settings, scene, tile_index, sample));
+    let mut tile = Tile::new(tile_index, settings.tile_resolution());
+    tile.data
+        .par_mapv_inplace(|sample| run_sample(settings, scene, tile_index, sample));
+
+    if settings.display_tiles {
+        println!("{}", tile);
+    }
+
     tile
 }
 
-fn _run_sample(
+/// Run a single pixel sample.
+fn run_sample(
     settings: &Settings,
     scene: &Scene,
-    offset: [usize; 2],
+    tile_index: [usize; 2],
     mut sample: Sample,
 ) -> Sample {
     debug_assert!(scene.is_valid());
     debug_assert!(settings.is_valid());
 
-    let x = sample.index.0 + offset[0] * settings.tile_resolution[0];
-    let y = sample.index.1 + offset[1] * settings.tile_resolution[1];
-    println!("x: {}, y: {}", x, y);
-    sample.total += 1.0;
+    let pixel_x = sample.index.0 + (tile_index[0] * settings.tile_resolution[0]);
+    let pixel_y = sample.index.1 + (tile_index[1] * settings.tile_resolution[1]);
+
+    if pixel_x == pixel_y {
+        sample.colour.blue = 1.0;
+        sample.colour.alpha = 1.0;
+    } else if pixel_x == (2 * pixel_y) {
+        sample.colour.green = 1.0;
+        sample.colour.alpha = 1.0;
+    } else {
+        sample.colour.red = 0.1;
+        sample.colour.green = 0.1;
+        sample.colour.blue = 0.1;
+        sample.colour.alpha = 1.0;
+    }
+
     sample
 }

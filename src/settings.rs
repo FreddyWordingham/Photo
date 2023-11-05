@@ -8,11 +8,17 @@ pub struct Settings {
     pub resolution: [usize; 2],
     /// The resolution of each tile in pixels.
     pub tile_resolution: [usize; 2],
+    /// Display the tiles as they are rendered.
+    pub display_tiles: bool,
 }
 
 impl Settings {
     /// Construct a new Settings object.
-    pub const fn new(resolution: [usize; 2], tile_resolution: [usize; 2]) -> Self {
+    pub const fn new(
+        resolution: [usize; 2],
+        tile_resolution: [usize; 2],
+        display_tiles: bool,
+    ) -> Self {
         debug_assert!(resolution[0] > 0);
         debug_assert!(resolution[1] > 0);
         debug_assert!(tile_resolution[0] > 0);
@@ -23,6 +29,7 @@ impl Settings {
         Self {
             resolution,
             tile_resolution,
+            display_tiles,
         }
     }
 
@@ -90,11 +97,9 @@ impl Display for Settings {
         let [num_x_tiles, num_y_tiles] = self.num_tiles();
         write!(
             f,
-            "number of tiles: {:>11} = {}\n",
+            "number of tiles: {:>11} = {}",
             format!("[{}, {}]", num_x_tiles, num_y_tiles),
             num_x_tiles * num_y_tiles
-        )?;
-
-        Ok(())
+        )
     }
 }

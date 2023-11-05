@@ -17,8 +17,6 @@ impl Scene {
 
 impl Display for Scene {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "valid:                         {}\n", self.is_valid())?;
-
-        Ok(())
+        write!(f, "valid:                         {}", self.is_valid())
     }
 }

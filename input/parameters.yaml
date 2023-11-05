@@ -1,6 +1,8 @@
 resolution:
-  - 16
-  - 12
+  - 2400
+  - 2400
 tile_resolution:
-  - 2
-  - 2
+  - 240
+  - 240
+
+display_tiles: false

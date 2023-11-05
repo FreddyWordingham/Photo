@@ -1,21 +1,18 @@
-use std::fmt::Display;
+use palette::Srgba;
 
 /// Sample data for a single ray.
 #[derive(Debug, Clone)]
 pub struct Sample {
     pub index: (usize, usize),
-    pub total: f64,
+    pub colour: Srgba,
 }
 
 impl Sample {
     /// Construct a new Sample object.
     pub fn new(index: (usize, usize)) -> Self {
-        Self { index, total: 0.0 }
-    }
-}
-
-impl Display for Sample {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.total)
+        Self {
+            index,
+            colour: Srgba::new(0.0, 0.0, 0.0, 0.0),
+        }
     }
 }
