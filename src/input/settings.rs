@@ -30,17 +30,16 @@ impl Settings {
         lighting: LightingBuilder,
         cameras: HashMap<String, CameraBuilder>,
     ) -> Self {
-        debug_assert!(scene.is_valid());
-        debug_assert!(lighting.is_valid());
-        debug_assert!(!cameras.is_empty());
-        debug_assert!(cameras.values().all(|c| c.is_valid()));
-
-        Self {
+        let settings = Self {
             print_tiles_to_terminal,
             scene,
             lighting,
             cameras,
-        }
+        };
+
+        debug_assert!(settings.is_valid());
+
+        settings
     }
 
     /// Load the settings from the given file.
@@ -68,7 +67,22 @@ impl Settings {
 
     /// Check that the current combination of values are valid.
     pub fn is_valid(&self) -> bool {
-        !self.cameras.is_empty() && self.cameras.values().all(|c| c.is_valid())
+        if !self.scene.is_valid() {
+            println!("INVALID! Invalid scene");
+            return false;
+        }
+
+        if self.cameras.is_empty() {
+            println!("INVALID! No cameras");
+            return false;
+        }
+
+        if !self.cameras.values().all(|c| c.is_valid()) {
+            println!("INVALID! Invalid camera");
+            return false;
+        }
+
+        true
     }
 
     /// Get whether to print the tiles to the terminal as they are rendered.

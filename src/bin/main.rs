@@ -14,8 +14,8 @@ fn main() {
     println!("{}\n{}", terminal::heading("Settings"), settings);
 
     let scene = Scene::new();
-    println!("{}\n{}", terminal::heading("Scene"), scene);
+    println!("{}", terminal::heading("Scene"));
 
-    run::all(&scene, &settings, &output_directory);
+    run::all(&settings, &scene, &output_directory);
     println!("{}", terminal::heading("Done!"));
 }

@@ -7,6 +7,15 @@ use crate::world::Scene;
 pub struct SceneBuilder {}
 
 impl SceneBuilder {
+    /// Construct a new instance.
+    pub fn new() -> Self {
+        let scene_builder = Self {};
+
+        debug_assert!(scene_builder.is_valid());
+
+        scene_builder
+    }
+
     /// Check that the current combination of values are valid.
     pub fn is_valid(&self) -> bool {
         true

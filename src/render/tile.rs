@@ -17,7 +17,7 @@ pub struct Tile {
 
 impl Tile {
     /// Construct a new Tile object.
-    pub fn _new(tile_index: [usize; 2], resolution: [usize; 2]) -> Self {
+    pub fn new(tile_index: [usize; 2], resolution: [usize; 2]) -> Self {
         debug_assert!(resolution[0] > 0);
         debug_assert!(resolution[1] > 0);
 
@@ -29,7 +29,7 @@ impl Tile {
         }
     }
 
-    pub fn _save(&self, output_directory: &Path) {
+    pub fn save(&self, output_directory: &Path) {
         let image_name = format!(
             "tile_{:03}_{:03}.png",
             self.tile_index[0], self.tile_index[1]

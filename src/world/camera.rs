@@ -1,17 +1,20 @@
 use nalgebra::{Unit, Vector3};
-use std::fmt::{Display, Formatter, Result};
+use std::{
+    f64::consts::PI,
+    fmt::{Display, Formatter, Result},
+};
 
 /// Converts between pixel and world coordinates.
 pub struct Camera {
     /// The position of the camera in world coordinates.
     position: Vector3<f64>,
-    /// Target position of the camera in world coordinates.
+    /// Target position of the camera in world coordinates. [x, y, z] (meters)
     target: Vector3<f64>,
-    /// Horizontal field of view of the camera in degrees.
+    /// Horizontal field of view of the camera. (degrees)
     field_of_view: f64,
-    /// The resolution of the image in pixels. [rows, columns]
-    resolution: [usize; 2],
-    /// The resolution of each tile in pixels. [rows, columns]
+    /// The resolution of the image. [rows, columns] (tiles)
+    image_resolution: [usize; 2],
+    /// The resolution of each tile. [rows, columns] (pixels)
     tile_resolution: [usize; 2],
 }
 
@@ -21,7 +24,7 @@ impl Camera {
         position: Vector3<f64>,
         target: Vector3<f64>,
         field_of_view: f64,
-        resolution: [usize; 2],
+        image_resolution: [usize; 2],
         tile_resolution: [usize; 2],
     ) -> Self {
         debug_assert!(position.iter().all(|p| p.is_finite()));
@@ -34,39 +37,39 @@ impl Camera {
                 > 0.0
         );
         debug_assert!(field_of_view > 0.0);
-        debug_assert!(resolution[0] > 0);
-        debug_assert!(resolution[1] > 0);
+        debug_assert!(image_resolution[0] > 0);
+        debug_assert!(image_resolution[1] > 0);
         debug_assert!(tile_resolution[0] > 0);
         debug_assert!(tile_resolution[1] > 0);
-        debug_assert!(resolution[0] % tile_resolution[0] == 0);
-        debug_assert!(resolution[1] % tile_resolution[1] == 0);
 
         Self {
             position,
             target,
             field_of_view,
-            resolution,
+            image_resolution,
             tile_resolution,
         }
     }
 
-    /// Check that the current combination of values are valid.
-    pub fn is_valid(&self) -> bool {
-        self.position.iter().all(|p| p.is_finite())
-            && self.target.iter().all(|t| t.is_finite())
-            && self
-                .position
-                .iter()
-                .zip(self.target.iter())
-                .fold(0.0, |acc, (p, t)| acc + (p - t).abs())
-                > 0.0
-            && self.field_of_view > 0.0
-            && self.resolution[0] > 0
-            && self.resolution[1] > 0
-            && self.tile_resolution[0] > 0
-            && self.tile_resolution[1] > 0
-            && self.resolution[0] % self.tile_resolution[0] == 0
-            && self.resolution[1] % self.tile_resolution[1] == 0
+    /// Get the horizontal field of view of the camera. (radians)
+    pub fn field_of_view(&self) -> f64 {
+        self.field_of_view
+    }
+
+    /// Get the aspect ratio of the camera.
+    pub fn aspect_ratio(&self) -> f64 {
+        (self.image_resolution[1] * self.tile_resolution[1]) as f64
+            / (self.image_resolution[0] * self.tile_resolution[0]) as f64
+    }
+
+    /// Get the image resolution. [rows, columns] (tiles)
+    pub fn image_resolution(&self) -> [usize; 2] {
+        self.image_resolution
+    }
+
+    /// Get the tile resolution. [rows, columns]
+    pub fn tile_resolution(&self) -> [usize; 2] {
+        self.tile_resolution
     }
 
     /// Get the forwards direction of the camera.
@@ -87,8 +90,6 @@ impl Camera {
 
 impl Display for Camera {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        writeln!(f, "valid:                         {}", self.is_valid())?;
-
         writeln!(
             f,
             "position:                      [{}, {}, {}] meters",
@@ -103,20 +104,27 @@ impl Display for Camera {
 
         writeln!(
             f,
-            "field of view:                 {} radians",
-            self.field_of_view
+            "field of view:                 {} degrees",
+            self.field_of_view * 180.0 / PI
         )?;
 
         writeln!(
             f,
-            "resolution:                    [{}, {}] pixels",
-            self.resolution[0], self.resolution[1]
+            "image resolution:              [{}, {}] tiles",
+            self.image_resolution[0], self.image_resolution[1]
+        )?;
+
+        writeln!(
+            f,
+            "tile resolution:               [{}, {}] pixels",
+            self.tile_resolution[0], self.tile_resolution[1]
         )?;
 
         write!(
             f,
-            "tile resolution:               [{}, {}] pixels",
-            self.tile_resolution[0], self.tile_resolution[1]
+            "total resolution:              [{}, {}] pixels",
+            self.tile_resolution[0] * self.image_resolution[0],
+            self.tile_resolution[1] * self.image_resolution[1]
         )
     }
 }

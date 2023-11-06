@@ -16,7 +16,7 @@ cameras:
     - 0.0
     - 0.0
     field_of_view: 90.0
-    resolution:
+    image_resolution:
     - 1080
     - 1920
     tile_resolution:
