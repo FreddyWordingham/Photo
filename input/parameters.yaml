@@ -1,22 +1,30 @@
 print_tiles_to_terminal: false
-scene: {}
+scene:
+  meshes:
+    cube: ./assets/meshes/cube.obj
+    icosphere: ./assets/meshes/icosphere.obj
+  objects:
+    obj0:
+      mesh_id: cube
+      translation: null
+      rotation: null
+      scale: null
+    obj1:
+      mesh_id: icosphere
+      translation: null
+      rotation: null
+      scale: null
 lighting:
   sun_position: [-40.0, 70.0, 100.0]
 cameras:
   camera 0:
-    position: [10.0, 5.0, 7.0]
+    position: [-10.0, -10.0, -10.0]
     target: [0.0, 0.0, 0.0]
     field_of_view: 90.0
-    image_resolution: [10, 20]
-    tile_resolution: [108, 96]
+    image_resolution: [1, 2]
+    tile_resolution: [300, 300]
   camera 1:
     position: [10.0, 0.0, 0.0]
-    target: [0.0, 0.0, 0.0]
-    field_of_view: 90.0
-    image_resolution: [10, 10]
-    tile_resolution: [108, 192]
-  camera 2:
-    position: [10.0, 0.0, 20.0]
     target: [0.0, 0.0, 0.0]
     field_of_view: 90.0
     image_resolution: [10, 10]

@@ -1,15 +1,21 @@
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, path::PathBuf};
 
-use crate::world::Scene;
+use crate::{input::ObjectBuilder, world::Scene};
 
 /// Runtime scene settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SceneBuilder {}
+pub struct SceneBuilder {
+    /// Mesh file paths.
+    pub meshes: HashMap<String, PathBuf>,
+    /// Scene objects.
+    pub objects: HashMap<String, ObjectBuilder>,
+}
 
 impl SceneBuilder {
     /// Construct a new instance.
-    pub fn new() -> Self {
-        let scene_builder = Self {};
+    pub fn new(meshes: HashMap<String, PathBuf>, objects: HashMap<String, ObjectBuilder>) -> Self {
+        let scene_builder = Self { meshes, objects };
 
         debug_assert!(scene_builder.is_valid());
 
@@ -18,6 +24,27 @@ impl SceneBuilder {
 
     /// Check that the current combination of values are valid.
     pub fn is_valid(&self) -> bool {
+        for (mesh_id, file_path) in &self.meshes {
+            if !file_path.exists() {
+                println!(
+                    "INVALID! Mesh file does not exist: {} -> {}",
+                    mesh_id,
+                    file_path.display()
+                );
+                return false;
+            }
+        }
+
+        for (object_id, object) in &self.objects {
+            if !self.meshes.contains_key(&object.mesh_id) {
+                println!(
+                    "INVALID! Object {} requires mesh_id: {}",
+                    object_id, object.mesh_id
+                );
+                return false;
+            }
+        }
+
         true
     }
 

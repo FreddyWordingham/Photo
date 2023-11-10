@@ -57,12 +57,19 @@ impl Settings {
         settings
     }
 
+    /// Get this as YAML.
+    pub fn as_yaml(&self) -> String {
+        serde_yaml::to_string(self).expect("Unable to serialise settings to YAML string")
+    }
+
     /// Save the settings to the given file.
     pub fn save(&self, settings_filepath: &Path) {
-        let file_string =
-            serde_yaml::to_string(self).expect("Unable to serialise settings to string");
+        write(settings_filepath, self.as_yaml()).expect("Unable to write settings file");
+    }
 
-        write(settings_filepath, file_string).expect("Unable to write settings file");
+    /// Get the scene settings.
+    pub fn scene(&self) -> &SceneBuilder {
+        &self.scene
     }
 
     /// Check that the current combination of values are valid.
@@ -100,17 +107,7 @@ impl Display for Settings {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         writeln!(f, "valid:                         {}", self.is_valid())?;
 
-        writeln!(
-            f,
-            "print tiles to terminal:       {}",
-            self.print_tiles_to_terminal
-        )?;
-
-        write!(
-            f,
-            "number of cameras:     {:>9} cameras",
-            self.cameras.len()
-        )?;
+        writeln!(f, "{}", self.as_yaml())?;
 
         Ok(())
     }

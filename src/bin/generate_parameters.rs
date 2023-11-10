@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use photo::{
-    input::{CameraBuilder, LightingBuilder, SceneBuilder, Settings},
+    input::{CameraBuilder, LightingBuilder, ObjectBuilder, SceneBuilder, Settings},
     utility::setup,
 };
 
@@ -28,7 +28,27 @@ fn main() {
         )
     );
 
-    let scene = SceneBuilder {};
+    let meshes = hashmap!(
+        "cube".to_string() => "./assets/meshes/cube.obj".into(),
+        "icosphere".to_string() => "./assets/meshes/icosphere.obj".into()
+    );
+
+    let objects = hashmap!(
+        "obj0".to_string() => ObjectBuilder {
+            mesh_id: "cube".to_string(),
+            translation: None,
+            rotation: None,
+            scale: None,
+        },
+        "obj1".to_string() => ObjectBuilder {
+            mesh_id: "icosphere".to_string(),
+            translation: None,
+            rotation: None,
+            scale: None,
+        }
+    );
+
+    let scene = SceneBuilder { meshes, objects };
 
     let sun_position = [-40.0, 70.0, 100.0]; // [x, y, z]
     let lighting = LightingBuilder::new(sun_position);

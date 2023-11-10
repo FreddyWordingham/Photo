@@ -1,5 +1,19 @@
 print_tiles_to_terminal: false
-scene: {}
+scene:
+  meshes:
+    cube: ./assets/meshes/cube.obj
+    icosphere: ./assets/meshes/icosphere.obj
+  objects:
+    obj0:
+      mesh_id: cube
+      translation: null
+      rotation: null
+      scale: null
+    obj1:
+      mesh_id: icosphere
+      translation: null
+      rotation: null
+      scale: null
 lighting:
   sun_position:
   - -40.0

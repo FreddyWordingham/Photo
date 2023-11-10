@@ -2,7 +2,6 @@ use photo::{
     input::Settings,
     run,
     utility::{setup, terminal},
-    Scene,
 };
 
 fn main() {
@@ -13,9 +12,8 @@ fn main() {
     let output_directory = setup::create_output_directory(&settings);
     println!("{}\n{}", terminal::heading("Settings"), settings);
 
-    let scene = Scene::new();
-    println!("{}", terminal::heading("Scene"));
+    let scene = settings.scene().build();
 
-    run::all(&settings, &scene, &output_directory);
+    run::render_all_cameras(&settings, &scene, &output_directory);
     println!("{}", terminal::heading("Done!"));
 }

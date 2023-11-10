@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Render the all the cameras.
-pub fn all(settings: &Settings, scene: &Scene, output_directory: &Path) {
+pub fn render_all_cameras(settings: &Settings, scene: &Scene, output_directory: &Path) {
     debug_assert!(settings.is_valid());
 
     for (camera_name, camera_settings) in settings.cameras() {
@@ -74,7 +74,7 @@ fn run_sample(
     _scene: &Scene,
     camera: &Camera,
     tile_index: [usize; 2],
-    sample: Sample,
+    mut sample: Sample,
 ) -> Sample {
     debug_assert!(settings.is_valid());
 
@@ -86,8 +86,21 @@ fn run_sample(
     let d_theta = camera.field_of_view()
         / (camera.image_resolution()[1] * camera.tile_resolution()[1]) as f64;
 
-    let _phi = (row as f64 * d_phi) - (camera.field_of_view() / camera.aspect_ratio() * 0.5);
-    let _theta = (column as f64 * d_theta) - (camera.field_of_view() * 0.5);
+    let phi = (row as f64 * d_phi) - (camera.field_of_view() / camera.aspect_ratio() * 0.5);
+    let theta = (column as f64 * d_theta) - (camera.field_of_view() * 0.5);
+
+    let forwards = camera.forwards();
+    let right = camera.right();
+    let up = camera.up();
+
+    let vertical_rotation = nalgebra::Rotation3::from_axis_angle(&up, phi);
+    let lateral_rotation = nalgebra::Rotation3::from_axis_angle(&right, theta);
+
+    let direction = lateral_rotation * vertical_rotation * forwards;
+
+    sample.colour.red = direction.x.abs() as f32;
+    sample.colour.green = direction.y.abs() as f32;
+    sample.colour.blue = direction.z.abs() as f32;
 
     sample
 }
