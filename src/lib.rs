@@ -1,3 +1,4 @@
+pub mod geometry;
 pub mod input;
 mod render;
 pub mod run;

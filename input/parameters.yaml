@@ -11,9 +11,6 @@ scene:
       scale: null
     obj1:
       mesh_id: icosphere
-      translation: null
-      rotation: null
-      scale: null
 lighting:
   sun_position: [-40.0, 70.0, 100.0]
 cameras:
@@ -21,11 +18,11 @@ cameras:
     position: [-10.0, -10.0, -10.0]
     target: [0.0, 0.0, 0.0]
     field_of_view: 90.0
-    image_resolution: [1, 2]
-    tile_resolution: [300, 300]
-  camera 1:
-    position: [10.0, 0.0, 0.0]
-    target: [0.0, 0.0, 0.0]
-    field_of_view: 90.0
-    image_resolution: [10, 10]
-    tile_resolution: [108, 192]
+    image_resolution: [1, 1]
+    tile_resolution: [400, 400]
+  # camera 1:
+  #   position: [10.0, 0.0, 0.0]
+  #   target: [0.0, 0.0, 0.0]
+  #   field_of_view: 90.0
+  #   image_resolution: [10, 10]
+  #   tile_resolution: [108, 192]

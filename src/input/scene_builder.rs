@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
 
-use crate::{input::ObjectBuilder, world::Scene};
+use crate::{
+    input::ObjectBuilder,
+    world::{Mesh, Scene},
+};
 
 /// Runtime scene settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,10 +51,16 @@ impl SceneBuilder {
         true
     }
 
-    /// Build a camera from the current settings.
+    /// Build a scene from the current settings.
     pub fn build(&self) -> Scene {
         debug_assert!(self.is_valid());
 
-        Scene::new()
+        let meshes: HashMap<_, _> = self
+            .meshes
+            .iter()
+            .map(|(mesh_id, file_path)| (mesh_id.clone(), Mesh::load(file_path)))
+            .collect();
+
+        Scene::new(meshes)
     }
 }
