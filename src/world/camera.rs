@@ -118,8 +118,8 @@ impl Camera {
         let right = self.right();
         let up = self.up();
 
-        let vertical_rotation = nalgebra::Rotation3::from_axis_angle(&up, phi);
-        let lateral_rotation = nalgebra::Rotation3::from_axis_angle(&right, theta);
+        let vertical_rotation = nalgebra::Rotation3::from_axis_angle(&up, theta);
+        let lateral_rotation = nalgebra::Rotation3::from_axis_angle(&right, phi);
 
         let direction = lateral_rotation * vertical_rotation * forwards;
 
