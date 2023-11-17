@@ -1,17 +1,21 @@
-use nalgebra::{Unit, Vector3};
+use nalgebra::{Matrix4, Point3, Unit, Vector3};
 use std::{
     f64::consts::PI,
     fmt::{Display, Formatter, Result},
 };
 
+use crate::geometry::Ray;
+
 /// Converts between pixel and world coordinates.
 pub struct Camera {
     /// The position of the camera in world coordinates.
-    position: Vector3<f64>,
+    position: Point3<f64>,
     /// Target position of the camera in world coordinates. [x, y, z] (meters)
-    target: Vector3<f64>,
+    target: Point3<f64>,
     /// Horizontal field of view of the camera. (degrees)
     field_of_view: f64,
+    // Super samples per axis.
+    super_samples_per_axis: usize,
     /// The resolution of the image. [rows, columns] (tiles)
     image_resolution: [usize; 2],
     /// The resolution of each tile. [rows, columns] (pixels)
@@ -21,9 +25,10 @@ pub struct Camera {
 impl Camera {
     /// Constructs a new camera instance.
     pub fn new(
-        position: Vector3<f64>,
-        target: Vector3<f64>,
+        position: Point3<f64>,
+        target: Point3<f64>,
         field_of_view: f64,
+        super_samples_per_axis: usize,
         image_resolution: [usize; 2],
         tile_resolution: [usize; 2],
     ) -> Self {
@@ -37,6 +42,7 @@ impl Camera {
                 > 0.0
         );
         debug_assert!(field_of_view > 0.0);
+        debug_assert!(super_samples_per_axis > 0);
         debug_assert!(image_resolution[0] > 0);
         debug_assert!(image_resolution[1] > 0);
         debug_assert!(tile_resolution[0] > 0);
@@ -46,6 +52,7 @@ impl Camera {
             position,
             target,
             field_of_view,
+            super_samples_per_axis,
             image_resolution,
             tile_resolution,
         }
@@ -60,6 +67,11 @@ impl Camera {
     pub fn aspect_ratio(&self) -> f64 {
         (self.image_resolution[1] * self.tile_resolution[1]) as f64
             / (self.image_resolution[0] * self.tile_resolution[0]) as f64
+    }
+
+    /// Get the super samples per axis.
+    pub fn super_samples_per_axis(&self) -> usize {
+        self.super_samples_per_axis
     }
 
     /// Get the image resolution. [rows, columns] (tiles)
@@ -85,6 +97,49 @@ impl Camera {
     /// Get the up direction of the camera.
     pub fn up(&self) -> Unit<Vector3<f64>> {
         Unit::new_normalize(self.forwards().cross(&self.right()))
+    }
+
+    /// Generate a ray from the camera to the given pixel.
+    pub fn gen_ray(&self, x: f64, y: f64) -> Ray {
+        debug_assert!(x >= 0.0);
+        debug_assert!(x <= (self.image_resolution[0] * self.tile_resolution[0]) as f64);
+        debug_assert!(y >= 0.0);
+        debug_assert!(y <= (self.image_resolution[1] * self.tile_resolution[1]) as f64);
+
+        let d_theta =
+            self.field_of_view / (self.image_resolution[1] * self.tile_resolution[1]) as f64;
+        let d_phi = (self.field_of_view / self.aspect_ratio())
+            / (self.image_resolution[0] * self.tile_resolution[0]) as f64;
+
+        let theta = (y * d_theta) - (self.field_of_view * 0.5);
+        let phi = (x * d_phi) - (self.field_of_view / self.aspect_ratio() * 0.5);
+
+        let forwards = self.forwards();
+        let right = self.right();
+        let up = self.up();
+
+        let vertical_rotation = nalgebra::Rotation3::from_axis_angle(&up, phi);
+        let lateral_rotation = nalgebra::Rotation3::from_axis_angle(&right, theta);
+
+        let direction = lateral_rotation * vertical_rotation * forwards;
+
+        Ray::new(self.position, direction)
+    }
+
+    /// Calculate the MVP matrix for the camera.
+    /// This is the matrix that converts from world coordinates to screen coordinates.
+    pub fn model_view_projection(&self) -> Matrix4<f64> {
+        let view = Matrix4::look_at_rh(&self.position, &self.target, &Vector3::z_axis());
+        let projection =
+            Matrix4::new_perspective(self.aspect_ratio(), self.field_of_view, 0.1, 1000.0);
+
+        projection * view
+    }
+
+    /// Calculate the inverse MVP matrix for the camera.
+    /// This is the matrix that converts from screen coordinates to world coordinates.
+    pub fn inverse_model_view_projection(&self) -> Matrix4<f64> {
+        self.model_view_projection().try_inverse().unwrap()
     }
 }
 

@@ -1,6 +1,7 @@
 use nalgebra::{Point3, Vector3};
+use std::f64::EPSILON;
 
-use crate::geometry::Aabb;
+use crate::geometry::{Aabb, Ray};
 
 pub struct Triangle {
     /// Vertices.
@@ -56,6 +57,41 @@ impl Triangle {
         }
 
         true
+    }
+
+    /// Test for an intersection point with a ray.
+    pub fn intersect_ray(&self, ray: &Ray) -> Option<Point3<f64>> {
+        let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
+        let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
+        let h = ray.direction.cross(&edge2);
+        let a = edge1.dot(&h);
+
+        if a.abs() < EPSILON {
+            return None;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.origin - self.vertex_positions[0];
+        let u = f * s.dot(&h);
+
+        if !(0.0..=1.0).contains(&u) {
+            return None;
+        }
+
+        let q = s.cross(&edge1);
+        let v = f * ray.direction.dot(&q);
+
+        if v < 0.0 || u + v > 1.0 {
+            return None;
+        }
+
+        let t = f * edge2.dot(&q);
+
+        if t > EPSILON {
+            return Some(ray.origin + t * ray.direction.as_ref());
+        }
+
+        None
     }
 
     fn overlaps_on_box_axes(&self, aabb: &Aabb) -> bool {

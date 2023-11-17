@@ -23,6 +23,7 @@ fn main() {
             [10.0, 5.0, 7.0],   // [x, y, z]
             [0.0, 0.0, 0.0],    // [x, y, z]
             90.0,               // [degrees]
+            3,                  // super samples per axis
             [1080, 1920],       // [rows, columns]
             [108, 192]          // [rows, columns]
         )

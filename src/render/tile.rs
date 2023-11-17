@@ -24,7 +24,7 @@ impl Tile {
         Self {
             tile_index,
             data: Array2::<Sample>::from_shape_fn(resolution, |sample_index| {
-                Sample::_new(sample_index.into())
+                Sample::new(sample_index.into())
             }),
         }
     }

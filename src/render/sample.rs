@@ -9,7 +9,7 @@ pub struct Sample {
 
 impl Sample {
     /// Construct a new Sample object.
-    pub fn _new(sample_index: [usize; 2]) -> Self {
+    pub fn new(sample_index: [usize; 2]) -> Self {
         Self {
             colour: Srgba::new(0.0, 0.0, 0.0, 1.0),
             sample_index,

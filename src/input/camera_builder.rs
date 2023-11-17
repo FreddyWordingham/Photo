@@ -1,4 +1,4 @@
-use nalgebra::Vector3;
+use nalgebra::Point3;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 
@@ -13,6 +13,8 @@ pub struct CameraBuilder {
     target: [f64; 3],
     /// Horizontal field of view of the camera. [degrees].
     field_of_view: f64,
+    /// Super samples per axis.
+    super_samples_per_axis: usize,
     /// The resolution of the image. [rows, columns] (tiles)
     image_resolution: [usize; 2],
     /// The resolution of each tile. [rows, columns] (pixels)
@@ -25,6 +27,7 @@ impl CameraBuilder {
         position: [f64; 3],
         target: [f64; 3],
         field_of_view: f64,
+        super_samples_per_axis: usize,
         image_resolution: [usize; 2],
         tile_resolution: [usize; 2],
     ) -> Self {
@@ -32,6 +35,7 @@ impl CameraBuilder {
             position,
             target,
             field_of_view,
+            super_samples_per_axis,
             image_resolution,
             tile_resolution,
         };
@@ -69,6 +73,14 @@ impl CameraBuilder {
 
         if !(self.field_of_view > 0.0 && self.field_of_view < 180.0) {
             println!("INVALID! Invalid field of view: {:?}", self.field_of_view);
+            return false;
+        }
+
+        if self.super_samples_per_axis <= 0 {
+            println!(
+                "INVALID! Invalid super samples per axis: {:?}",
+                self.super_samples_per_axis
+            );
             return false;
         }
 
@@ -112,9 +124,10 @@ impl CameraBuilder {
         debug_assert!(self.is_valid());
 
         Camera::new(
-            Vector3::from_row_slice(&self.position),
-            Vector3::from_row_slice(&self.target),
+            Point3::from_slice(&self.position),
+            Point3::from_slice(&self.target),
             self.field_of_view * PI / 180.0,
+            self.super_samples_per_axis,
             self.image_resolution,
             self.tile_resolution,
         )

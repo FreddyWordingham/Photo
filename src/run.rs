@@ -1,7 +1,9 @@
 use indicatif::ProgressBar;
+use palette::Srgba;
 use std::{fs::create_dir_all, path::Path};
 
 use crate::{
+    geometry::Ray,
     input::Settings,
     render::Sample,
     render::Tile,
@@ -59,7 +61,7 @@ fn render_tile(
 ) -> Tile {
     let mut tile = Tile::new(tile_index, camera.tile_resolution());
     tile.data
-        .par_mapv_inplace(|sample| run_sample(settings, scene, camera, tile_index, sample));
+        .par_mapv_inplace(|sample| super_sample_pixel(settings, scene, camera, tile_index, sample));
 
     if settings.print_tiles_to_terminal() {
         println!("{}", tile);
@@ -68,8 +70,8 @@ fn render_tile(
     tile
 }
 
-/// Run a single pixel sample.
-fn run_sample(
+/// Super sample a single pixel.
+fn super_sample_pixel(
     settings: &Settings,
     _scene: &Scene,
     camera: &Camera,
@@ -81,26 +83,52 @@ fn run_sample(
     let row = sample.sample_index[0] + (tile_index[0] * camera.tile_resolution()[0]);
     let column = sample.sample_index[1] + (tile_index[1] * camera.tile_resolution()[1]);
 
-    let d_phi = (camera.field_of_view() / camera.aspect_ratio())
-        / (camera.image_resolution()[0] * camera.tile_resolution()[0]) as f64;
-    let d_theta = camera.field_of_view()
-        / (camera.image_resolution()[1] * camera.tile_resolution()[1]) as f64;
+    let ss = camera.super_samples_per_axis();
+    let inv_ss = 1.0 / ss as f64;
 
-    let phi = (row as f64 * d_phi) - (camera.field_of_view() / camera.aspect_ratio() * 0.5);
-    let theta = (column as f64 * d_theta) - (camera.field_of_view() * 0.5);
-
-    let forwards = camera.forwards();
-    let right = camera.right();
-    let up = camera.up();
-
-    let vertical_rotation = nalgebra::Rotation3::from_axis_angle(&up, phi);
-    let lateral_rotation = nalgebra::Rotation3::from_axis_angle(&right, theta);
-
-    let direction = lateral_rotation * vertical_rotation * forwards;
-
-    sample.colour.red = direction.x.abs() as f32;
-    sample.colour.green = direction.y.abs() as f32;
-    sample.colour.blue = direction.z.abs() as f32;
+    let mut colours = Vec::with_capacity(ss * ss);
+    for xi in 0..ss {
+        let dx = (xi as f64 + 0.5) * inv_ss;
+        let px = row as f64 + dx;
+        for yi in 0..camera.super_samples_per_axis() {
+            let dy = (yi as f64 + 0.5) * inv_ss;
+            let py = column as f64 + dy;
+            let ray = camera.gen_ray(px, py);
+            colours.push(sample_scene(_scene, ray));
+        }
+    }
+    sample.colour = average_color(colours);
 
     sample
+}
+
+/// Calculate the average colour of a list of colours.
+fn average_color(colors: Vec<Srgba>) -> Srgba {
+    let mut sum = Srgba::new(0.0, 0.0, 0.0, 0.0);
+    let count = colors.len() as f32;
+
+    for color in colors {
+        sum.red += color.red;
+        sum.green += color.green;
+        sum.blue += color.blue;
+        sum.alpha += color.alpha;
+    }
+
+    Srgba::new(
+        sum.red / count,
+        sum.green / count,
+        sum.blue / count,
+        sum.alpha / count,
+    )
+}
+
+/// Sample the scene with a ray.
+fn sample_scene(_scene: &Scene, ray: Ray) -> Srgba {
+    let mut colour = Srgba::new(0.0, 0.0, 0.0, 1.0);
+
+    colour.red = ray.direction.x.abs() as f32;
+    colour.green = ray.direction.y.abs() as f32;
+    colour.blue = ray.direction.z.abs() as f32;
+
+    colour
 }
