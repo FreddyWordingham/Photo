@@ -3,7 +3,7 @@ use palette::Srgba;
 use std::{fs::create_dir_all, path::Path};
 
 use crate::{
-    geometry::Ray,
+    engine,
     input::Settings,
     render::Sample,
     render::Tile,
@@ -94,7 +94,7 @@ fn super_sample_pixel(
             let dy = (yi as f64 + 0.5) * inv_ss;
             let py = column as f64 + dy;
             let ray = camera.gen_ray(px, py);
-            colours.push(sample_scene(_scene, ray));
+            colours.push(engine::sample_scene(_scene, ray));
         }
     }
     sample.colour = average_color(colours);
@@ -120,15 +120,4 @@ fn average_color(colors: Vec<Srgba>) -> Srgba {
         sum.blue / count,
         sum.alpha / count,
     )
-}
-
-/// Sample the scene with a ray.
-fn sample_scene(_scene: &Scene, ray: Ray) -> Srgba {
-    let mut colour = Srgba::new(0.0, 0.0, 0.0, 1.0);
-
-    colour.red = ray.direction.x.abs() as f32;
-    colour.green = ray.direction.y.abs() as f32;
-    colour.blue = ray.direction.z.abs() as f32;
-
-    colour
 }
