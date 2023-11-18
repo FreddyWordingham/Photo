@@ -2,6 +2,8 @@ use nalgebra::{Point3, Vector3};
 
 use crate::geometry::Ray;
 
+/// Axis-aligned bounding box.
+#[derive(Debug, Clone)]
 pub struct Aabb {
     /// Minimum coordinates.
     pub mins: Point3<f64>,
@@ -44,7 +46,8 @@ impl Aabb {
         corners
     }
 
-    pub fn intersects_aabb(&self, other: &Aabb) -> bool {
+    /// Test for an overlap with another AABB.
+    pub fn overlaps_aabb(&self, other: &Aabb) -> bool {
         // Check for separation along the x-axis
         if self.maxs.x < other.mins.x || other.maxs.x < self.mins.x {
             return false;
@@ -65,7 +68,28 @@ impl Aabb {
     }
 
     /// Test for an intersection distance with a ray.
-    pub fn intersect_ray(&self, ray: &Ray) -> Option<f64> {
+    pub fn intersect_ray(&self, ray: &Ray) -> bool {
+        let inv_direction = Vector3::new(
+            1.0 / ray.direction.x,
+            1.0 / ray.direction.y,
+            1.0 / ray.direction.z,
+        );
+
+        let t1 = (self.mins - ray.origin).component_mul(&inv_direction);
+        let t2 = (self.maxs - ray.origin).component_mul(&inv_direction);
+
+        let t_min = t1.zip_map(&t2, f64::min);
+        let t_max = t1.zip_map(&t2, f64::max);
+
+        let t_min = t_min.x.max(t_min.y).max(t_min.z);
+        let t_max = t_max.x.min(t_max.y).min(t_max.z);
+
+        !(t_max < t_min || t_max < 0.0)
+    }
+
+    /// Test for an intersection distance with a ray.
+    /// Returns the distance along the ray to the intersection point.
+    pub fn intersect_ray_distance(&self, ray: &Ray) -> Option<f64> {
         let inv_direction = Vector3::new(
             1.0 / ray.direction.x,
             1.0 / ray.direction.y,
@@ -86,5 +110,11 @@ impl Aabb {
         }
 
         Some(t_min.max(0.0))
+    }
+
+    /// Get the point of intersection with a ray.
+    pub fn intersect_ray_position(&self, ray: &Ray) -> Option<Point3<f64>> {
+        let distance = self.intersect_ray_distance(ray)?;
+        Some(ray.origin + distance * ray.direction.as_ref())
     }
 }

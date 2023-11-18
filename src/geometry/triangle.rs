@@ -27,8 +27,8 @@ impl Triangle {
         (min, max)
     }
 
-    /// Check if the triangle intersects an AABB.
-    pub fn intersects_aabb(&self, aabb: &Aabb) -> bool {
+    /// Check if the triangle overlaps an AABB.
+    pub fn overlaps_aabb(&self, aabb: &Aabb) -> bool {
         // 1. Test for overlap on the box axes (X, Y, and Z axes)
         if !self.overlaps_on_box_axes(aabb) {
             return false;
@@ -59,8 +59,78 @@ impl Triangle {
         true
     }
 
+    /// Test for an intersection distance with a ray.
+    pub fn intersect_ray(&self, ray: &Ray) -> bool {
+        let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
+        let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
+        let h = ray.direction.cross(&edge2);
+        let a = edge1.dot(&h);
+
+        if a.abs() < EPSILON {
+            return false;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.origin - self.vertex_positions[0];
+        let u = f * s.dot(&h);
+
+        if !(0.0..=1.0).contains(&u) {
+            return false;
+        }
+
+        let q = s.cross(&edge1);
+        let v = f * ray.direction.dot(&q);
+
+        if v < 0.0 || u + v > 1.0 {
+            return false;
+        }
+
+        let t = f * edge2.dot(&q);
+
+        if t > EPSILON {
+            return true;
+        }
+
+        false
+    }
+
+    /// Test for an intersection distance with a ray.
+    pub fn intersect_ray_distance(&self, ray: &Ray) -> Option<f64> {
+        let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
+        let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
+        let h = ray.direction.cross(&edge2);
+        let a = edge1.dot(&h);
+
+        if a.abs() < EPSILON {
+            return None;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.origin - self.vertex_positions[0];
+        let u = f * s.dot(&h);
+
+        if !(0.0..=1.0).contains(&u) {
+            return None;
+        }
+
+        let q = s.cross(&edge1);
+        let v = f * ray.direction.dot(&q);
+
+        if v < 0.0 || u + v > 1.0 {
+            return None;
+        }
+
+        let t = f * edge2.dot(&q);
+
+        if t > EPSILON {
+            return Some(t);
+        }
+
+        None
+    }
+
     /// Test for an intersection point with a ray.
-    pub fn intersect_ray(&self, ray: &Ray) -> Option<Point3<f64>> {
+    pub fn intersect_ray_point(&self, ray: &Ray) -> Option<Point3<f64>> {
         let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
         let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
         let h = ray.direction.cross(&edge2);

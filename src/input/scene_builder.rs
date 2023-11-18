@@ -61,6 +61,17 @@ impl SceneBuilder {
             .map(|(mesh_id, file_path)| (mesh_id.clone(), Mesh::load(file_path)))
             .collect();
 
-        Scene::new(meshes)
+        let objects: HashMap<_, _> = self
+            .objects
+            .iter()
+            .map(|(object_id, object_builder)| {
+                (
+                    object_id.clone(),
+                    object_builder.build(&meshes[&object_builder.mesh_id]),
+                )
+            })
+            .collect();
+
+        Scene::new(meshes, objects)
     }
 }

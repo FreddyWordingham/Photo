@@ -6,15 +6,15 @@ use crate::geometry::{Aabb, Ray, Triangle};
 /// Triangular mesh.
 pub struct Mesh {
     /// List of vertex positions.
-    pub vertex_positions: Vec<Point3<f64>>,
+    vertex_positions: Vec<Point3<f64>>,
     /// List of vertex normals.
-    pub vertex_normals: Vec<Unit<Vector3<f64>>>,
+    _vertex_normals: Vec<Unit<Vector3<f64>>>,
     /// List of vertex textures.
-    pub vertex_textures: Vec<Vector2<f64>>,
+    _vertex_textures: Vec<Vector2<f64>>,
     /// List face indices.
-    pub face_indices: Vec<[[usize; 3]; 3]>,
+    face_indices: Vec<[[usize; 3]; 3]>,
     /// Axis-aligned bounding box.
-    pub aabb: Aabb,
+    aabb: Aabb,
 }
 
 impl Mesh {
@@ -99,16 +99,26 @@ impl Mesh {
 
         Self {
             vertex_positions,
-            vertex_normals,
-            vertex_textures,
+            _vertex_normals: vertex_normals,
+            _vertex_textures: vertex_textures,
             face_indices,
             aabb: Aabb::new(mins, maxs),
         }
     }
 
+    /// Get the axis-aligned bounding box.
+    pub fn aabb(&self) -> &Aabb {
+        &self.aabb
+    }
+
+    /// Get the list of vertex positions.
+    pub fn vertex_positions(&self) -> &[Point3<f64>] {
+        &self.vertex_positions
+    }
+
     /// Check if the mesh intersects an AABB.
     pub fn intersects_aabb(&self, aabb: &Aabb) -> bool {
-        if !self.aabb.intersects_aabb(aabb) {
+        if !self.aabb.overlaps_aabb(aabb) {
             return false;
         }
 
@@ -120,7 +130,29 @@ impl Mesh {
             ];
             let triangle = Triangle::new(vertex_positions);
 
-            if triangle.intersects_aabb(aabb) {
+            if triangle.overlaps_aabb(aabb) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Test for an intersection with a ray.
+    pub fn intersect_ray(&self, ray: &Ray) -> bool {
+        if !self.aabb.intersect_ray(ray) {
+            return false;
+        }
+
+        for face in &self.face_indices {
+            let vertices = [
+                self.vertex_positions[face[0][0]],
+                self.vertex_positions[face[1][0]],
+                self.vertex_positions[face[2][0]],
+            ];
+            let triangle = Triangle::new(vertices);
+
+            if triangle.intersect_ray(ray) {
                 return true;
             }
         }
@@ -129,9 +161,34 @@ impl Mesh {
     }
 
     /// Test for an intersection distance with a ray.
-    pub fn intersect_ray(&self, ray: &Ray) -> Option<Point3<f64>> {
-        // First check if the ray intersects the mesh's AABB
-        if self.aabb.intersect_ray(ray).is_none() {
+    pub fn intersect_ray_distance(&self, ray: &Ray) -> Option<f64> {
+        if !self.aabb.intersect_ray(ray) {
+            return None;
+        }
+
+        let mut closest_distance: Option<f64> = None;
+
+        for face in &self.face_indices {
+            let vertices = [
+                self.vertex_positions[face[0][0]],
+                self.vertex_positions[face[1][0]],
+                self.vertex_positions[face[2][0]],
+            ];
+            let triangle = Triangle::new(vertices);
+
+            if let Some(distance) = triangle.intersect_ray_distance(ray) {
+                if closest_distance.is_none() || distance < closest_distance.unwrap() {
+                    closest_distance = Some(distance);
+                }
+            }
+        }
+
+        closest_distance
+    }
+
+    /// Test for an intersection point with a ray.
+    pub fn intersect_ray_point(&self, ray: &Ray) -> Option<Point3<f64>> {
+        if !self.aabb.intersect_ray(ray) {
             return None;
         }
 
@@ -145,7 +202,7 @@ impl Mesh {
             ];
             let triangle = Triangle::new(vertices);
 
-            if let Some(intersection_point) = triangle.intersect_ray(ray) {
+            if let Some(intersection_point) = triangle.intersect_ray_point(ray) {
                 let intersection_distance = nalgebra::distance(&intersection_point, &ray.origin);
 
                 if closest_intersection.is_none()
