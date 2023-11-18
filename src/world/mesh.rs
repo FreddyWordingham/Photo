@@ -8,9 +8,9 @@ pub struct Mesh {
     /// List of vertex positions.
     vertex_positions: Vec<Point3<f64>>,
     /// List of vertex normals.
-    _vertex_normals: Vec<Unit<Vector3<f64>>>,
-    /// List of vertex textures.
-    _vertex_textures: Vec<Vector2<f64>>,
+    vertex_normals: Vec<Unit<Vector3<f64>>>,
+    /// List of vertex texture coordinates.
+    vertex_texture_coordinates: Vec<Vector2<f64>>,
     /// List face indices.
     face_indices: Vec<[[usize; 3]; 3]>,
     /// Axis-aligned bounding box.
@@ -33,7 +33,7 @@ impl Mesh {
                 .count(),
         );
         let mut vertex_normals = vec![];
-        let mut vertex_textures = vec![];
+        let mut vertex_texture_coordinates = vec![];
         let mut face_indices = vec![];
 
         let mut mins = Point3::new(f64::MAX, f64::MAX, f64::MAX);
@@ -80,7 +80,7 @@ impl Mesh {
                 "vt" => {
                     let u = tokens[1].parse::<f64>().unwrap();
                     let v = tokens[2].parse::<f64>().unwrap();
-                    vertex_textures.push(Vector2::new(u, v));
+                    vertex_texture_coordinates.push(Vector2::new(u, v));
                 }
                 "f" => {
                     let mut face_indices_inner = [[0; 3]; 3];
@@ -99,21 +99,57 @@ impl Mesh {
 
         Self {
             vertex_positions,
-            _vertex_normals: vertex_normals,
-            _vertex_textures: vertex_textures,
+            vertex_normals,
+            vertex_texture_coordinates,
             face_indices,
             aabb: Aabb::new(mins, maxs),
         }
     }
 
-    /// Get the axis-aligned bounding box.
-    pub fn aabb(&self) -> &Aabb {
-        &self.aabb
-    }
-
     /// Get the list of vertex positions.
     pub fn vertex_positions(&self) -> &[Point3<f64>] {
         &self.vertex_positions
+    }
+
+    /// Get the list of vertex normals.
+    pub fn vertex_normals(&self) -> &[Unit<Vector3<f64>>] {
+        &self.vertex_normals
+    }
+
+    /// Get the list of vertex texture coordinates.
+    pub fn vertex_texture_coordinates(&self) -> &[Vector2<f64>] {
+        &self.vertex_texture_coordinates
+    }
+
+    /// Get the list of face indices.
+    pub fn face_indices(&self) -> &[[[usize; 3]; 3]] {
+        &self.face_indices
+    }
+
+    /// Iterate over the triangles of the mesh.
+    pub fn triangles(&self) -> impl Iterator<Item = Triangle> + '_ {
+        self.face_indices.iter().map(move |indices| Triangle {
+            vertex_positions: [
+                self.vertex_positions[indices[0][0]],
+                self.vertex_positions[indices[1][0]],
+                self.vertex_positions[indices[2][0]],
+            ],
+            vertex_normals: [
+                self.vertex_normals[indices[0][2]],
+                self.vertex_normals[indices[1][2]],
+                self.vertex_normals[indices[2][2]],
+            ],
+            vertex_texture_coordinates: [
+                self.vertex_texture_coordinates[indices[0][1]],
+                self.vertex_texture_coordinates[indices[1][1]],
+                self.vertex_texture_coordinates[indices[2][1]],
+            ],
+        })
+    }
+
+    /// Get the axis-aligned bounding box.
+    pub fn aabb(&self) -> &Aabb {
+        &self.aabb
     }
 
     /// Check if the mesh intersects an AABB.
@@ -122,14 +158,7 @@ impl Mesh {
             return false;
         }
 
-        for face in &self.face_indices {
-            let vertex_positions = [
-                self.vertex_positions[face[0][0]],
-                self.vertex_positions[face[1][0]],
-                self.vertex_positions[face[2][0]],
-            ];
-            let triangle = Triangle::new(vertex_positions);
-
+        for triangle in self.triangles() {
             if triangle.overlaps_aabb(aabb) {
                 return true;
             }
@@ -144,14 +173,7 @@ impl Mesh {
             return false;
         }
 
-        for face in &self.face_indices {
-            let vertices = [
-                self.vertex_positions[face[0][0]],
-                self.vertex_positions[face[1][0]],
-                self.vertex_positions[face[2][0]],
-            ];
-            let triangle = Triangle::new(vertices);
-
+        for triangle in self.triangles() {
             if triangle.intersect_ray(ray) {
                 return true;
             }
@@ -168,14 +190,7 @@ impl Mesh {
 
         let mut closest_distance: Option<f64> = None;
 
-        for face in &self.face_indices {
-            let vertices = [
-                self.vertex_positions[face[0][0]],
-                self.vertex_positions[face[1][0]],
-                self.vertex_positions[face[2][0]],
-            ];
-            let triangle = Triangle::new(vertices);
-
+        for triangle in self.triangles() {
             if let Some(distance) = triangle.intersect_ray_distance(ray) {
                 if closest_distance.is_none() || distance < closest_distance.unwrap() {
                     closest_distance = Some(distance);
@@ -194,14 +209,7 @@ impl Mesh {
 
         let mut closest_intersection: Option<f64> = None;
 
-        for face in &self.face_indices {
-            let vertices = [
-                self.vertex_positions[face[0][0]],
-                self.vertex_positions[face[1][0]],
-                self.vertex_positions[face[2][0]],
-            ];
-            let triangle = Triangle::new(vertices);
-
+        for triangle in self.triangles() {
             if let Some(intersection_point) = triangle.intersect_ray_point(ray) {
                 let intersection_distance = nalgebra::distance(&intersection_point, &ray.origin);
 
@@ -214,5 +222,24 @@ impl Mesh {
         }
 
         closest_intersection.map(|distance| ray.origin + distance * ray.direction.as_ref())
+    }
+
+    /// Test for an intersection point with a ray.
+    pub fn intersect_ray_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
+        if !self.aabb.intersect_ray(ray) {
+            return None;
+        }
+
+        let mut closest_normal: Option<(f64, Unit<Vector3<f64>>)> = None;
+
+        for triangle in self.triangles() {
+            if let Some((distance, normal)) = triangle.intersect_ray_distance_normal(ray) {
+                if closest_normal.is_none() || distance < closest_normal.unwrap().0 {
+                    closest_normal = Some((distance, normal));
+                }
+            }
+        }
+
+        closest_normal
     }
 }

@@ -1,4 +1,4 @@
-use nalgebra::{Point3, Similarity3, Unit};
+use nalgebra::{Point3, Similarity3, Unit, Vector3};
 
 use crate::{
     geometry::{Aabb, Ray},
@@ -10,7 +10,7 @@ pub struct Object {
     /// Mesh id.
     mesh_id: String,
     /// Object to world coordinate transformation.
-    _transformation: Similarity3<f64>,
+    transformation: Similarity3<f64>,
     /// World to object coordinate transformation.
     inverse_transformation: Similarity3<f64>,
     /// Axis-aligned bounding box.
@@ -38,7 +38,7 @@ impl Object {
 
         Self {
             mesh_id,
-            _transformation: transformation,
+            transformation,
             inverse_transformation: transformation.inverse(),
             aabb: Aabb::new(mins, maxs),
         }
@@ -66,5 +66,30 @@ impl Object {
         );
 
         mesh.intersect_ray(&transformed_ray)
+    }
+
+    /// Ray intersection distance and normal.
+    pub fn intersect_ray_distance_normal(
+        &self,
+        ray: &Ray,
+        mesh: &Mesh,
+    ) -> Option<(f64, Unit<Vector3<f64>>)> {
+        if !self.aabb.intersect_ray(ray) {
+            return None;
+        }
+
+        let transformed_ray = Ray::new(
+            self.inverse_transformation * ray.origin,
+            Unit::new_normalize(self.inverse_transformation * ray.direction.as_ref()),
+        );
+
+        if let Some((distance, normal)) = mesh.intersect_ray_distance_normal(&transformed_ray) {
+            return Some((
+                distance,
+                Unit::new_normalize(self.transformation * normal.as_ref()),
+            ));
+        }
+
+        None
     }
 }

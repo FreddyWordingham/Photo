@@ -1,17 +1,29 @@
-use nalgebra::{Point3, Vector3};
+use nalgebra::{Point3, Unit, Vector2, Vector3};
 use std::f64::EPSILON;
 
 use crate::geometry::{Aabb, Ray};
 
 pub struct Triangle {
-    /// Vertices.
+    /// Vertex positions.
     pub vertex_positions: [Point3<f64>; 3],
+    /// Vertex normals.
+    pub vertex_normals: [Unit<Vector3<f64>>; 3],
+    /// Vertex texture coordinates.
+    pub vertex_texture_coordinates: [Vector2<f64>; 3],
 }
 
 impl Triangle {
     /// Construct a new instance.
-    pub fn new(vertex_positions: [Point3<f64>; 3]) -> Self {
-        Self { vertex_positions }
+    pub fn new(
+        vertex_positions: [Point3<f64>; 3],
+        vertex_normals: [Unit<Vector3<f64>>; 3],
+        vertex_texture_coordinates: [Vector2<f64>; 3],
+    ) -> Self {
+        Self {
+            vertex_positions,
+            vertex_normals,
+            vertex_texture_coordinates,
+        }
     }
 
     fn project_onto_axis(&self, axis: &Vector3<f64>) -> (f64, f64) {
@@ -35,7 +47,7 @@ impl Triangle {
         }
 
         // 2. Test for overlap on the triangle's normal axis
-        let normal = self.triangle_normal();
+        let normal = self.triangle_plane_normal();
         if !self.overlaps_on_axis(&normal, aabb) {
             return false;
         }
@@ -164,6 +176,49 @@ impl Triangle {
         None
     }
 
+    /// Test for an intersection point with a ray, returning the surface normal.
+    pub fn intersect_ray_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
+        let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
+        let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
+        let h = ray.direction.cross(&edge2);
+        let a = edge1.dot(&h);
+
+        if a.abs() < EPSILON {
+            return None;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.origin - self.vertex_positions[0];
+        let u = f * s.dot(&h);
+
+        if !(0.0..=1.0).contains(&u) {
+            return None;
+        }
+
+        let q = s.cross(&edge1);
+        let v = f * ray.direction.dot(&q);
+
+        if v < 0.0 || u + v > 1.0 {
+            return None;
+        }
+
+        let t = f * edge2.dot(&q);
+
+        if t > EPSILON {
+            let w = 1.0 - u - v;
+            return Some((
+                t,
+                Unit::new_normalize(
+                    w * self.vertex_normals[0].as_ref()
+                        + u * self.vertex_normals[1].as_ref()
+                        + v * self.vertex_normals[2].as_ref(),
+                ),
+            ));
+        }
+
+        None
+    }
+
     fn overlaps_on_box_axes(&self, aabb: &Aabb) -> bool {
         // For each axis (X, Y, Z)
         for i in 0..3 {
@@ -181,7 +236,7 @@ impl Triangle {
         true
     }
 
-    fn triangle_normal(&self) -> Vector3<f64> {
+    fn triangle_plane_normal(&self) -> Vector3<f64> {
         let u = self.vertex_positions[1] - self.vertex_positions[0];
         let v = self.vertex_positions[2] - self.vertex_positions[0];
         u.cross(&v).normalize()
