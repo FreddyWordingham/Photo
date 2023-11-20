@@ -1,9 +1,13 @@
-mod engine;
-pub mod geometry;
-pub mod input;
-mod render;
+mod camera;
+mod geometry;
+mod instance;
+mod parameters;
+mod resources;
 pub mod run;
-pub mod utility;
-mod world;
+mod scene;
 
-pub use world::Scene;
+pub use camera::Camera;
+pub use instance::Instance;
+pub use parameters::Parameters;
+pub use resources::Resources;
+pub use scene::Scene;

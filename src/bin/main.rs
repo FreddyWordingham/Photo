@@ -1,19 +1,28 @@
-use photo::{
-    input::Settings,
-    run,
-    utility::{setup, terminal},
-};
+use nalgebra::Similarity3;
+
+use photo::run;
+use photo::Parameters;
+use photo::Scene;
 
 fn main() {
-    println!("{}", terminal::title("PHOTO!"));
+    println!("PHOTO!");
 
-    let settings_filepath = setup::read_command_line_arguments();
-    let settings = Settings::load(&settings_filepath);
-    let output_directory = setup::create_output_directory(&settings);
-    println!("{}\n{}", terminal::heading("Settings"), settings);
+    let parameters = Parameters::new();
+    let cameras = parameters.create_cameras();
+    let resources = parameters.create_resources();
+    let instances = init_instances(&resources);
+    let scene = Scene::new(&resources, instances);
 
-    let scene = settings.scene().build();
+    for camera in cameras {
+        run::render(&scene, &camera);
+    }
+}
 
-    run::render_all_cameras(&settings, &scene, &output_directory);
-    println!("{}", terminal::heading("Done!"));
+fn init_instances(resources: &photo::Resources) -> Vec<photo::Instance> {
+    let instances = vec![
+        photo::Instance::new(&resources.meshes()[0], Similarity3::identity()),
+        photo::Instance::new(&resources.meshes()[1], Similarity3::identity()),
+        photo::Instance::new(&resources.meshes()[2], Similarity3::identity()),
+    ];
+    instances
 }
