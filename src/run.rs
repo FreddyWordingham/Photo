@@ -1,4 +1,4 @@
-use crate::{Camera, Scene};
+use crate::world::{Camera, Scene};
 
 pub fn render(_scene: &Scene, _camera: &Camera) {
     // ...

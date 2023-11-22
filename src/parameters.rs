@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Camera, Resources};
+use crate::world::{Camera, Resources};
 
 /// Runtime rendering settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]

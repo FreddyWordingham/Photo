@@ -1,4 +1,7 @@
-use crate::{geometry::Bvh, Instance, Resources};
+use crate::{
+    geometry::Bvh,
+    world::{Instance, Resources},
+};
 
 pub struct Scene<'a> {
     _resources: &'a Resources,
