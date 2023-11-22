@@ -1,30 +1,16 @@
-use nalgebra::Similarity3;
-
-use photo::render::run;
-use photo::render::Parameters;
-use photo::world::Instance;
-use photo::world::Resources;
-use photo::world::Scene;
+use photo::{input::Parameters, render::run, world::Scene};
+use std::path::Path;
 
 fn main() {
     println!("PHOTO!");
 
-    let parameters = Parameters::new();
+    let parameters = Parameters::load(Path::new("input/parameters.yaml"));
+    println!("{}", parameters.as_yaml());
+    let resources = parameters.load_resources();
     let cameras = parameters.create_cameras();
-    let resources = parameters.create_resources();
-    let instances = init_instances(&resources);
-    let scene = Scene::new(&resources, instances);
+    let scene = Scene::new(&resources);
 
     for camera in cameras {
         run::render(&scene, &camera);
     }
-}
-
-fn init_instances(resources: &Resources) -> Vec<Instance> {
-    let instances = vec![
-        Instance::new(&resources.meshes()[0], Similarity3::identity()),
-        Instance::new(&resources.meshes()[1], Similarity3::identity()),
-        Instance::new(&resources.meshes()[2], Similarity3::identity()),
-    ];
-    instances
 }
