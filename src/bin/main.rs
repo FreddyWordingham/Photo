@@ -1,10 +1,10 @@
 use nalgebra::Similarity3;
 
-use photo::run;
+use photo::render::run;
+use photo::render::Parameters;
 use photo::world::Instance;
 use photo::world::Resources;
 use photo::world::Scene;
-use photo::Parameters;
 
 fn main() {
     println!("PHOTO!");
