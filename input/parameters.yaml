@@ -1,2 +1,13 @@
+meshes:
+  cube: resources/cube.obj
+instances:
+  left_cube:
+    mesh_id: cube
+    translation: [-1.0, 0.0, 0.0]
+  right_cube:
+    mesh_id: cube
+    translation: [1.0, 0.0, 0.0]
+    rotation: [10.0, 15.0, 20.0]
+    scale: 0.5
 cameras:
-- resolution: [1920, 1080]
+  - resolution: [1920, 1080]

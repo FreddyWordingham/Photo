@@ -1,24 +1,35 @@
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashMap,
     fs::{read_to_string, write},
     path::Path,
 };
 
 use crate::{
-    input::CameraBuilder,
+    input::{CameraBuilder, InstanceBuilder},
     world::{Camera, Resources},
 };
 
 /// Runtime rendering settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Parameters {
+    meshes: HashMap<String, String>,
+    instances: HashMap<String, InstanceBuilder>,
     cameras: Vec<CameraBuilder>,
 }
 
 impl Parameters {
     /// Construct a new instance.
-    pub fn new(cameras: Vec<CameraBuilder>) -> Self {
-        Self { cameras }
+    pub fn new(
+        meshes: HashMap<String, String>,
+        instances: HashMap<String, InstanceBuilder>,
+        cameras: Vec<CameraBuilder>,
+    ) -> Self {
+        Self {
+            meshes,
+            instances,
+            cameras,
+        }
     }
 
     /// Load a Parameters object from a file.
