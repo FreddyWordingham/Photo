@@ -7,13 +7,14 @@ use std::{
 
 use crate::{
     assets::Resources,
-    input::{CameraBuilder, InstanceBuilder},
-    world::Camera,
+    input::{CameraBuilder, InstanceBuilder, SettingsBuilder},
+    world::{Camera, Scene},
 };
 
 /// Runtime rendering settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Parameters {
+    settings: SettingsBuilder,
     meshes: HashMap<String, String>,
     instances: HashMap<String, InstanceBuilder>,
     cameras: Vec<CameraBuilder>,
@@ -22,11 +23,15 @@ pub struct Parameters {
 impl Parameters {
     /// Construct a new instance.
     pub fn new(
+        settings: SettingsBuilder,
         meshes: HashMap<String, String>,
         instances: HashMap<String, InstanceBuilder>,
         cameras: Vec<CameraBuilder>,
     ) -> Self {
+        debug_assert!(settings.is_valid());
+
         Self {
+            settings,
             meshes,
             instances,
             cameras,
@@ -51,6 +56,11 @@ impl Parameters {
 
     /// Load the resources.
     pub fn load_resources(&self) -> Resources {
+        todo!()
+    }
+
+    /// Create the scene.
+    pub fn create_scene<'a>(&self, _resources: &'a Resources) -> Scene<'a> {
         todo!()
     }
 

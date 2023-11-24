@@ -1,5 +1,7 @@
 use crate::{
     assets::Resources,
+    geometry::Ray,
+    render::Sample,
     world::{Bvh, Instance},
 };
 
@@ -16,5 +18,9 @@ impl<'a> Scene<'a> {
             _instances: vec![],
             _instance_bvh: Bvh {},
         }
+    }
+
+    pub fn sample(&self, _ray: Ray) -> Sample {
+        todo!()
     }
 }

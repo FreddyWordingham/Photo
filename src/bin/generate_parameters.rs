@@ -1,10 +1,11 @@
-use photo::input::{CameraBuilder, InstanceBuilder, Parameters};
+use photo::input::{CameraBuilder, InstanceBuilder, Parameters, SettingsBuilder};
 use std::{fs::create_dir_all, path::Path};
 
 fn main() {
     // Create output directory if it doesn't exist.
     create_dir_all(Path::new("output")).expect("Unable to create output directory");
 
+    let settings = SettingsBuilder::new();
     let meshes = vec![("cube".to_string(), "resources/cube.obj".to_string())]
         .into_iter()
         .collect();
@@ -25,6 +26,6 @@ fn main() {
     .collect();
     let cameras = vec![CameraBuilder::new([270, 480], [4, 4], Some(2))];
 
-    let parameters = Parameters::new(meshes, instances, cameras);
+    let parameters = Parameters::new(settings, meshes, instances, cameras);
     parameters.save(Path::new("output/parameters.yaml"));
 }
