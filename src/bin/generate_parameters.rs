@@ -23,7 +23,7 @@ fn main() {
     ]
     .into_iter()
     .collect();
-    let cameras = vec![CameraBuilder::new([1920, 1080])];
+    let cameras = vec![CameraBuilder::new([270, 480], [4, 4], Some(2))];
 
     let parameters = Parameters::new(meshes, instances, cameras);
     parameters.save(Path::new("output/parameters.yaml"));

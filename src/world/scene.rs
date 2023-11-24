@@ -1,6 +1,6 @@
 use crate::{
-    geometry::Bvh,
-    world::{Instance, Resources},
+    assets::Resources,
+    world::{Bvh, Instance},
 };
 
 pub struct Scene<'a> {

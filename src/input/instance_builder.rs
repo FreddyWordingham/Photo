@@ -10,6 +10,8 @@ pub struct InstanceBuilder {
 
 impl InstanceBuilder {
     pub fn new(mesh_id: String) -> Self {
+        debug_assert!(!mesh_id.is_empty());
+
         Self {
             mesh_id,
             translation: None,

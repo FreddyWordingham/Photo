@@ -10,4 +10,6 @@ instances:
     rotation: [10.0, 15.0, 20.0]
     scale: 0.5
 cameras:
-  - resolution: [1920, 1080]
+  - resolution: [270, 480]
+    num_tiles: [4, 4]
+    super_sampling: 3

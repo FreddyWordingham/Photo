@@ -6,8 +6,9 @@ use std::{
 };
 
 use crate::{
+    assets::Resources,
     input::{CameraBuilder, InstanceBuilder},
-    world::{Camera, Resources},
+    world::Camera,
 };
 
 /// Runtime rendering settings.
