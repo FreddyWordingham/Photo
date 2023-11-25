@@ -12,7 +12,7 @@ impl SettingsBuilder {
         Self {}
     }
 
-    /// Validate the settings.
+    /// Check if the settings parameters are valid.
     pub fn is_valid(&self) -> bool {
         true
     }

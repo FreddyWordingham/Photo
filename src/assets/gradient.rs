@@ -7,13 +7,20 @@ pub struct Gradient {
 
 impl Gradient {
     /// Create a new gradient from a list of RGBA colours.
-    pub fn new(colours: Vec<[f32; 4]>) -> Self {
+    pub fn new(colours: Vec<u32>) -> Self {
         Self {
             colours: Linear::builder()
                 .elements(
                     colours
                         .iter()
-                        .map(|colour| LinSrgba::new(colour[0], colour[1], colour[2], colour[3]))
+                        .map(|colour| {
+                            let red = ((colour >> 24) & 0xFF) as f32 / 255.0;
+                            let green = ((colour >> 16) & 0xFF) as f32 / 255.0;
+                            let blue = ((colour >> 8) & 0xFF) as f32 / 255.0;
+                            let alpha = (colour & 0xFF) as f32 / 255.0;
+
+                            LinSrgba::new(red, green, blue, alpha)
+                        })
                         .collect::<Vec<_>>(),
                 )
                 .knots(

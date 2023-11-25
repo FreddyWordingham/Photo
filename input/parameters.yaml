@@ -1,8 +1,16 @@
 settings:
 gradients:
-  white: resources/white.csv
+  white:
+    colours: [0x444f, 0xffff]
 materials:
-  plastic: resources/plastic.csv
+  plastic: !Diffuse
+    gradient_id: white
+  mirror: !Reflective
+    gradient_id: white
+    reflectivity: 0.9
+  glass: !Refractive
+    gradient_id: white
+    refractive_index: 1.5
 meshes:
   cube: resources/cube.obj
 instances:

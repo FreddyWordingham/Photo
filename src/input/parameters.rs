@@ -7,7 +7,7 @@ use std::{
 
 use crate::{
     assets::Resources,
-    input::{CameraBuilder, InstanceBuilder, SettingsBuilder},
+    input::{CameraBuilder, GradientBuilder, InstanceBuilder, MaterialBuilder, SettingsBuilder},
     world::{Camera, Scene},
 };
 
@@ -15,8 +15,8 @@ use crate::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Parameters {
     settings: SettingsBuilder,
-    gradients: HashMap<String, PathBuf>,
-    materials: HashMap<String, PathBuf>,
+    gradients: HashMap<String, GradientBuilder>,
+    materials: HashMap<String, MaterialBuilder>,
     meshes: HashMap<String, PathBuf>,
     instances: HashMap<String, InstanceBuilder>,
     cameras: Vec<CameraBuilder>,
@@ -26,34 +26,37 @@ impl Parameters {
     /// Construct a new instance.
     pub fn new(
         settings: SettingsBuilder,
-        gradients: HashMap<String, PathBuf>,
-        materials: HashMap<String, PathBuf>,
+        gradients: HashMap<String, GradientBuilder>,
+        materials: HashMap<String, MaterialBuilder>,
         meshes: HashMap<String, PathBuf>,
         instances: HashMap<String, InstanceBuilder>,
         cameras: Vec<CameraBuilder>,
     ) -> Self {
-        debug_assert!(settings.is_valid());
-
-        Self {
+        let new = Self {
             settings,
             gradients,
             materials,
             meshes,
             instances,
             cameras,
-        }
+        };
+
+        debug_assert!(new.is_valid());
+
+        new
     }
 
+    /// Check if the parameters are all valid.
     pub fn is_valid(&self) -> bool {
         self.settings.is_valid()
             && self
                 .gradients
                 .iter()
-                .all(|(id, path)| !id.is_empty() && path.exists())
+                .all(|(id, gradient_builder)| !id.is_empty() && gradient_builder.is_valid())
             && self
                 .materials
                 .iter()
-                .all(|(id, path)| !id.is_empty() && path.exists())
+                .all(|(id, material_builder)| !id.is_empty() && material_builder.is_valid())
             && self
                 .meshes
                 .iter()
@@ -63,6 +66,16 @@ impl Parameters {
                 .iter()
                 .all(|(id, instance)| !id.is_empty() && instance.is_valid())
             && self.cameras.iter().all(|camera| camera.is_valid())
+            && self.materials.iter().all(|(_, material)| {
+                material
+                    .gradient_ids()
+                    .iter()
+                    .all(|id| self.gradients.contains_key(*id))
+            })
+            && self.instances.iter().all(|(_, instance)| {
+                self.materials.contains_key(instance.material_id())
+                    && self.meshes.contains_key(instance.mesh_id())
+            })
     }
 
     /// Load a Parameters object from a file.

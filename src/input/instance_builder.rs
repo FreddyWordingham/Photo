@@ -24,6 +24,14 @@ impl InstanceBuilder {
         new
     }
 
+    pub fn mesh_id(&self) -> &str {
+        &self.mesh_id
+    }
+
+    pub fn material_id(&self) -> &str {
+        &self.material_id
+    }
+
     pub fn with_translation(mut self, translation: [f64; 3]) -> Self {
         self.translation = Some(translation);
         self
@@ -39,6 +47,7 @@ impl InstanceBuilder {
         self
     }
 
+    /// Check if the instance parameters are valid.
     pub fn is_valid(&self) -> bool {
         !self.mesh_id.is_empty()
             && !self.material_id.is_empty()

@@ -1,4 +1,6 @@
-use photo::input::{CameraBuilder, InstanceBuilder, Parameters, SettingsBuilder};
+use photo::input::{
+    CameraBuilder, GradientBuilder, InstanceBuilder, MaterialBuilder, Parameters, SettingsBuilder,
+};
 use std::{fs::create_dir_all, path::Path, path::PathBuf};
 
 fn main() {
@@ -6,13 +8,34 @@ fn main() {
     create_dir_all(Path::new("output")).expect("Unable to create output directory");
 
     let settings = SettingsBuilder::new();
-    let gradients = vec![("white".to_string(), PathBuf::from("resources/white.obj"))]
-        .into_iter()
-        .collect();
-    let materials = vec![(
-        "plastic".to_string(),
-        PathBuf::from("resources/plastic.mat"),
+    let gradients = vec![(
+        "white".to_string(),
+        GradientBuilder::new(vec![0xaaaf, 0xffff]),
     )]
+    .into_iter()
+    .collect();
+    let materials = vec![
+        (
+            "plastic".to_string(),
+            MaterialBuilder::Diffuse {
+                gradient_id: "white".to_string(),
+            },
+        ),
+        (
+            "mirror".to_string(),
+            MaterialBuilder::Reflective {
+                gradient_id: "white".to_string(),
+                reflectivity: 0.9,
+            },
+        ),
+        (
+            "glass".to_string(),
+            MaterialBuilder::Refractive {
+                gradient_id: "white".to_string(),
+                refractive_index: 1.5,
+            },
+        ),
+    ]
     .into_iter()
     .collect();
     let meshes = vec![("cube".to_string(), PathBuf::from("resources/cube.obj"))]
