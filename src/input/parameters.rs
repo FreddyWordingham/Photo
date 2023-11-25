@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fs::{read_to_string, write},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use crate::{
@@ -15,7 +15,9 @@ use crate::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Parameters {
     settings: SettingsBuilder,
-    meshes: HashMap<String, String>,
+    gradients: HashMap<String, PathBuf>,
+    materials: HashMap<String, PathBuf>,
+    meshes: HashMap<String, PathBuf>,
     instances: HashMap<String, InstanceBuilder>,
     cameras: Vec<CameraBuilder>,
 }
@@ -24,7 +26,9 @@ impl Parameters {
     /// Construct a new instance.
     pub fn new(
         settings: SettingsBuilder,
-        meshes: HashMap<String, String>,
+        gradients: HashMap<String, PathBuf>,
+        materials: HashMap<String, PathBuf>,
+        meshes: HashMap<String, PathBuf>,
         instances: HashMap<String, InstanceBuilder>,
         cameras: Vec<CameraBuilder>,
     ) -> Self {
@@ -32,10 +36,33 @@ impl Parameters {
 
         Self {
             settings,
+            gradients,
+            materials,
             meshes,
             instances,
             cameras,
         }
+    }
+
+    pub fn is_valid(&self) -> bool {
+        self.settings.is_valid()
+            && self
+                .gradients
+                .iter()
+                .all(|(id, path)| !id.is_empty() && path.exists())
+            && self
+                .materials
+                .iter()
+                .all(|(id, path)| !id.is_empty() && path.exists())
+            && self
+                .meshes
+                .iter()
+                .all(|(id, path)| !id.is_empty() && !path.exists())
+            && self
+                .instances
+                .iter()
+                .all(|(id, instance)| !id.is_empty() && instance.is_valid())
+            && self.cameras.iter().all(|camera| camera.is_valid())
     }
 
     /// Load a Parameters object from a file.

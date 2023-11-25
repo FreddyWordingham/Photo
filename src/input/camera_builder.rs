@@ -15,17 +15,24 @@ impl CameraBuilder {
         num_tiles: [usize; 2],
         super_sampling: Option<usize>,
     ) -> Self {
-        debug_assert!(resolution[0] > 0);
-        debug_assert!(resolution[1] > 0);
-        debug_assert!(num_tiles[0] > 0);
-        debug_assert!(num_tiles[1] > 0);
-        debug_assert!(super_sampling.is_none() || super_sampling.unwrap() > 0);
-
-        Self {
+        let new = Self {
             resolution,
             num_tiles,
             super_sampling,
-        }
+        };
+
+        debug_assert!(new.is_valid());
+
+        new
+    }
+
+    /// Check if the camera parameters are valid.
+    pub fn is_valid(&self) -> bool {
+        self.resolution[0] > 0
+            && self.resolution[1] > 0
+            && self.num_tiles[0] > 0
+            && self.num_tiles[1] > 0
+            && self.super_sampling.unwrap_or(1) > 0
     }
 
     /// Get the resolution.
