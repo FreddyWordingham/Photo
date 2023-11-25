@@ -8,6 +8,7 @@ use std::{
 use crate::{
     assets::{Mesh, Resources},
     input::{CameraBuilder, GradientBuilder, InstanceBuilder, MaterialBuilder, SettingsBuilder},
+    render::Settings,
     world::{Camera, Scene},
 };
 
@@ -94,6 +95,11 @@ impl Parameters {
         write(path, self.as_yaml()).expect("Unable to write Parameters object to file");
     }
 
+    /// Create the settings.
+    pub fn settings(&self) -> Settings {
+        self.settings.build()
+    }
+
     /// Load the resources.
     pub fn load_resources(&self) -> Resources {
         let mut used_mesh_ids = self
@@ -160,12 +166,21 @@ impl Parameters {
     }
 
     /// Create the scene.
-    pub fn create_scene<'a>(&self, _resources: &'a Resources) -> Scene<'a> {
-        todo!()
+    pub fn create_scene<'a>(&self, resources: &'a Resources) -> Scene<'a> {
+        let instances = self
+            .instances
+            .iter()
+            .map(|(_, instance)| instance.build(resources))
+            .collect::<Vec<_>>();
+
+        Scene::new(resources, instances)
     }
 
     /// Create the cameras.
     pub fn create_cameras(&self) -> Vec<Camera> {
-        todo!()
+        self.cameras
+            .iter()
+            .map(|camera_builder| camera_builder.build())
+            .collect::<Vec<_>>()
     }
 }

@@ -7,7 +7,7 @@ fn main() {
     // Create output directory if it doesn't exist.
     create_dir_all(Path::new("output")).expect("Unable to create output directory");
 
-    let settings = SettingsBuilder::new();
+    let settings = SettingsBuilder::new("output");
     let gradients = vec![(
         "white".to_string(),
         GradientBuilder::new(vec![0xaaaf, 0xffff]),
@@ -57,7 +57,14 @@ fn main() {
     ]
     .into_iter()
     .collect();
-    let cameras = vec![CameraBuilder::new([270, 480], [4, 4], Some(2))];
+    let cameras = vec![CameraBuilder::new(
+        [-4.0, 8.0, 12.0],
+        [0.0, 0.0, 0.0],
+        90.0,
+        Some(2),
+        [270, 480],
+        [4, 4],
+    )];
 
     let parameters = Parameters::new(settings, gradients, materials, meshes, instances, cameras);
     parameters.save(Path::new("output/parameters.yaml"));

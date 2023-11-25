@@ -1,4 +1,5 @@
 settings:
+  output_directory: output
 gradients:
   white:
     colours: [0x444f, 0xffff]
@@ -26,7 +27,10 @@ instances:
     rotation: [10.0, 15.0, 20.0]
     scale: 0.5
 cameras:
-  - resolution: [270, 480]
-    num_tiles: [4, 4]
+  - position: [-4.0, 8.0, 12.0]
+    target: [0.0, 0.0, 0.0]
+    field_of_view: 90.0
+    resolution: [540, 960]
+    num_tiles: [10, 4]
     super_sampling: 3
   

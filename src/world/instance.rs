@@ -14,7 +14,7 @@ pub struct Instance<'a> {
 }
 
 impl<'a> Instance<'a> {
-    pub fn _new(mesh: &'a Mesh, material: &'a Material, transformation: Similarity3<f64>) -> Self {
+    pub fn new(mesh: &'a Mesh, material: &'a Material, transformation: Similarity3<f64>) -> Self {
         let inverse_transformation = transformation.inverse();
         Self {
             _mesh: mesh,

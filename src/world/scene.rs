@@ -12,10 +12,10 @@ pub struct Scene<'a> {
 }
 
 impl<'a> Scene<'a> {
-    pub fn new(resources: &'a Resources) -> Self {
+    pub fn new(resources: &'a Resources, instances: Vec<Instance<'a>>) -> Self {
         Self {
             _resources: resources,
-            _instances: vec![],
+            _instances: instances,
             _instance_bvh: Bvh {},
         }
     }
