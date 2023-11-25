@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    assets::Resources,
+    assets::{Mesh, Resources},
     input::{CameraBuilder, GradientBuilder, InstanceBuilder, MaterialBuilder, SettingsBuilder},
     world::{Camera, Scene},
 };
@@ -60,7 +60,7 @@ impl Parameters {
             && self
                 .meshes
                 .iter()
-                .all(|(id, path)| !id.is_empty() && !path.exists())
+                .all(|(id, path)| !id.is_empty() && path.exists() && path.is_file())
             && self
                 .instances
                 .iter()
@@ -122,11 +122,41 @@ impl Parameters {
         used_gradient_ids.sort_unstable();
         used_gradient_ids.dedup();
 
-        println!("Loading gradients... {:?}", used_gradient_ids);
-        println!("Loading materials... {:?}", used_material_ids);
-        println!("Loading meshes...    {:?}", used_mesh_ids);
+        let gradients = used_gradient_ids
+            .iter()
+            .map(|gradient_id| {
+                let gradient_builder = self
+                    .gradients
+                    .get(*gradient_id)
+                    .expect("Unable to find gradient");
+                (gradient_id.to_string(), gradient_builder.build())
+            })
+            .collect::<HashMap<_, _>>();
 
-        todo!()
+        let materials = used_material_ids
+            .iter()
+            .map(|material_id| {
+                let material_builder = self
+                    .materials
+                    .get(*material_id)
+                    .expect("Unable to find material");
+                (material_id.to_string(), material_builder.build(&gradients))
+            })
+            .collect::<HashMap<_, _>>();
+
+        let meshes = used_mesh_ids
+            .iter()
+            .map(|mesh_id| {
+                let path = self
+                    .meshes
+                    .get(*mesh_id)
+                    .expect("Unable to find mesh")
+                    .clone();
+                (mesh_id.to_string(), Mesh::load(&path))
+            })
+            .collect::<HashMap<_, _>>();
+
+        Resources::new(meshes, materials)
     }
 
     /// Create the scene.

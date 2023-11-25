@@ -12,8 +12,8 @@ materials:
     gradient_id: white
     refractive_index: 1.5
 meshes:
-  cube: resources/cube.obj
-  icosphere: resources/icosphere.obj
+  cube: ./assets/meshes/cube.obj
+  icosphere: ./assets/meshes/icosphere.obj
 instances:
   left_cube:
     mesh_id: cube

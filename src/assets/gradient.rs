@@ -1,6 +1,7 @@
 use enterpolation::{linear::Linear, Generator, Identity, Sorted};
 use palette::LinSrgba;
 
+#[derive(Debug, Clone)]
 pub struct Gradient {
     pub colours: Linear<Sorted<Vec<f32>>, Vec<LinSrgba>, Identity>,
 }

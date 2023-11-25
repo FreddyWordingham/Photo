@@ -1,4 +1,7 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+use crate::assets::{Gradient, Material};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MaterialBuilder {
@@ -35,6 +38,28 @@ impl MaterialBuilder {
             Self::Diffuse { gradient_id } => vec![gradient_id],
             Self::Reflective { gradient_id, .. } => vec![gradient_id],
             Self::Refractive { gradient_id, .. } => vec![gradient_id],
+        }
+    }
+
+    pub fn build(&self, gradients: &HashMap<String, Gradient>) -> Material {
+        match self {
+            Self::Diffuse { gradient_id } => Material::Diffuse {
+                colour: gradients[gradient_id].clone(),
+            },
+            Self::Reflective {
+                gradient_id,
+                reflectivity,
+            } => Material::Reflective {
+                colour: gradients[gradient_id].clone(),
+                reflectivity: *reflectivity,
+            },
+            Self::Refractive {
+                gradient_id,
+                refractive_index,
+            } => Material::Refractive {
+                colour: gradients[gradient_id].clone(),
+                refractive_index: *refractive_index,
+            },
         }
     }
 }
