@@ -96,6 +96,36 @@ impl Parameters {
 
     /// Load the resources.
     pub fn load_resources(&self) -> Resources {
+        let mut used_mesh_ids = self
+            .instances
+            .iter()
+            .map(|(_, instance)| instance.mesh_id())
+            .collect::<Vec<_>>();
+        used_mesh_ids.sort_unstable();
+        used_mesh_ids.dedup();
+        let mut used_material_ids = self
+            .instances
+            .iter()
+            .map(|(_, instance)| instance.material_id())
+            .collect::<Vec<_>>();
+        used_material_ids.sort_unstable();
+        used_material_ids.dedup();
+        let mut used_gradient_ids = used_material_ids
+            .iter()
+            .flat_map(|material_id| {
+                self.materials
+                    .get(*material_id)
+                    .expect("Unable to find material")
+                    .gradient_ids()
+            })
+            .collect::<Vec<_>>();
+        used_gradient_ids.sort_unstable();
+        used_gradient_ids.dedup();
+
+        println!("Loading gradients... {:?}", used_gradient_ids);
+        println!("Loading materials... {:?}", used_material_ids);
+        println!("Loading meshes...    {:?}", used_mesh_ids);
+
         todo!()
     }
 

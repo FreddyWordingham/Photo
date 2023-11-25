@@ -13,6 +13,7 @@ materials:
     refractive_index: 1.5
 meshes:
   cube: resources/cube.obj
+  icosphere: resources/icosphere.obj
 instances:
   left_cube:
     mesh_id: cube
