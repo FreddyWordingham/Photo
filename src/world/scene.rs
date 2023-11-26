@@ -11,7 +11,7 @@ use crate::{
 pub struct Scene<'a> {
     _resources: &'a Resources,
     instances: Vec<Instance<'a>>,
-    _instance_bvh: Bvh,
+    instance_bvh: Bvh,
     aabb: Aabb,
 }
 
@@ -19,10 +19,12 @@ impl<'a> Scene<'a> {
     pub fn new(resources: &'a Resources, instances: Vec<Instance<'a>>) -> Self {
         let aabb = Self::init_aabb(&instances);
 
+        let bvh = Bvh::new(&instances);
+
         Self {
             _resources: resources,
             instances,
-            _instance_bvh: Bvh {},
+            instance_bvh: bvh,
             aabb,
         }
     }
@@ -38,18 +40,16 @@ impl<'a> Scene<'a> {
     }
 
     pub fn sample(&self, pixel_index: [usize; 2], ray: Ray) -> Sample {
-        if !self.aabb.intersect_ray(&ray) {
-            return Sample::new(pixel_index, LinSrgba::new(0.0, 0.0, 0.0, 0.0));
-        }
-
-        for instance in &self.instances {
-            if instance.aabb().intersect_ray(&ray) {
-                if instance.intersect_ray(&ray) {
-                    let r = ray.direction().x.abs() as f32;
-                    let g = ray.direction().y.abs() as f32;
-                    let b = ray.direction().z.abs() as f32;
-                    return Sample::new(pixel_index, LinSrgba::new(r, g, b, 1.0));
-                }
+        for i in self
+            .instance_bvh
+            .ray_intersect_indices(&ray, &self.instances)
+        {
+            let instance = &self.instances[i];
+            if instance.intersect_ray(&ray) {
+                let r = ray.direction().x.abs() as f32;
+                let g = ray.direction().y.abs() as f32;
+                let b = ray.direction().z.abs() as f32;
+                return Sample::new(pixel_index, LinSrgba::new(r, g, b, 1.0));
             }
         }
 

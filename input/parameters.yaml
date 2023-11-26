@@ -62,7 +62,7 @@ cameras:
   - position: [12.0, 12.0, 12.0]
     target: [0.0, 0.0, 2.5]
     field_of_view: 120.0
-    resolution: [200, 400]
+    resolution: [2000, 4000]
     num_tiles: [20, 10]
     super_samples_per_axis: 1
   

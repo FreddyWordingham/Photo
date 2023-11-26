@@ -3,7 +3,7 @@ use nalgebra::{Point3, Similarity3};
 use crate::{
     assets::{Material, Mesh},
     geometry::{Aabb, Ray},
-    world::Bvh,
+    // world::Bvh,
 };
 
 pub struct Instance<'a> {
@@ -11,7 +11,7 @@ pub struct Instance<'a> {
     _material: &'a Material,
     _transformation: Similarity3<f64>,
     inverse_transformation: Similarity3<f64>,
-    _bvh: Bvh,
+    // _bvh: Bvh,
     aabb: Aabb,
 }
 
@@ -26,7 +26,7 @@ impl<'a> Instance<'a> {
             _material: material,
             _transformation: transformation,
             inverse_transformation,
-            _bvh: Bvh {},
+            // _bvh: Bvh::new(&vec![]),
             aabb,
         }
     }
