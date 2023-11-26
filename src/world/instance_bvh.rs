@@ -8,19 +8,19 @@ use crate::{
 const MAX_CHILDREN: usize = 2;
 
 #[derive(Clone)]
-struct BvhNode {
+struct InstanceBvhNode {
     pub aabb: Aabb,
     pub left_child: usize,
     pub count: usize,
 }
 
-pub struct Bvh {
+pub struct InstanceBvh {
     indices: Vec<usize>,
-    nodes: Vec<BvhNode>,
+    nodes: Vec<InstanceBvhNode>,
     nodes_used: usize,
 }
 
-impl Bvh {
+impl InstanceBvh {
     pub fn new(instances: &[Instance]) -> Self {
         let instance_count = instances.len();
 
@@ -37,7 +37,7 @@ impl Bvh {
     fn build(&mut self, instances: &[Instance]) {
         self.indices = (0..instances.len()).collect();
         self.nodes = vec![
-            BvhNode {
+            InstanceBvhNode {
                 aabb: Aabb::new_unchecked(
                     Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY),
                     Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY),
@@ -136,7 +136,7 @@ impl Bvh {
         instances: &[Instance],
         hits: &mut Vec<(usize, f64)>,
     ) {
-        if self.nodes[node_index].aabb.intersect_ray(ray) {
+        if self.nodes[node_index].aabb.ray_intersect(ray) {
             if self.nodes[node_index].count == 0 {
                 self.ray_intersect_node(self.nodes[node_index].left_child, ray, instances, hits);
                 self.ray_intersect_node(
@@ -149,7 +149,7 @@ impl Bvh {
                 for i in 0..self.nodes[node_index].count {
                     let instance_index = self.indices[self.nodes[node_index].left_child + i];
                     let instance_aabb = instances[instance_index].aabb();
-                    if let Some(instance_distance) = instance_aabb.intersect_ray_distance(ray) {
+                    if let Some(instance_distance) = instance_aabb.ray_intersect_distance(ray) {
                         hits.push((instance_index, instance_distance));
                     }
                 }

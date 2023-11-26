@@ -136,7 +136,7 @@ impl MeshBvh {
         mesh: &Mesh,
         hits: &mut Vec<(usize, f64)>,
     ) {
-        if self.nodes[node_index].aabb.intersect_ray(ray) {
+        if self.nodes[node_index].aabb.ray_intersect(ray) {
             if self.nodes[node_index].count == 0 {
                 self.ray_intersect_node(self.nodes[node_index].left_child, ray, mesh, hits);
                 self.ray_intersect_node(self.nodes[node_index].left_child + 1, ray, mesh, hits);
@@ -144,7 +144,7 @@ impl MeshBvh {
                 for i in 0..self.nodes[node_index].count {
                     let triangle_index = self.indices[self.nodes[node_index].left_child + i];
                     if let Some(triangle_distance) =
-                        mesh.triangle(triangle_index).intersect_ray_distance(ray)
+                        mesh.triangle(triangle_index).ray_intersect_distance(ray)
                     {
                         hits.push((triangle_index, triangle_distance));
                     }

@@ -1,8 +1,10 @@
 use indicatif::{ProgressBar, ProgressStyle};
+use palette::LinSrgba;
 use std::fs::create_dir_all;
 
 use crate::{
-    render::{Settings, Tile},
+    geometry::Ray,
+    render::{Sample, Settings, Tile},
     world::{Camera, Scene},
 };
 
@@ -42,7 +44,7 @@ fn render_tile(scene: &Scene, camera: &Camera, tile_index: [usize; 2]) -> Tile {
         for xi in 0..camera.super_samples_per_axis() {
             for yi in 0..camera.super_samples_per_axis() {
                 let ray = camera.generate_ray(sample.pixel_index, [xi, yi]);
-                sample += scene.sample(sample.pixel_index, ray);
+                sample += sample_scene(scene, sample.pixel_index, ray);
             }
         }
         sample /= (camera.super_samples_per_axis() * camera.super_samples_per_axis()) as f32;
@@ -50,4 +52,15 @@ fn render_tile(scene: &Scene, camera: &Camera, tile_index: [usize; 2]) -> Tile {
     });
 
     tile
+}
+
+fn sample_scene(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
+    if scene.ray_intersect(&ray) {
+        let r = ray.direction().x.abs() as f32;
+        let g = ray.direction().y.abs() as f32;
+        let b = ray.direction().z.abs() as f32;
+        return Sample::new(pixel_index, LinSrgba::new(r, g, b, 1.0));
+    }
+
+    return Sample::new(pixel_index, LinSrgba::new(0.0, 0.0, 0.0, 0.0));
 }

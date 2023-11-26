@@ -82,7 +82,7 @@ impl Triangle {
     }
 
     /// Test for an intersection distance with a ray.
-    pub fn intersect_ray(&self, ray: &Ray) -> bool {
+    pub fn ray_intersect(&self, ray: &Ray) -> bool {
         let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
         let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
         let h = ray.direction().cross(&edge2);
@@ -117,7 +117,7 @@ impl Triangle {
     }
 
     /// Test for an intersection distance with a ray.
-    pub fn intersect_ray_distance(&self, ray: &Ray) -> Option<f64> {
+    pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
         let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
         let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
         let h = ray.direction().cross(&edge2);
@@ -152,7 +152,7 @@ impl Triangle {
     }
 
     /// Test for an intersection point with a ray.
-    pub fn intersect_ray_point(&self, ray: &Ray) -> Option<Point3<f64>> {
+    pub fn ray_intersect_point(&self, ray: &Ray) -> Option<Point3<f64>> {
         let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
         let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
         let h = ray.direction().cross(&edge2);
@@ -187,7 +187,7 @@ impl Triangle {
     }
 
     /// Test for an intersection point with a ray, returning the surface normal.
-    pub fn intersect_ray_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
+    pub fn ray_intersect_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
         let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
         let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
         let h = ray.direction().cross(&edge2);

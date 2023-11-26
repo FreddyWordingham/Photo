@@ -98,7 +98,7 @@ impl Aabb {
     }
 
     /// Test for an intersection with a ray.
-    pub fn intersect_ray(&self, ray: &Ray) -> bool {
+    pub fn ray_intersect(&self, ray: &Ray) -> bool {
         let inv_direction = Vector3::new(
             1.0 / ray.direction().x,
             1.0 / ray.direction().y,
@@ -119,7 +119,7 @@ impl Aabb {
 
     /// Test for an intersection distance with a ray.
     /// Returns the distance along the ray to the intersection point.
-    pub fn intersect_ray_distance(&self, ray: &Ray) -> Option<f64> {
+    pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
         let inv_direction = Vector3::new(
             1.0 / ray.direction().x,
             1.0 / ray.direction().y,
@@ -143,8 +143,8 @@ impl Aabb {
     }
 
     /// Get the point of intersection with a ray.
-    pub fn intersect_ray_position(&self, ray: &Ray) -> Option<Point3<f64>> {
-        let distance = self.intersect_ray_distance(ray)?;
+    pub fn ray_intersect_position(&self, ray: &Ray) -> Option<Point3<f64>> {
+        let distance = self.ray_intersect_distance(ray)?;
         Some(ray.origin() + distance * ray.direction().as_ref())
     }
 }
