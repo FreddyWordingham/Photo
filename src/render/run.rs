@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::{
-    render::{Sample, Tile},
+    render::Tile,
     world::{Camera, Scene},
 };
 
@@ -19,23 +19,15 @@ pub fn render(output_directory: &Path, scene: &Scene, camera: &Camera) {
 }
 
 fn render_tile(scene: &Scene, camera: &Camera, tile_index: [usize; 2]) -> Tile {
-    let [rows, columns] = camera.tile_resolution();
-    let total_num_pixels = rows * columns;
-    let row_offset = tile_index[0] * rows;
-    let column_offset = tile_index[1] * columns;
+    let mut tile = Tile::new(
+        tile_index,
+        camera.tile_resolution(),
+        [0.0, 0.0, 0.0, 1.0].into(),
+    );
 
-    let mut tile = Tile::new([rows, columns]);
-
-    (0..total_num_pixels).into_iter().for_each(|n| {
-        let row = n % rows;
-        let column = n / rows;
-
-        tile.data[[row, column]] = if (row_offset + row) == (column_offset + column) {
-            Sample::new([0.0, 0.0, 1.0, 1.0].into())
-        } else {
-            let ray = camera.generate_ray([row_offset + row, column_offset + column], [0, 0]);
-            scene.sample(ray)
-        };
+    tile.data.par_mapv_inplace(|sample| {
+        let ray = camera.generate_ray(sample.pixel_index, [0, 0]);
+        scene.sample(sample.pixel_index, ray)
     });
 
     tile

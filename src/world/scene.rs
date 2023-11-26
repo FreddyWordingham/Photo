@@ -22,13 +22,11 @@ impl<'a> Scene<'a> {
         }
     }
 
-    pub fn sample(&self, ray: Ray) -> Sample {
+    pub fn sample(&self, pixel_index: [usize; 2], ray: Ray) -> Sample {
         let r = ray.direction().x.abs() as f32;
         let g = ray.direction().y.abs() as f32;
         let b = ray.direction().z.abs() as f32;
 
-        // println!("r: {}, g: {}, b: {}", r, g, b);
-
-        Sample::new(LinSrgba::new(r, g, b, 1.0))
+        Sample::new(pixel_index, LinSrgba::new(r, g, b, 1.0))
     }
 }

@@ -30,7 +30,7 @@ cameras:
   - position: [12.0, 12.0, 12.0]
     target: [0.0, 0.0, 0.0]
     field_of_view: 90.0
-    resolution: [960, 960]
+    resolution: [960, 1960]
     num_tiles: [20, 4]
     super_sampling: 3
   
