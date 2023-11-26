@@ -18,6 +18,10 @@ impl Aabb {
         new
     }
 
+    pub fn new_unchecked(mins: Point3<f64>, maxs: Point3<f64>) -> Self {
+        Self { mins, maxs }
+    }
+
     /// Check if the axis-aligned bounding box parameters are valid.
     pub fn is_valid(&self) -> bool {
         self.mins < self.maxs
@@ -52,8 +56,51 @@ impl Aabb {
         (min, max)
     }
 
+    pub fn union(&self, other: &Self) -> Self {
+        let mins = Point3::new(
+            self.mins.x.min(other.mins.x),
+            self.mins.y.min(other.mins.y),
+            self.mins.z.min(other.mins.z),
+        );
+        let maxs = Point3::new(
+            self.maxs.x.max(other.maxs.x),
+            self.maxs.y.max(other.maxs.y),
+            self.maxs.z.max(other.maxs.z),
+        );
+
+        Self::new(mins, maxs)
+    }
+
+    pub fn overlaps_aabb(&self, other: &Aabb) -> bool {
+        if self.maxs.x < other.mins.x || other.maxs.x < self.mins.x {
+            return false;
+        }
+        if self.maxs.y < other.mins.y || other.maxs.y < self.mins.y {
+            return false;
+        }
+        if self.maxs.z < other.mins.z || other.maxs.z < self.mins.z {
+            return false;
+        }
+        true
+    }
+
     /// Test for an intersection with a ray.
-    pub fn intersect_ray(&self, _ray: &Ray) -> bool {
-        todo!()
+    pub fn intersect_ray(&self, ray: &Ray) -> bool {
+        let inv_direction = Vector3::new(
+            1.0 / ray.direction().x,
+            1.0 / ray.direction().y,
+            1.0 / ray.direction().z,
+        );
+
+        let t1 = (self.mins - ray.origin()).component_mul(&inv_direction);
+        let t2 = (self.maxs - ray.origin()).component_mul(&inv_direction);
+
+        let t_min = t1.zip_map(&t2, f64::min);
+        let t_max = t1.zip_map(&t2, f64::max);
+
+        let t_min = t_min.x.max(t_min.y).max(t_min.z);
+        let t_max = t_max.x.min(t_max.y).min(t_max.z);
+
+        !(t_max < t_min || t_max < 0.0)
     }
 }

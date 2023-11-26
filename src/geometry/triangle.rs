@@ -23,6 +23,11 @@ impl Triangle {
         }
     }
 
+    /// Get the triangle's vertex positions.
+    pub fn vertex_positions(&self) -> &[Point3<f64>; 3] {
+        &self.vertex_positions
+    }
+
     /// Check if the triangle overlaps an AABB.
     pub fn overlaps_aabb(&self, aabb: &Aabb) -> bool {
         // 1. Test for overlap on the box axes (X, Y, and Z axes)

@@ -1,4 +1,5 @@
-use nalgebra::{Point3, Unit, Vector3};
+use nalgebra::{Point3, Similarity3, Unit, Vector3};
+use std::ops::Mul;
 
 pub struct Ray {
     origin: Point3<f64>,
@@ -24,5 +25,16 @@ impl Ray {
     /// Travel (move the origin) along the ray's direction.
     pub fn travel(&mut self, distance: f64) {
         self.origin += distance * self.direction.as_ref();
+    }
+}
+
+impl Mul<&Similarity3<f64>> for &Ray {
+    type Output = Ray;
+
+    fn mul(self, transform: &Similarity3<f64>) -> Self::Output {
+        Self::Output {
+            origin: transform * self.origin,
+            direction: Unit::new_normalize(transform * self.direction.as_ref()),
+        }
     }
 }

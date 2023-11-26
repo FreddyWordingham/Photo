@@ -93,8 +93,8 @@ impl Mesh {
                     }
                     faces.push(Face {
                         position_indices: [f[0][0], f[1][0], f[2][0]],
-                        normal_indices: [f[0][1], f[1][1], f[2][1]],
-                        texture_coordinate_indices: [f[0][2], f[1][2], f[2][2]],
+                        normal_indices: [f[0][2], f[1][2], f[2][2]],
+                        texture_coordinate_indices: [f[0][1], f[1][1], f[2][1]],
                     });
                 }
                 _ => {}
