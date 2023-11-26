@@ -18,7 +18,7 @@ pub fn render(output_directory: &Path, scene: &Scene, camera: &Camera) {
     });
 }
 
-fn render_tile(_scene: &Scene, camera: &Camera, tile_index: [usize; 2]) -> Tile {
+fn render_tile(scene: &Scene, camera: &Camera, tile_index: [usize; 2]) -> Tile {
     let [rows, columns] = camera.tile_resolution();
     let total_num_pixels = rows * columns;
     let row_offset = tile_index[0] * rows;
@@ -30,10 +30,12 @@ fn render_tile(_scene: &Scene, camera: &Camera, tile_index: [usize; 2]) -> Tile 
         let row = n % rows;
         let column = n / rows;
 
-        if (row_offset + row) == (column_offset + column) {
-            let sample = Sample::new([0.0, 0.0, 1.0, 1.0].into());
-            tile.data[[row, column]] = sample;
-        }
+        tile.data[[row, column]] = if (row_offset + row) == (column_offset + column) {
+            Sample::new([0.0, 0.0, 1.0, 1.0].into())
+        } else {
+            let ray = camera.generate_ray([row_offset + row, column_offset + column], [0, 0]);
+            scene.sample(ray)
+        };
     });
 
     tile

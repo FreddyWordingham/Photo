@@ -1,3 +1,5 @@
+use palette::LinSrgba;
+
 use crate::{
     assets::Resources,
     geometry::Ray,
@@ -20,7 +22,13 @@ impl<'a> Scene<'a> {
         }
     }
 
-    pub fn sample(&self, _ray: Ray) -> Sample {
-        todo!()
+    pub fn sample(&self, ray: Ray) -> Sample {
+        let r = ray.direction().x.abs() as f32;
+        let g = ray.direction().y.abs() as f32;
+        let b = ray.direction().z.abs() as f32;
+
+        // println!("r: {}, g: {}, b: {}", r, g, b);
+
+        Sample::new(LinSrgba::new(r, g, b, 1.0))
     }
 }

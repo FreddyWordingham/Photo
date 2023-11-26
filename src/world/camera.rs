@@ -1,11 +1,11 @@
-use nalgebra::{Point3, Unit};
+use nalgebra::{Point3, Rotation3, Unit};
 
 use crate::geometry::Ray;
 
 pub struct Camera {
     position: Point3<f64>,
     target: Point3<f64>,
-    _field_of_view: f64,
+    field_of_view: f64,
     super_samples_per_axis: usize,
     resolution: [usize; 2],
     num_tiles: [usize; 2],
@@ -41,11 +41,15 @@ impl Camera {
         Self {
             position,
             target,
-            _field_of_view: field_of_view,
+            field_of_view,
             super_samples_per_axis,
             resolution,
             num_tiles,
         }
+    }
+
+    pub fn super_samples_per_axis(&self) -> usize {
+        self.super_samples_per_axis
     }
 
     pub fn num_tiles(&self) -> [usize; 2] {
@@ -69,11 +73,23 @@ impl Camera {
             pixel[0] as f64 + ((sub_pixel[0] as f64 + 0.5) / self.super_samples_per_axis as f64),
             pixel[1] as f64 + ((sub_pixel[1] as f64 + 0.5) / self.super_samples_per_axis as f64),
         ];
-        println!("pixel: {} - {}\n", pixel[0], pixel[1]);
 
-        Ray::new(
-            self.position,
-            Unit::new_normalize(self.target - self.position),
-        )
+        let d_row = (pixel[0] / self.resolution[0] as f64) - 0.5;
+        let d_col = (pixel[1] / self.resolution[1] as f64) - 0.5;
+
+        let d_theta = d_col * (self.field_of_view * 0.5);
+        let d_phi = d_row
+            * (self.field_of_view * (self.resolution[0] as f64 / self.resolution[1] as f64) * 0.5);
+
+        let forward = Unit::new_normalize(self.target - self.position);
+        let right = Unit::new_normalize(forward.cross(&nalgebra::Vector3::z()));
+        let up = Unit::new_normalize(right.cross(&forward));
+
+        let vertical_rotation = Rotation3::from_axis_angle(&up, d_phi);
+        let lateral_rotation = Rotation3::from_axis_angle(&right, d_theta);
+
+        let direction = lateral_rotation * vertical_rotation * forward;
+
+        Ray::new(self.position, direction)
     }
 }

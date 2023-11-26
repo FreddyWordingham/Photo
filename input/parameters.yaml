@@ -27,10 +27,10 @@ instances:
     rotation: [10.0, 15.0, 20.0]
     scale: 0.5
 cameras:
-  - position: [-4.0, 8.0, 12.0]
+  - position: [12.0, 12.0, 12.0]
     target: [0.0, 0.0, 0.0]
     field_of_view: 90.0
-    resolution: [540, 960]
-    num_tiles: [10, 4]
+    resolution: [960, 960]
+    num_tiles: [20, 4]
     super_sampling: 3
   
