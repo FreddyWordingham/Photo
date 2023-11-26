@@ -1,3 +1,4 @@
+use indicatif::{ProgressBar, ProgressStyle};
 use std::fs::create_dir_all;
 
 use crate::{
@@ -12,13 +13,21 @@ pub fn render(settings: &Settings, scene: &Scene, camera_id: &str, camera: &Came
     let [rows, columns] = camera.num_tiles();
     let total_num_tiles = rows * columns;
 
+    let pb = ProgressBar::new(total_num_tiles as u64).with_style(
+            ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.green/red}] [{pos}/{len}] {percent}% ({eta}) {msg}")
+                .expect("Failed to set progress-bar style.")
+                .progress_chars("\\/"),
+        );
     (0..total_num_tiles).into_iter().for_each(|n| {
+        pb.inc(1);
         let row = n % rows;
         let column = n / rows;
         let tile = render_tile(scene, camera, [row, column]);
         let file_name = output_directory.join(format!("tile_{:03}_{:03}.png", row, column));
         tile.save(&file_name);
     });
+    pb.finish_with_message(format!("Rendered {}", camera_id));
 }
 
 fn render_tile(scene: &Scene, camera: &Camera, tile_index: [usize; 2]) -> Tile {

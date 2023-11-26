@@ -33,6 +33,27 @@ instances:
     material_id: plastic
     translation: [0.0, 4.0, 0.0]
     scale: 0.25
+  planet_sphere_0:
+    mesh_id: icosphere
+    material_id: plastic
+    translation: [4.0, 8.0, 8.0]
+    scale: 0.25
+  planet_ring_0:
+    mesh_id: torus
+    material_id: plastic
+    translation: [4.0, 8.0, 8.0]
+    rotation: [45.0, 15.0, 30.0]
+    scale: 0.5
+  planet_sphere_1:
+    mesh_id: icosphere
+    material_id: plastic
+    translation: [4.0, -8.0, 4.0]
+    scale: 0.5
+  planet_ring_1:
+    mesh_id: torus
+    material_id: plastic
+    translation: [4.0, -8.0, 4.0]
+    rotation: [145.0, 75.0, 70.0]
   tree:
     mesh_id: tree
     material_id: plastic
@@ -40,8 +61,8 @@ instances:
 cameras:
   - position: [12.0, 12.0, 12.0]
     target: [0.0, 0.0, 2.5]
-    field_of_view: 90.0
-    resolution: [600, 1000]
-    num_tiles: [20, 4]
+    field_of_view: 120.0
+    resolution: [200, 400]
+    num_tiles: [20, 10]
     super_samples_per_axis: 1
   
