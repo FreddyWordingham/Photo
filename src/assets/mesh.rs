@@ -1,7 +1,10 @@
 use nalgebra::{Point3, Unit, Vector2, Vector3};
 use std::{fs::read_to_string, path::Path};
 
-use crate::geometry::{Aabb, Ray, Triangle};
+use crate::{
+    assets::MeshBvh,
+    geometry::{Ray, Triangle},
+};
 
 struct Face {
     position_indices: [usize; 3],
@@ -14,7 +17,7 @@ pub struct Mesh {
     vertex_normals: Vec<Unit<Vector3<f64>>>,
     vertex_texture_coordinates: Vec<Vector2<f64>>,
     faces: Vec<Face>,
-    aabb: Aabb,
+    bvh: MeshBvh,
 }
 
 impl Mesh {
@@ -101,12 +104,35 @@ impl Mesh {
             }
         }
 
+        let triangles = faces
+            .iter()
+            .map(|f| {
+                Triangle::new(
+                    [
+                        vertex_positions[f.position_indices[0]],
+                        vertex_positions[f.position_indices[1]],
+                        vertex_positions[f.position_indices[2]],
+                    ],
+                    [
+                        vertex_normals[f.normal_indices[0]],
+                        vertex_normals[f.normal_indices[1]],
+                        vertex_normals[f.normal_indices[2]],
+                    ],
+                    [
+                        vertex_texture_coordinates[f.texture_coordinate_indices[0]],
+                        vertex_texture_coordinates[f.texture_coordinate_indices[1]],
+                        vertex_texture_coordinates[f.texture_coordinate_indices[2]],
+                    ],
+                )
+            })
+            .collect::<Vec<_>>();
+
         Self {
             vertex_positions,
             vertex_normals,
             vertex_texture_coordinates,
             faces,
-            aabb: Aabb::new(mins, maxs),
+            bvh: MeshBvh::new(&triangles),
         }
     }
 
@@ -155,18 +181,7 @@ impl Mesh {
         })
     }
 
-    /// Test for an intersection with a ray.
     pub fn intersect_ray(&self, ray: &Ray) -> bool {
-        if !self.aabb.intersect_ray(ray) {
-            return false;
-        }
-
-        for triangle in self.triangles() {
-            if triangle.intersect_ray(ray) {
-                return true;
-            }
-        }
-
-        false
+        self.bvh.ray_intersect_indices(ray, self).len() > 0
     }
 }

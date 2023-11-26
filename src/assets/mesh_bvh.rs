@@ -1,43 +1,43 @@
 use nalgebra::Point3;
 
 use crate::{
-    geometry::{Aabb, Ray},
-    world::Instance,
+    assets::Mesh,
+    geometry::{Aabb, Ray, Triangle},
 };
 
-const MAX_CHILDREN: usize = 2;
+const MAX_CHILDREN: usize = 8;
 
 #[derive(Clone)]
-struct BvhNode {
+struct MeshBvhNode {
     pub aabb: Aabb,
     pub left_child: usize,
     pub count: usize,
 }
 
-pub struct Bvh {
+pub struct MeshBvh {
     indices: Vec<usize>,
-    nodes: Vec<BvhNode>,
+    nodes: Vec<MeshBvhNode>,
     nodes_used: usize,
 }
 
-impl Bvh {
-    pub fn new(instances: &[Instance]) -> Self {
-        let instance_count = instances.len();
+impl MeshBvh {
+    pub fn new(triangles: &[Triangle]) -> Self {
+        let triangle_count = triangles.len();
 
         let mut new = Self {
-            indices: Vec::with_capacity(instance_count),
-            nodes: Vec::with_capacity((instance_count * 2) - 1),
+            indices: Vec::with_capacity(triangle_count),
+            nodes: Vec::with_capacity((triangle_count * 2) - 1),
             nodes_used: 0,
         };
-        new.build(instances);
+        new.build(triangles);
 
         new
     }
 
-    fn build(&mut self, instances: &[Instance]) {
-        self.indices = (0..instances.len()).collect();
+    fn build(&mut self, triangles: &[Triangle]) {
+        self.indices = (0..triangles.len()).collect();
         self.nodes = vec![
-            BvhNode {
+            MeshBvhNode {
                 aabb: Aabb::new_unchecked(
                     Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY),
                     Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY),
@@ -45,26 +45,26 @@ impl Bvh {
                 left_child: 0,
                 count: 0,
             };
-            (instances.len() * 2) - 1
+            (triangles.len() * 2) - 1
         ];
         self.nodes[0].left_child = 0;
-        self.nodes[0].count = instances.len();
+        self.nodes[0].count = triangles.len();
         self.nodes_used = 1;
 
-        self.update_bounds(0, instances);
-        self.subdivide(0, instances);
+        self.update_bounds(0, triangles);
+        self.subdivide(0, triangles);
 
         self.nodes.truncate(self.nodes_used);
     }
 
-    fn update_bounds(&mut self, index: usize, instances: &[Instance]) {
+    fn update_bounds(&mut self, index: usize, triangles: &[Triangle]) {
         for i in 0..self.nodes[index].count {
-            let instance_aabb = &instances[self.indices[self.nodes[index].left_child + i]].aabb();
-            self.nodes[index].aabb = self.nodes[index].aabb.union(instance_aabb);
+            let triangle_aabb = &triangles[self.indices[self.nodes[index].left_child + i]].aabb();
+            self.nodes[index].aabb = self.nodes[index].aabb.union(triangle_aabb);
         }
     }
 
-    fn subdivide(&mut self, index: usize, instances: &[Instance]) {
+    fn subdivide(&mut self, index: usize, triangles: &[Triangle]) {
         if self.nodes[index].count <= MAX_CHILDREN {
             return;
         }
@@ -87,7 +87,7 @@ impl Bvh {
         let mut j = i + self.nodes[index].count - 1;
 
         while i <= j {
-            if instances[self.indices[i]].aabb().centre()[axis] < split_position {
+            if triangles[self.indices[i]].aabb().centre()[axis] < split_position {
                 i += 1;
             } else {
                 let temp = self.indices[i];
@@ -116,15 +116,15 @@ impl Bvh {
         self.nodes[index].left_child = left_child_index;
         self.nodes[index].count = 0;
 
-        self.update_bounds(left_child_index, instances);
-        self.update_bounds(right_child_index, instances);
-        self.subdivide(left_child_index, instances);
-        self.subdivide(right_child_index, instances);
+        self.update_bounds(left_child_index, triangles);
+        self.update_bounds(right_child_index, triangles);
+        self.subdivide(left_child_index, triangles);
+        self.subdivide(right_child_index, triangles);
     }
 
-    pub fn ray_intersect_indices(&self, ray: &Ray, instances: &[Instance]) -> Vec<usize> {
+    pub fn ray_intersect_indices(&self, ray: &Ray, mesh: &Mesh) -> Vec<usize> {
         let mut hits: Vec<(usize, f64)> = Vec::new();
-        self.ray_intersect_node(0, ray, instances, &mut hits);
+        self.ray_intersect_node(0, ray, mesh, &mut hits);
         hits.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
         hits.into_iter().map(|(index, _)| index).collect()
     }
@@ -133,24 +133,20 @@ impl Bvh {
         &self,
         node_index: usize,
         ray: &Ray,
-        instances: &[Instance],
+        mesh: &Mesh,
         hits: &mut Vec<(usize, f64)>,
     ) {
         if self.nodes[node_index].aabb.intersect_ray(ray) {
             if self.nodes[node_index].count == 0 {
-                self.ray_intersect_node(self.nodes[node_index].left_child, ray, instances, hits);
-                self.ray_intersect_node(
-                    self.nodes[node_index].left_child + 1,
-                    ray,
-                    instances,
-                    hits,
-                );
+                self.ray_intersect_node(self.nodes[node_index].left_child, ray, mesh, hits);
+                self.ray_intersect_node(self.nodes[node_index].left_child + 1, ray, mesh, hits);
             } else {
                 for i in 0..self.nodes[node_index].count {
-                    let instance_index = self.indices[self.nodes[node_index].left_child + i];
-                    let instance_aabb = instances[instance_index].aabb();
-                    if let Some(instance_distance) = instance_aabb.intersect_ray_distance(ray) {
-                        hits.push((instance_index, instance_distance));
+                    let triangle_index = self.indices[self.nodes[node_index].left_child + i];
+                    if let Some(triangle_distance) =
+                        mesh.triangle(triangle_index).intersect_ray_distance(ray)
+                    {
+                        hits.push((triangle_index, triangle_distance));
                     }
                 }
             }

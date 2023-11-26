@@ -24,7 +24,7 @@ impl Aabb {
 
     /// Check if the axis-aligned bounding box parameters are valid.
     pub fn is_valid(&self) -> bool {
-        self.mins < self.maxs
+        self.mins <= self.maxs
     }
 
     /// Get the minimum point.

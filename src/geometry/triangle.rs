@@ -28,6 +28,27 @@ impl Triangle {
         &self.vertex_positions
     }
 
+    /// Get the axis-aligned bounding box of the triangle.
+    pub fn aabb(&self) -> Aabb {
+        let mut mins = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+        let mut maxs = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+
+        for vertex in &self.vertex_positions {
+            mins = Point3::new(
+                mins.x.min(vertex.x),
+                mins.y.min(vertex.y),
+                mins.z.min(vertex.z),
+            );
+            maxs = Point3::new(
+                maxs.x.max(vertex.x),
+                maxs.y.max(vertex.y),
+                maxs.z.max(vertex.z),
+            );
+        }
+
+        Aabb::new(mins, maxs)
+    }
+
     /// Check if the triangle overlaps an AABB.
     pub fn overlaps_aabb(&self, aabb: &Aabb) -> bool {
         // 1. Test for overlap on the box axes (X, Y, and Z axes)
