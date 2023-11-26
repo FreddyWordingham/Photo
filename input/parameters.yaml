@@ -15,26 +15,32 @@ materials:
 meshes:
   cube: ./assets/meshes/cube.obj
   icosphere: ./assets/meshes/icosphere.obj
+  torus: ./assets/meshes/torus.obj
+  tree: ./assets/meshes/tree.obj
 instances:
   left_cube:
     mesh_id: cube
     material_id: plastic
-    translation: [-1.0, 0.0, 0.0]
+    translation: [-3.0, 0.0, 0.0]
   right_cube:
     mesh_id: cube
     material_id: plastic
-    translation: [1.0, 0.0, 0.0]
+    translation: [3.0, 0.0, 0.0]
     rotation: [10.0, 15.0, 20.0]
     scale: 0.5
   front_sphere:
     mesh_id: icosphere
     material_id: plastic
-    translation: [0.0, 2.0, 0.0]
+    translation: [0.0, 4.0, 0.0]
     scale: 0.25
+  tree:
+    mesh_id: tree
+    material_id: plastic
+    translation: [0.0, 0.0, 0.0]
 cameras:
   - position: [12.0, 12.0, 12.0]
-    target: [0.0, 0.0, 0.0]
-    field_of_view: 45.0
+    target: [0.0, 0.0, 2.5]
+    field_of_view: 90.0
     resolution: [600, 1000]
     num_tiles: [20, 4]
     super_samples_per_axis: 1

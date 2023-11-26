@@ -78,15 +78,15 @@ impl Camera {
         let d_col = (pixel[1] / self.resolution[1] as f64) - 0.5;
 
         let d_theta = d_col * (self.field_of_view * 0.5);
-        let d_phi = d_row
+        let d_phi = -d_row
             * (self.field_of_view * (self.resolution[0] as f64 / self.resolution[1] as f64) * 0.5);
 
         let forward = Unit::new_normalize(self.target - self.position);
         let right = Unit::new_normalize(forward.cross(&nalgebra::Vector3::z()));
         let up = Unit::new_normalize(right.cross(&forward));
 
-        let vertical_rotation = Rotation3::from_axis_angle(&up, d_phi);
-        let lateral_rotation = Rotation3::from_axis_angle(&right, d_theta);
+        let vertical_rotation = Rotation3::from_axis_angle(&right, d_phi);
+        let lateral_rotation = Rotation3::from_axis_angle(&up, d_theta);
 
         let direction = lateral_rotation * vertical_rotation * forward;
 
