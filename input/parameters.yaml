@@ -13,11 +13,16 @@ materials:
     gradient_id: white
     refractive_index: 1.5
 meshes:
+  square: ./assets/meshes/square.obj
   cube: ./assets/meshes/cube.obj
   icosphere: ./assets/meshes/icosphere.obj
   torus: ./assets/meshes/torus.obj
   tree: ./assets/meshes/tree.obj
 instances:
+  floor:
+    mesh_id: square
+    material_id: plastic
+    scale: 5.0
   left_cube:
     mesh_id: cube
     material_id: plastic

@@ -198,4 +198,19 @@ impl Mesh {
             .filter_map(|(n, _dist)| self.triangle(n).ray_intersect_distance(ray))
             .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
     }
+
+    pub fn ray_intersect_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
+        self.bvh
+            .ray_intersections(ray, self)
+            .into_iter()
+            .filter_map(|(n, _dist)| {
+                self.triangle(n)
+                    .ray_intersect_distance_normal(ray)
+                    .map(|result| (n, result))
+            })
+            .min_by(|(_, (a_dist, _)), (_, (b_dist, _))| {
+                a_dist.partial_cmp(b_dist).unwrap_or(Ordering::Equal)
+            })
+            .map(|(_, result)| result)
+    }
 }

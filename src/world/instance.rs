@@ -1,4 +1,4 @@
-use nalgebra::{Point3, Similarity3};
+use nalgebra::{Point3, Similarity3, Unit, Vector3};
 
 use crate::{
     assets::{Material, Mesh},
@@ -64,6 +64,19 @@ impl<'a> Instance<'a> {
         let transformed_ray = ray * &self.inverse_transformation;
         if let Some(distance) = self.mesh.ray_intersect_distance(&transformed_ray) {
             Some(distance * self.transformation.scaling())
+        } else {
+            None
+        }
+    }
+
+    pub fn ray_intersect_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
+        let transformed_ray = ray * &self.inverse_transformation;
+        if let Some((distance, normal)) = self.mesh.ray_intersect_distance_normal(&transformed_ray)
+        {
+            Some((
+                distance * self.transformation.scaling(),
+                Unit::new_normalize(self.transformation.transform_vector(&normal)),
+            ))
         } else {
             None
         }

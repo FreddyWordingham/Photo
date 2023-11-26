@@ -46,9 +46,10 @@ fn render_tile(scene: &Scene, camera: &Camera, tile_index: [usize; 2]) -> Tile {
                 let ray = camera.generate_ray(sample.pixel_index, [xi, yi]);
                 sample += sample_stencil(scene, sample.pixel_index, ray.clone());
                 sample += sample_distance(scene, sample.pixel_index, ray);
+                sample += sample_normal(scene, sample.pixel_index, ray);
             }
         }
-        sample /= (camera.super_samples_per_axis() * camera.super_samples_per_axis() * 2) as f32;
+        sample /= (camera.super_samples_per_axis() * camera.super_samples_per_axis() * 3) as f32;
         sample
     });
 
@@ -72,6 +73,17 @@ fn sample_distance(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
         let r = scale * distance as f32;
         let g = scale * distance as f32;
         let b = scale * distance as f32;
+        return Sample::new(pixel_index, LinSrgba::new(r, g, b, 1.0));
+    }
+
+    return Sample::new(pixel_index, LinSrgba::new(0.0, 0.0, 0.0, 0.0));
+}
+
+fn sample_normal(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
+    if let Some((_distance, normal)) = scene.ray_intersect_distance_normal(&ray) {
+        let r = normal.x.abs() as f32;
+        let g = normal.y.abs() as f32;
+        let b = normal.z.abs() as f32;
         return Sample::new(pixel_index, LinSrgba::new(r, g, b, 1.0));
     }
 
