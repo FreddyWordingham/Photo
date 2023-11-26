@@ -122,11 +122,11 @@ impl InstanceBvh {
         self.subdivide(right_child_index, instances);
     }
 
-    pub fn ray_intersect_indices(&self, ray: &Ray, instances: &[Instance]) -> Vec<usize> {
+    pub fn ray_intersections(&self, ray: &Ray, instances: &[Instance]) -> Vec<(usize, f64)> {
         let mut hits: Vec<(usize, f64)> = Vec::new();
         self.ray_intersect_node(0, ray, instances, &mut hits);
         hits.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-        hits.into_iter().map(|(index, _)| index).collect()
+        hits
     }
 
     fn ray_intersect_node(
@@ -149,8 +149,9 @@ impl InstanceBvh {
                 for i in 0..self.nodes[node_index].count {
                     let instance_index = self.indices[self.nodes[node_index].left_child + i];
                     let instance_aabb = instances[instance_index].aabb();
-                    if let Some(instance_distance) = instance_aabb.ray_intersect_distance(ray) {
-                        hits.push((instance_index, instance_distance));
+                    if let Some(instance_aabb_distance) = instance_aabb.ray_intersect_distance(ray)
+                    {
+                        hits.push((instance_index, instance_aabb_distance));
                     }
                 }
             }

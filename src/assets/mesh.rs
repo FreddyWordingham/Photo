@@ -1,5 +1,8 @@
 use nalgebra::{Point3, Unit, Vector2, Vector3};
-use std::{fs::read_to_string, path::Path};
+use std::{
+    cmp::Ordering,
+    {fs::read_to_string, path::Path},
+};
 
 use crate::{
     assets::MeshBvh,
@@ -181,7 +184,18 @@ impl Mesh {
         })
     }
 
-    pub fn intersect_ray(&self, ray: &Ray) -> bool {
-        self.bvh.ray_intersect_indices(ray, self).len() > 0
+    pub fn ray_intersect(&self, ray: &Ray) -> bool {
+        self.bvh
+            .ray_intersections(ray, self)
+            .into_iter()
+            .any(|(n, _dist)| self.triangle(n).ray_intersect(ray))
+    }
+
+    pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
+        self.bvh
+            .ray_intersections(ray, self)
+            .into_iter()
+            .filter_map(|(n, _dist)| self.triangle(n).ray_intersect_distance(ray))
+            .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
     }
 }

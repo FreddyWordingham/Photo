@@ -17,6 +17,17 @@ impl<'a> Scene<'a> {
     }
 
     pub fn ray_intersect(&self, ray: &Ray) -> bool {
-        self.bvh.ray_intersect_indices(ray, &self.instances).len() > 0
+        self.bvh
+            .ray_intersections(ray, &self.instances)
+            .iter()
+            .any(|&(n, _distance)| self.instances[n].ray_intersect(ray))
+    }
+
+    pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
+        self.bvh
+            .ray_intersections(ray, &self.instances)
+            .iter()
+            .filter_map(|&(n, _distance)| self.instances[n].ray_intersect_distance(ray))
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
     }
 }

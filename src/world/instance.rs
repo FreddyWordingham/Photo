@@ -8,7 +8,7 @@ use crate::{
 pub struct Instance<'a> {
     mesh: &'a Mesh,
     _material: &'a Material,
-    _transformation: Similarity3<f64>,
+    transformation: Similarity3<f64>,
     inverse_transformation: Similarity3<f64>,
     aabb: Aabb,
 }
@@ -22,7 +22,7 @@ impl<'a> Instance<'a> {
         Self {
             mesh,
             _material: material,
-            _transformation: transformation,
+            transformation,
             inverse_transformation,
             aabb,
         }
@@ -55,8 +55,17 @@ impl<'a> Instance<'a> {
         self.aabb
     }
 
-    pub fn intersect_ray(&self, ray: &Ray) -> bool {
+    pub fn ray_intersect(&self, ray: &Ray) -> bool {
         let transformed_ray = ray * &self.inverse_transformation;
-        self.mesh.intersect_ray(&transformed_ray)
+        self.mesh.ray_intersect(&transformed_ray)
+    }
+
+    pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
+        let transformed_ray = ray * &self.inverse_transformation;
+        if let Some(distance) = self.mesh.ray_intersect_distance(&transformed_ray) {
+            Some(distance * self.transformation.scaling())
+        } else {
+            None
+        }
     }
 }

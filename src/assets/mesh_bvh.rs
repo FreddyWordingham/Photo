@@ -122,11 +122,11 @@ impl MeshBvh {
         self.subdivide(right_child_index, triangles);
     }
 
-    pub fn ray_intersect_indices(&self, ray: &Ray, mesh: &Mesh) -> Vec<usize> {
+    pub fn ray_intersections(&self, ray: &Ray, mesh: &Mesh) -> Vec<(usize, f64)> {
         let mut hits: Vec<(usize, f64)> = Vec::new();
         self.ray_intersect_node(0, ray, mesh, &mut hits);
         hits.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-        hits.into_iter().map(|(index, _)| index).collect()
+        hits
     }
 
     fn ray_intersect_node(
@@ -143,10 +143,10 @@ impl MeshBvh {
             } else {
                 for i in 0..self.nodes[node_index].count {
                     let triangle_index = self.indices[self.nodes[node_index].left_child + i];
-                    if let Some(triangle_distance) =
-                        mesh.triangle(triangle_index).ray_intersect_distance(ray)
+                    let triangle_aabb = mesh.triangle(triangle_index).aabb();
+                    if let Some(triangle_aabb_distance) = triangle_aabb.ray_intersect_distance(ray)
                     {
-                        hits.push((triangle_index, triangle_distance));
+                        hits.push((triangle_index, triangle_aabb_distance));
                     }
                 }
             }

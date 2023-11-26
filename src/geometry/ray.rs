@@ -1,6 +1,7 @@
 use nalgebra::{Point3, Similarity3, Unit, Vector3};
 use std::ops::Mul;
 
+#[derive(Clone, Copy, Debug)]
 pub struct Ray {
     origin: Point3<f64>,
     direction: Unit<Vector3<f64>>,
