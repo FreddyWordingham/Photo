@@ -167,13 +167,12 @@ impl Parameters {
 
     /// Create the scene.
     pub fn create_scene<'a>(&self, resources: &'a Resources) -> Scene<'a> {
-        let instances = self
-            .instances
-            .iter()
-            .map(|(_, instance)| instance.build(resources))
-            .collect::<Vec<_>>();
-
-        Scene::new(resources, instances)
+        Scene::new(
+            self.instances
+                .iter()
+                .map(|(_, instance)| instance.build(resources))
+                .collect::<Vec<_>>(),
+        )
     }
 
     /// Create the cameras.

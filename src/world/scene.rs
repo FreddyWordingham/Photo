@@ -1,42 +1,22 @@
-use nalgebra::Point3;
 use palette::LinSrgba;
 
 use crate::{
-    assets::Resources,
-    geometry::{Aabb, Ray},
+    geometry::Ray,
     render::Sample,
     world::{Bvh, Instance},
 };
 
 pub struct Scene<'a> {
-    _resources: &'a Resources,
-    instances: Vec<Instance<'a>>,
     instance_bvh: Bvh,
-    aabb: Aabb,
+    instances: Vec<Instance<'a>>,
 }
 
 impl<'a> Scene<'a> {
-    pub fn new(resources: &'a Resources, instances: Vec<Instance<'a>>) -> Self {
-        let aabb = Self::init_aabb(&instances);
-
-        let bvh = Bvh::new(&instances);
-
+    pub fn new(instances: Vec<Instance<'a>>) -> Self {
         Self {
-            _resources: resources,
+            instance_bvh: Bvh::new(&instances),
             instances,
-            instance_bvh: bvh,
-            aabb,
         }
-    }
-
-    fn init_aabb(instances: &[Instance]) -> Aabb {
-        let empty = Aabb::new_unchecked(
-            Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY),
-            Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY),
-        );
-        instances
-            .iter()
-            .fold(empty, |aabb, instance| aabb.union(&instance.aabb()))
     }
 
     pub fn sample(&self, pixel_index: [usize; 2], ray: Ray) -> Sample {

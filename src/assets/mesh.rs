@@ -110,6 +110,28 @@ impl Mesh {
         }
     }
 
+    /// Get a single triangle.
+    pub fn triangle(&self, index: usize) -> Triangle {
+        let face = &self.faces[index];
+        Triangle::new(
+            [
+                self.vertex_positions[face.position_indices[0]],
+                self.vertex_positions[face.position_indices[1]],
+                self.vertex_positions[face.position_indices[2]],
+            ],
+            [
+                self.vertex_normals[face.normal_indices[0]],
+                self.vertex_normals[face.normal_indices[1]],
+                self.vertex_normals[face.normal_indices[2]],
+            ],
+            [
+                self.vertex_texture_coordinates[face.texture_coordinate_indices[0]],
+                self.vertex_texture_coordinates[face.texture_coordinate_indices[1]],
+                self.vertex_texture_coordinates[face.texture_coordinate_indices[2]],
+            ],
+        )
+    }
+
     /// Iterate over the triangles of the mesh.
     pub fn triangles(&self) -> impl Iterator<Item = Triangle> + '_ {
         self.faces.iter().map(|f| {
