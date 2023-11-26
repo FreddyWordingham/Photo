@@ -8,7 +8,6 @@ pub struct Settings {
 }
 
 impl Settings {
-    /// Construct a new instance.
     pub fn new(output_directory: &Path) -> Self {
         Self {
             output_directory: output_directory.to_path_buf(),
