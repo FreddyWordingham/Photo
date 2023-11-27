@@ -101,7 +101,7 @@ impl Parameters {
     }
 
     /// Load the resources.
-    pub fn load_resources(&self) -> Resources {
+    pub fn load_resources(&self, settings: &Settings) -> Resources {
         let mut used_mesh_ids = self
             .instances
             .iter()
@@ -158,7 +158,10 @@ impl Parameters {
                     .get(*mesh_id)
                     .expect("Unable to find mesh")
                     .clone();
-                (mesh_id.to_string(), Mesh::load(&path))
+                (
+                    mesh_id.to_string(),
+                    Mesh::load(&path, settings.mesh_bvh_max_children()),
+                )
             })
             .collect::<HashMap<_, _>>();
 
@@ -166,12 +169,13 @@ impl Parameters {
     }
 
     /// Create the scene.
-    pub fn create_scene<'a>(&self, resources: &'a Resources) -> Scene<'a> {
+    pub fn create_scene<'a>(&self, settings: &Settings, resources: &'a Resources) -> Scene<'a> {
         Scene::new(
             self.instances
                 .iter()
                 .map(|(_, instance)| instance.build(resources))
                 .collect::<Vec<_>>(),
+            settings.scene_bvh_max_children(),
         )
     }
 

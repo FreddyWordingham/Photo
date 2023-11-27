@@ -10,11 +10,11 @@ pub enum MaterialBuilder {
     },
     Reflective {
         gradient_id: String,
-        reflectivity: f32,
+        reflectivity: f64,
     },
     Refractive {
         gradient_id: String,
-        refractive_index: f32,
+        refractive_index: f64,
     },
 }
 

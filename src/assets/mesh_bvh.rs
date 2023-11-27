@@ -5,8 +5,6 @@ use crate::{
     geometry::{Aabb, Ray, Triangle},
 };
 
-const MAX_CHILDREN: usize = 8;
-
 #[derive(Clone)]
 struct MeshBvhNode {
     pub aabb: Aabb,
@@ -21,7 +19,9 @@ pub struct MeshBvh {
 }
 
 impl MeshBvh {
-    pub fn new(triangles: &[Triangle]) -> Self {
+    pub fn new(triangles: &[Triangle], max_children: usize) -> Self {
+        debug_assert!(max_children >= 2);
+
         let triangle_count = triangles.len();
 
         let mut new = Self {
@@ -29,12 +29,14 @@ impl MeshBvh {
             nodes: Vec::with_capacity((triangle_count * 2) - 1),
             nodes_used: 0,
         };
-        new.build(triangles);
+        new.build(triangles, max_children);
 
         new
     }
 
-    fn build(&mut self, triangles: &[Triangle]) {
+    fn build(&mut self, triangles: &[Triangle], max_children: usize) {
+        debug_assert!(max_children >= 2);
+
         self.indices = (0..triangles.len()).collect();
         self.nodes = vec![
             MeshBvhNode {
@@ -52,7 +54,7 @@ impl MeshBvh {
         self.nodes_used = 1;
 
         self.update_bounds(0, triangles);
-        self.subdivide(0, triangles);
+        self.subdivide(0, triangles, max_children);
 
         self.nodes.truncate(self.nodes_used);
     }
@@ -64,8 +66,10 @@ impl MeshBvh {
         }
     }
 
-    fn subdivide(&mut self, index: usize, triangles: &[Triangle]) {
-        if self.nodes[index].count <= MAX_CHILDREN {
+    fn subdivide(&mut self, index: usize, triangles: &[Triangle], max_children: usize) {
+        debug_assert!(max_children >= 2);
+
+        if self.nodes[index].count <= max_children {
             return;
         }
 
@@ -93,6 +97,15 @@ impl MeshBvh {
                 let temp = self.indices[i];
                 self.indices[i] = self.indices[j];
                 self.indices[j] = temp;
+
+                if j == 0 {
+                    println!(
+                        "MESH BVH WARNING j == 0, when count is {}",
+                        self.nodes[index].count
+                    );
+                    return;
+                }
+
                 j -= 1;
             }
         }
@@ -118,8 +131,8 @@ impl MeshBvh {
 
         self.update_bounds(left_child_index, triangles);
         self.update_bounds(right_child_index, triangles);
-        self.subdivide(left_child_index, triangles);
-        self.subdivide(right_child_index, triangles);
+        self.subdivide(left_child_index, triangles, max_children);
+        self.subdivide(right_child_index, triangles, max_children);
     }
 
     pub fn ray_intersections(&self, ray: &Ray, mesh: &Mesh) -> Vec<(usize, f64)> {

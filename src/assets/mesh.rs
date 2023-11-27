@@ -25,7 +25,9 @@ pub struct Mesh {
 
 impl Mesh {
     /// Load a mesh from a file.
-    pub fn load(path: &Path) -> Self {
+    pub fn load(path: &Path, bvh_max_children: usize) -> Self {
+        debug_assert!(bvh_max_children >= 2);
+
         let file_string = read_to_string(path).unwrap();
         let line_tokens: Vec<Vec<_>> = file_string
             .lines()
@@ -135,7 +137,7 @@ impl Mesh {
             vertex_normals,
             vertex_texture_coordinates,
             faces,
-            bvh: MeshBvh::new(&triangles),
+            bvh: MeshBvh::new(&triangles, bvh_max_children),
         }
     }
 

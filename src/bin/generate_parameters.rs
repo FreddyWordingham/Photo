@@ -7,7 +7,19 @@ fn main() {
     // Create output directory if it doesn't exist.
     create_dir_all(Path::new("output")).expect("Unable to create output directory");
 
-    let settings = SettingsBuilder::new("output", [0.0, 0.0, 1.0]);
+    let min_weight = 0.01;
+    let max_loops = 100;
+    let mesh_bvh_max_children = 8;
+    let scene_bvh_max_children = 3;
+
+    let settings = SettingsBuilder::new(
+        "output",
+        [0.0, 0.0, 1.0],
+        min_weight,
+        max_loops,
+        mesh_bvh_max_children,
+        scene_bvh_max_children,
+    );
     let gradients = vec![(
         "white".to_string(),
         GradientBuilder::new(vec![0xaaaf, 0xffff]),

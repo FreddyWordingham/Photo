@@ -10,9 +10,11 @@ pub struct Scene<'a> {
 }
 
 impl<'a> Scene<'a> {
-    pub fn new(instances: Vec<Instance<'a>>) -> Self {
+    pub fn new(instances: Vec<Instance<'a>>, bvh_max_children: usize) -> Self {
+        debug_assert!(bvh_max_children >= 2);
+
         Self {
-            bvh: InstanceBvh::new(&instances),
+            bvh: InstanceBvh::new(&instances, bvh_max_children),
             instances,
         }
     }

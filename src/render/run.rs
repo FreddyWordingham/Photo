@@ -4,9 +4,9 @@ use palette::LinSrgba;
 use std::fs::create_dir_all;
 
 use crate::{
-    assets::Material,
+    assets::{Gradient, Material},
     geometry::Ray,
-    render::{Sample, Settings, Tile},
+    render::{Hit, Sample, Settings, Tile},
     world::{Camera, Scene},
 };
 
@@ -51,7 +51,7 @@ fn render_tile(
         for xi in 0..camera.super_samples_per_axis() {
             for yi in 0..camera.super_samples_per_axis() {
                 let ray = camera.generate_ray(sample.pixel_index, [xi, yi]);
-                sample += sample_shadow(settings, scene, sample.pixel_index, ray.clone());
+                sample += sample_full(settings, scene, sample.pixel_index, ray.clone());
             }
         }
         sample /= (camera.super_samples_per_axis() * camera.super_samples_per_axis()) as f32;
@@ -135,7 +135,7 @@ fn _sample_material(
     return Sample::new(pixel_index, LinSrgba::new(0.0, 0.0, 0.0, 0.0));
 }
 
-fn sample_shadow(settings: &Settings, scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
+fn _sample_shadow(settings: &Settings, scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
     if let Some(hit) = scene.ray_intersect_hit(&ray) {
         let mut hit_position = ray.origin() + ray.direction().as_ref() * hit.distance;
         hit_position += hit.normal.as_ref() * 0.0001;
@@ -151,19 +151,141 @@ fn sample_shadow(settings: &Settings, scene: &Scene, pixel_index: [usize; 2], ra
 
         match hit.material {
             Material::Diffuse { colour } => {
-                let c = colour.sample(lightness * shadow);
+                let mut c = colour.sample(lightness);
+                c.red *= shadow;
+                c.green *= shadow;
+                c.blue *= shadow;
                 return Sample::new(pixel_index, c);
             }
             Material::Reflective { colour, .. } => {
-                let c = colour.sample(lightness * shadow);
+                let mut c = colour.sample(lightness);
+                c.red *= shadow;
+                c.green *= shadow;
+                c.blue *= shadow;
                 return Sample::new(pixel_index, c);
             }
             Material::Refractive { colour, .. } => {
-                let c = colour.sample(lightness * shadow);
+                let mut c = colour.sample(lightness);
+                c.red *= shadow;
+                c.green *= shadow;
+                c.blue *= shadow;
                 return Sample::new(pixel_index, c);
             }
         }
     }
 
     return Sample::new(pixel_index, LinSrgba::new(0.0, 0.0, 0.0, 0.0));
+}
+
+fn sample_full(
+    settings: &Settings,
+    scene: &Scene,
+    pixel_index: [usize; 2],
+    mut ray: Ray,
+) -> Sample {
+    let mut current_weight = 1.0;
+    let mut current_colour = LinSrgba::new(0.0, 0.0, 0.0, 1.0);
+    let mut loops = 0;
+    while let Some(hit) = scene.ray_intersect_hit(&ray) {
+        let (weight, colour, new_ray) = match hit.material {
+            Material::Diffuse { colour } => run_diffuse(settings, scene, ray, hit, colour),
+            Material::Reflective {
+                colour,
+                reflectivity,
+            } => run_reflective(settings, scene, ray, hit, colour, *reflectivity),
+            Material::Refractive {
+                colour,
+                refractive_index,
+            } => run_refractive(settings, scene, ray, hit, colour, *refractive_index),
+        };
+
+        // current_colour += colour * (current_weight * (1.0 - weight)) as f32;
+        let new_colour = colour * (current_weight * (1.0 - weight)) as f32;
+        current_colour.red += new_colour.red;
+        current_colour.green += new_colour.green;
+        current_colour.blue += new_colour.blue;
+        current_weight *= weight;
+
+        if current_weight < settings.min_weight() {
+            break;
+        }
+        if loops > settings.max_loops() {
+            break;
+        }
+
+        ray = new_ray;
+        loops += 1;
+    }
+
+    return Sample::new(pixel_index, current_colour);
+}
+
+fn run_diffuse(
+    settings: &Settings,
+    scene: &Scene,
+    ray: Ray,
+    hit: Hit,
+    colour: &Gradient,
+) -> (f64, LinSrgba, Ray) {
+    let mut hit_position = ray.origin() + ray.direction().as_ref() * hit.distance;
+    hit_position += hit.normal.as_ref() * 0.0001;
+    let sun_direction = Unit::new_normalize(settings.sun_position() - hit_position);
+    let shadow_ray = Ray::new(hit_position, sun_direction);
+
+    let lightness = (hit.smooth_normal.dot(&sun_direction) as f32).max(0.0);
+    let shadow = if scene.ray_intersect(&shadow_ray) {
+        0.0
+    } else {
+        1.0
+    };
+
+    let mut c = colour.sample(lightness);
+    c.red *= shadow;
+    c.green *= shadow;
+    c.blue *= shadow;
+
+    (0.0, c, ray)
+}
+
+fn run_reflective(
+    settings: &Settings,
+    scene: &Scene,
+    ray: Ray,
+    hit: Hit,
+    colour: &Gradient,
+    reflectivity: f64,
+) -> (f64, LinSrgba, Ray) {
+    let mut hit_position = ray.origin() + ray.direction().as_ref() * hit.distance;
+    hit_position += (hit.normal.as_ref() * 0.01) * (if hit.is_inside { -1.0 } else { 1.0 });
+    let sun_direction = Unit::new_normalize(settings.sun_position() - hit_position);
+    let shadow_ray = Ray::new(hit_position, sun_direction);
+
+    let lightness = (hit.smooth_normal.dot(&sun_direction) as f32).max(0.0);
+    let shadow = if scene.ray_intersect(&shadow_ray) {
+        0.0
+    } else {
+        1.0
+    };
+
+    let mut c = colour.sample(lightness);
+    c.red *= shadow;
+    c.green *= shadow;
+    c.blue *= shadow;
+
+    let reflect_direction = Unit::new_normalize(
+        ray.direction().as_ref() - 2.0 * ray.direction().dot(&hit.normal) * hit.normal.as_ref(),
+    );
+
+    (reflectivity, c, Ray::new(hit_position, reflect_direction))
+}
+
+fn run_refractive(
+    _settings: &Settings,
+    _scene: &Scene,
+    ray: Ray,
+    _hit: Hit,
+    _colour: &Gradient,
+    _refractive_index: f64,
+) -> (f64, LinSrgba, Ray) {
+    (0.0, [1.0, 0.0, 1.0, 1.0].into(), ray)
 }

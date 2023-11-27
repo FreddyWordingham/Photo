@@ -1,80 +1,181 @@
-settings:
-  output_directory: output
-  sun_position: [0.0, 0.0, 20.0]
 gradients:
   white:
     colours: [0x000000ff, 0xffffffff]
+  red:
+    colours: [0x000000ff, 0xff0000ff]
+  green:
+    colours: [0x000000ff, 0x00ff00ff]
+  blue:
+    colours: [0x000000ff, 0x0000ffff]
+  cyan:
+    colours: [0x000000ff, 0x00ffffff]
+  magenta:
+    colours: [0x000000ff, 0xff00ffff]
+  yellow:
+    colours: [0x000000ff, 0xffff00ff]
+  orange:
+    colours: [0x000000ff, 0xffa500ff]
+  purple:
+    colours: [0x000000ff, 0x800080ff]
+  teal:
+    colours: [0x000000ff, 0x008080ff]
+  pink:
+    colours: [0x000000ff, 0xffc0cbff]
+  brown:
+    colours: [0x000000ff, 0xa52a2aff]
+  gold:
+    colours: [0x000000ff, 0xffd700ff]
+  sunrise:
+    colours: [0xffd700ff, 0xffa07aff, 0xdb7093ff, 0x800080ff, 0x4b0082ff]
+  sunset:
+    colours: [0xffbf15ff, 0xF2541Bff, 0xC91853ff, 0xA8186Eff, 0x6A0487ff, 0x301D7Dff]
+  glass:
+    colours: [0x0077beff, 0x00b2eeff, 0x00ced1ff]
+  forest:
+    colours: [0x006400ff, 0x228b22ff, 0x6b8e23ff]
+  tropical:
+    colours: [0x32a852ff, 0x2cb1caff, 0x8ed6f7ff, 0xffff00ff, 0xff4500ff]
+  galaxy:
+    colours: [0x000033ff, 0x000080ff, 0x3d2b1fff, 0xb10dc9ff, 0x850440ff, 0xffd700ff]
+  autumn:
+    colours: [0xff4500ff, 0xff8c00ff, 0xffd700ff, 0x32cd32ff, 0x006400ff]
+  icefire:
+    colours: [0x0000ffff, 0x00ffffff, 0xffffffff, 0xffa07aff, 0xff4500ff]
+  rainbow:
+    colours: [0x9400d3ff, 0x4b0082ff, 0x0000ffff, 0x00ff00ff, 0xffff00ff, 0xff7f00ff, 0xff0000ff]
+  peacock:
+    colours: [0x004b8dff, 0x0074d9ff, 0x7fdbffff, 0x2ecc40ff, 0x01ff70ff, 0x85144bff]
+  safari:
+    colours: [0x8b4513ff, 0xa0522dff, 0xcd853fff, 0xf4a460ff, 0xd2b48cff, 0xffe4b5ff]
+  mystic:
+    colours: [0x8a2be2ff, 0x9932ccff, 0xba55d3ff, 0xda70d6ff, 0xdda0ddff, 0xee82eeff]
+  aurora:
+    colours: [0x00ff7fff, 0x7fffd4ff, 0x87ceebff, 0xba55d3ff, 0x800080ff]
+  twilight:
+    colours: [0x4b0082ff, 0x8a2be2ff, 0x9400d3ff, 0x9932ccff, 0x8b008bff]
+  lagoon:
+    colours: [0x008080ff, 0x20b2aaff, 0x48d1ccff, 0x40e0d0ff, 0xafddeeff]
+  ember:
+    colours: [0x800000ff, 0xb22222ff, 0xdc143cff, 0xff4500ff, 0xff8c00ff]
+  oceanic:
+    colours: [0x000080ff, 0x0000cdff, 0x1e90ffff, 0x87ceebff, 0xafeeeeff]
+  jewel:
+    colours: [0xffd700ff, 0xdaa520ff, 0xb8860bff, 0x8b4513ff, 0x800000ff]
+  candy:
+    colours: [0xff69b4ff, 0xff1493ff, 0xdb7093ff, 0xc71585ff, 0x800080ff]
+  mirage:
+    colours: [0x2f4f4fff, 0x696969ff, 0x708090ff, 0x778899ff, 0xb0c4deff]
+  spectrum:
+    colours: [0xff0000ff, 0xff7f00ff, 0xffff00ff, 0x00ff00ff, 0x0000ffff, 0x4b0082ff, 0x9400d3ff]
+  inferno:
+    colours: [0x800000ff, 0xa52a2aff, 0xff4500ff, 0xff6347ff, 0xff7f50ff]
+  bliss:
+    colours: [0x4682b4ff, 0x87ceebff, 0xadd8e6ff, 0xf08080ff, 0xfa8072ff]
 materials:
   plastic: !Diffuse
     gradient_id: white
+  glass: !Diffuse
+    gradient_id: glass
+  spectrum: !Diffuse
+    gradient_id: spectrum
+  bliss: !Diffuse
+    gradient_id: bliss
+  sunrise: !Diffuse
+    gradient_id: sunrise
+  sunset: !Diffuse
+    gradient_id: sunset
+  forest: !Diffuse
+    gradient_id: forest
+  rainbow: !Diffuse
+    gradient_id: rainbow
+  inferno: !Diffuse
+    gradient_id: inferno
+  safari: !Diffuse
+    gradient_id: safari
+  oceanic: !Diffuse
+    gradient_id: oceanic
+  mystic: !Diffuse
+    gradient_id: mystic
+  twilight: !Diffuse
+    gradient_id: twilight
+  glass: !Diffuse
+    gradient_id: glass
   mirror: !Reflective
-    gradient_id: white
-    reflectivity: 0.9
-  glass: !Refractive
-    gradient_id: white
+    gradient_id: glass
+    reflectivity: 0.99
+  reflective: !Refractive
+    gradient_id: glass
     refractive_index: 1.5
 meshes:
   square: ./assets/meshes/square.obj
   cube: ./assets/meshes/cube.obj
   hemisphere: ./assets/meshes/hemisphere.obj
   icosphere: ./assets/meshes/icosphere.obj
+  sphere: ./assets/meshes/sphere.obj
   torus: ./assets/meshes/torus.obj
   tree: ./assets/meshes/tree.obj
 instances:
-  # hemisphere:
-  #   mesh_id: hemisphere
-  #   material_id: plastic
-  #   scale: 2.0
-  #   translation: [0.0, 0.0, 2.0]
+  hemisphere:
+    mesh_id: sphere
+    material_id: mirror
+    scale: 2.0
+    translation: [0.0, 0.0, 0.0]
   floor:
     mesh_id: square
-    material_id: plastic
+    material_id: forest
     scale: 5.0
-  left_cube:
-    mesh_id: cube
-    material_id: plastic
-    translation: [-3.0, 0.0, 0.0]
-  right_cube:
-    mesh_id: cube
-    material_id: plastic
-    translation: [3.0, 0.0, 0.0]
-    rotation: [10.0, 15.0, 20.0]
-    scale: 0.5
-  front_sphere:
-    mesh_id: icosphere
-    material_id: plastic
-    translation: [0.0, 4.0, 0.0]
-    scale: 0.25
-  planet_sphere_0:
-    mesh_id: icosphere
-    material_id: plastic
-    translation: [4.0, 8.0, 8.0]
-    scale: 0.25
-  planet_ring_0:
-    mesh_id: torus
-    material_id: plastic
-    translation: [4.0, 8.0, 8.0]
-    rotation: [45.0, 15.0, 30.0]
-    scale: 0.5
-  planet_sphere_1:
-    mesh_id: icosphere
-    material_id: plastic
-    translation: [4.0, -8.0, 4.0]
-    scale: 0.5
-  planet_ring_1:
-    mesh_id: torus
-    material_id: plastic
-    translation: [4.0, -8.0, 4.0]
-    rotation: [145.0, 75.0, 70.0]
   tree:
     mesh_id: tree
-    material_id: plastic
+    material_id: safari
     translation: [0.0, 0.0, 0.0]
+  # left_cube:
+  #   mesh_id: cube
+  #   material_id: rainbow
+  #   translation: [-3.0, 0.0, 0.0]
+  # right_cube:
+  #   mesh_id: cube
+  #   material_id: rainbow
+  #   translation: [3.0, 0.0, 0.0]
+  #   rotation: [10.0, 15.0, 20.0]
+  #   scale: 0.5
+  # front_sphere:
+  #   mesh_id: icosphere
+  #   material_id: sunset
+  #   translation: [0.0, 4.0, 0.0]
+  #   scale: 0.25
+  # planet_sphere_0:
+  #   mesh_id: icosphere
+  #   material_id: mystic
+  #   translation: [2.0, 4.0, 4.0]
+  #   scale: 0.25
+  # planet_ring_0:
+  #   mesh_id: torus
+  #   material_id: oceanic
+  #   translation: [2.0, 4.0, 4.0]
+  #   rotation: [45.0, 15.0, 30.0]
+  #   scale: 0.5
+  # planet_sphere_1:
+  #   mesh_id: icosphere
+  #   material_id: twilight
+  #   translation: [-4.0, -3.0, 4.0]
+  #   scale: 0.5
+  # planet_ring_1:
+  #   mesh_id: torus
+  #   material_id: inferno
+  #   translation: [-4.0, -3.0, 4.0]
+  #   rotation: [145.0, 75.0, 70.0]
+settings:
+  output_directory: output
+  sun_position: [130.0, 50.0, 120.0]
+  min_weight: 0.1
+  max_loops: 100
+  mesh_bvh_max_children: 8
+  scene_bvh_max_children: 3
 cameras:
-  - position: [8.0, 8.0, 8.0]
+  - position: [-80.0, 80.0, 80.0]
     target: [0.0, 0.0, 2.5]
-    field_of_view: 240.0
-    resolution: [1440, 3440]
+    field_of_view: 12.5
+    resolution: [1440, 1440]
     num_tiles: [20, 40]
     super_samples_per_axis: 1
   

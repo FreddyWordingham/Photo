@@ -6,10 +6,10 @@ pub enum Material {
     },
     Reflective {
         colour: Gradient,
-        reflectivity: f32,
+        reflectivity: f64,
     },
     Refractive {
         colour: Gradient,
-        refractive_index: f32,
+        refractive_index: f64,
     },
 }

@@ -16,8 +16,8 @@ fn main() {
     });
 
     let settings = parameters.settings();
-    let resources = parameters.load_resources();
-    let scene = parameters.create_scene(&resources);
+    let resources = parameters.load_resources(&settings);
+    let scene = parameters.create_scene(&settings, &resources);
     let cameras = parameters.create_cameras();
     drop(parameters);
 

@@ -5,8 +5,6 @@ use crate::{
     world::Instance,
 };
 
-const MAX_CHILDREN: usize = 2;
-
 #[derive(Clone)]
 struct InstanceBvhNode {
     pub aabb: Aabb,
@@ -21,7 +19,9 @@ pub struct InstanceBvh {
 }
 
 impl InstanceBvh {
-    pub fn new(instances: &[Instance]) -> Self {
+    pub fn new(instances: &[Instance], max_children: usize) -> Self {
+        debug_assert!(max_children >= 2);
+
         let instance_count = instances.len();
 
         let mut new = Self {
@@ -29,12 +29,14 @@ impl InstanceBvh {
             nodes: Vec::with_capacity((instance_count * 2) - 1),
             nodes_used: 0,
         };
-        new.build(instances);
+        new.build(instances, max_children);
 
         new
     }
 
-    fn build(&mut self, instances: &[Instance]) {
+    fn build(&mut self, instances: &[Instance], max_children: usize) {
+        debug_assert!(max_children >= 2);
+
         self.indices = (0..instances.len()).collect();
         self.nodes = vec![
             InstanceBvhNode {
@@ -52,7 +54,7 @@ impl InstanceBvh {
         self.nodes_used = 1;
 
         self.update_bounds(0, instances);
-        self.subdivide(0, instances);
+        self.subdivide(0, instances, max_children);
 
         self.nodes.truncate(self.nodes_used);
     }
@@ -64,8 +66,10 @@ impl InstanceBvh {
         }
     }
 
-    fn subdivide(&mut self, index: usize, instances: &[Instance]) {
-        if self.nodes[index].count <= MAX_CHILDREN {
+    fn subdivide(&mut self, index: usize, instances: &[Instance], max_children: usize) {
+        debug_assert!(max_children >= 2);
+
+        if self.nodes[index].count <= max_children {
             return;
         }
 
@@ -93,6 +97,15 @@ impl InstanceBvh {
                 let temp = self.indices[i];
                 self.indices[i] = self.indices[j];
                 self.indices[j] = temp;
+
+                if j == 0 {
+                    println!(
+                        "INSTANCE BVH WARNING j == 0, when count is {}",
+                        self.nodes[index].count
+                    );
+                    return;
+                }
+
                 j -= 1;
             }
         }
@@ -118,8 +131,8 @@ impl InstanceBvh {
 
         self.update_bounds(left_child_index, instances);
         self.update_bounds(right_child_index, instances);
-        self.subdivide(left_child_index, instances);
-        self.subdivide(right_child_index, instances);
+        self.subdivide(left_child_index, instances, max_children);
+        self.subdivide(right_child_index, instances, max_children);
     }
 
     pub fn ray_intersections(&self, ray: &Ray, instances: &[Instance]) -> Vec<usize> {
