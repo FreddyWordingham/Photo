@@ -44,19 +44,17 @@ fn render_tile(scene: &Scene, camera: &Camera, tile_index: [usize; 2]) -> Tile {
         for xi in 0..camera.super_samples_per_axis() {
             for yi in 0..camera.super_samples_per_axis() {
                 let ray = camera.generate_ray(sample.pixel_index, [xi, yi]);
-                sample += sample_stencil(scene, sample.pixel_index, ray.clone());
-                sample += sample_distance(scene, sample.pixel_index, ray);
-                sample += sample_normal(scene, sample.pixel_index, ray);
+                sample += sample_normal(scene, sample.pixel_index, ray.clone());
             }
         }
-        sample /= (camera.super_samples_per_axis() * camera.super_samples_per_axis() * 3) as f32;
+        sample /= (camera.super_samples_per_axis() * camera.super_samples_per_axis()) as f32;
         sample
     });
 
     tile
 }
 
-fn sample_stencil(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
+fn _sample_stencil(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
     if scene.ray_intersect(&ray) {
         let r = ray.direction().x.abs() as f32;
         let g = ray.direction().y.abs() as f32;
@@ -67,7 +65,7 @@ fn sample_stencil(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
     return Sample::new(pixel_index, LinSrgba::new(0.0, 0.0, 0.0, 0.0));
 }
 
-fn sample_distance(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
+fn _sample_distance(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
     if let Some(distance) = scene.ray_intersect_distance(&ray) {
         let scale = 1.0 / 20.0;
         let r = scale * distance as f32;
@@ -79,11 +77,22 @@ fn sample_distance(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
     return Sample::new(pixel_index, LinSrgba::new(0.0, 0.0, 0.0, 0.0));
 }
 
+fn _sample_side(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
+    if let Some(hit) = scene.ray_intersect_hit(&ray) {
+        let r = if hit.is_inside { 1.0 } else { 0.0 };
+        let g = 0.0;
+        let b = if hit.is_inside { 0.0 } else { 1.0 };
+        return Sample::new(pixel_index, LinSrgba::new(r, g, b, 1.0));
+    }
+
+    return Sample::new(pixel_index, LinSrgba::new(0.0, 0.0, 0.0, 0.0));
+}
+
 fn sample_normal(scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
-    if let Some((_distance, normal)) = scene.ray_intersect_distance_normal(&ray) {
-        let r = normal.x.abs() as f32;
-        let g = normal.y.abs() as f32;
-        let b = normal.z.abs() as f32;
+    if let Some(hit) = scene.ray_intersect_hit(&ray) {
+        let r = hit.normal.x.abs() as f32;
+        let g = hit.normal.y.abs() as f32;
+        let b = hit.normal.z.abs() as f32;
         return Sample::new(pixel_index, LinSrgba::new(r, g, b, 1.0));
     }
 

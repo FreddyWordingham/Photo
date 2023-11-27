@@ -1,13 +1,14 @@
-use nalgebra::{Point3, Similarity3, Unit, Vector3};
+use nalgebra::{Point3, Similarity3, Unit};
 
 use crate::{
     assets::{Material, Mesh},
     geometry::{Aabb, Ray},
+    render::Hit,
 };
 
 pub struct Instance<'a> {
     mesh: &'a Mesh,
-    _material: &'a Material,
+    material: &'a Material,
     transformation: Similarity3<f64>,
     inverse_transformation: Similarity3<f64>,
     aabb: Aabb,
@@ -21,7 +22,7 @@ impl<'a> Instance<'a> {
 
         Self {
             mesh,
-            _material: material,
+            material,
             transformation,
             inverse_transformation,
             aabb,
@@ -69,13 +70,22 @@ impl<'a> Instance<'a> {
         }
     }
 
-    pub fn ray_intersect_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
+    pub fn ray_intersect_hit(&self, ray: &Ray) -> Option<Hit> {
         let transformed_ray = ray * &self.inverse_transformation;
-        if let Some((distance, normal)) = self.mesh.ray_intersect_distance_normal(&transformed_ray)
+        if let Some((distance, normal, smooth_normal)) =
+            self.mesh.ray_intersect_distance_normals(&transformed_ray)
         {
-            Some((
-                distance * self.transformation.scaling(),
-                Unit::new_normalize(self.transformation.transform_vector(&normal)),
+            let is_inside = transformed_ray.direction().dot(&normal) > 0.0;
+            let distance = distance * self.transformation.scaling();
+            let normal = Unit::new_normalize(self.transformation.transform_vector(&normal));
+            let smooth_normal =
+                Unit::new_normalize(self.transformation.transform_vector(&smooth_normal));
+            Some(Hit::new(
+                is_inside,
+                distance,
+                normal,
+                smooth_normal,
+                self.material,
             ))
         } else {
             None

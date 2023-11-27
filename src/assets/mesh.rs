@@ -195,21 +195,26 @@ impl Mesh {
         self.bvh
             .ray_intersections(ray, self)
             .into_iter()
-            .filter_map(|(n, _dist)| self.triangle(n).ray_intersect_distance(ray))
+            .filter_map(|(n, _)| self.triangle(n).ray_intersect_distance(ray))
             .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
     }
 
-    pub fn ray_intersect_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
+    pub fn ray_intersect_distance_normals(
+        &self,
+        ray: &Ray,
+    ) -> Option<(f64, Unit<Vector3<f64>>, Unit<Vector3<f64>>)> {
         self.bvh
             .ray_intersections(ray, self)
             .into_iter()
-            .filter_map(|(n, _dist)| {
+            .filter_map(|(n, _)| {
                 self.triangle(n)
-                    .ray_intersect_distance_normal(ray)
+                    .ray_intersect_distance_normals(ray)
                     .map(|result| (n, result))
             })
-            .min_by(|(_, (a_dist, _)), (_, (b_dist, _))| {
-                a_dist.partial_cmp(b_dist).unwrap_or(Ordering::Equal)
+            .min_by(|(_, (a_distance, _, _)), (_, (b_distance, _, _))| {
+                a_distance
+                    .partial_cmp(b_distance)
+                    .unwrap_or(Ordering::Equal)
             })
             .map(|(_, result)| result)
     }

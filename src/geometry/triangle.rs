@@ -151,43 +151,10 @@ impl Triangle {
         None
     }
 
-    /// Test for an intersection point with a ray.
-    pub fn ray_intersect_point(&self, ray: &Ray) -> Option<Point3<f64>> {
-        let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
-        let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
-        let h = ray.direction().cross(&edge2);
-        let a = edge1.dot(&h);
-
-        if a.abs() < EPSILON {
-            return None;
-        }
-
-        let f = 1.0 / a;
-        let s = ray.origin() - self.vertex_positions[0];
-        let u = f * s.dot(&h);
-
-        if !(0.0..=1.0).contains(&u) {
-            return None;
-        }
-
-        let q = s.cross(&edge1);
-        let v = f * ray.direction().dot(&q);
-
-        if v < 0.0 || u + v > 1.0 {
-            return None;
-        }
-
-        let t = f * edge2.dot(&q);
-
-        if t > EPSILON {
-            return Some(ray.origin() + t * ray.direction().as_ref());
-        }
-
-        None
-    }
-
-    /// Test for an intersection point with a ray, returning the surface normal.
-    pub fn ray_intersect_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
+    pub fn ray_intersect_distance_normals(
+        &self,
+        ray: &Ray,
+    ) -> Option<(f64, Unit<Vector3<f64>>, Unit<Vector3<f64>>)> {
         let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
         let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
         let h = ray.direction().cross(&edge2);
@@ -218,6 +185,7 @@ impl Triangle {
             let w = 1.0 - u - v;
             return Some((
                 t,
+                self.triangle_plane_normal(),
                 Unit::new_normalize(
                     w * self.vertex_normals[0].as_ref()
                         + u * self.vertex_normals[1].as_ref()
@@ -259,10 +227,10 @@ impl Triangle {
         true
     }
 
-    fn triangle_plane_normal(&self) -> Vector3<f64> {
+    fn triangle_plane_normal(&self) -> Unit<Vector3<f64>> {
         let u = self.vertex_positions[1] - self.vertex_positions[0];
         let v = self.vertex_positions[2] - self.vertex_positions[0];
-        u.cross(&v).normalize()
+        Unit::new_normalize(u.cross(&v))
     }
 
     fn overlaps_on_axis(&self, axis: &Vector3<f64>, aabb: &Aabb) -> bool {

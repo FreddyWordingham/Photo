@@ -15,10 +15,16 @@ materials:
 meshes:
   square: ./assets/meshes/square.obj
   cube: ./assets/meshes/cube.obj
+  hemisphere: ./assets/meshes/hemisphere.obj
   icosphere: ./assets/meshes/icosphere.obj
   torus: ./assets/meshes/torus.obj
   tree: ./assets/meshes/tree.obj
 instances:
+  hemisphere:
+    mesh_id: hemisphere
+    material_id: plastic
+    scale: 2.0
+    translation: [0.0, 0.0, 2.0]
   floor:
     mesh_id: square
     material_id: plastic

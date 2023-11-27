@@ -1,7 +1,6 @@
-use nalgebra::{Unit, Vector3};
-
 use crate::{
     geometry::Ray,
+    render::Hit,
     world::{Instance, InstanceBvh},
 };
 
@@ -21,30 +20,23 @@ impl<'a> Scene<'a> {
     pub fn ray_intersect(&self, ray: &Ray) -> bool {
         self.bvh
             .ray_intersections(ray, &self.instances)
-            .iter()
-            .any(|&(n, _aabb_distance)| self.instances[n].ray_intersect(ray))
+            .into_iter()
+            .any(|n| self.instances[n].ray_intersect(ray))
     }
 
     pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
         self.bvh
             .ray_intersections(ray, &self.instances)
-            .iter()
-            .filter_map(|&(n, _aabb_distance)| self.instances[n].ray_intersect_distance(ray))
+            .into_iter()
+            .filter_map(|n| self.instances[n].ray_intersect_distance(ray))
             .min_by(|a, b| a.partial_cmp(b).unwrap())
     }
 
-    pub fn ray_intersect_distance_normal(&self, ray: &Ray) -> Option<(f64, Unit<Vector3<f64>>)> {
+    pub fn ray_intersect_hit(&self, ray: &Ray) -> Option<Hit> {
         self.bvh
             .ray_intersections(ray, &self.instances)
-            .iter()
-            .filter_map(|&(n, _aabb_distance)| {
-                self.instances[n]
-                    .ray_intersect_distance_normal(ray)
-                    .map(|result| (n, result))
-            })
-            .min_by(|(_, (a_distance, _)), (_, (b_distance, _))| {
-                a_distance.partial_cmp(&b_distance).unwrap()
-            })
-            .map(|(_, result)| result)
+            .into_iter()
+            .filter_map(|n| self.instances[n].ray_intersect_hit(ray))
+            .min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap())
     }
 }
