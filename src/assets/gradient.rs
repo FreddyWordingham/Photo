@@ -9,7 +9,7 @@ pub struct Gradient {
 impl Gradient {
     /// Create a new gradient from a list of RGBA colours.
     pub fn new(colours: Vec<u32>) -> Self {
-        Self {
+        let new = Self {
             colours: Linear::builder()
                 .elements(
                     colours
@@ -33,7 +33,9 @@ impl Gradient {
                 )
                 .build()
                 .expect("Failed to build colour gradient"),
-        }
+        };
+
+        new
     }
 
     /// Sample the gradient for a colour at a given point in the range [0, 1].

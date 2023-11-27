@@ -1,8 +1,9 @@
 settings:
   output_directory: output
+  sun_position: [0.0, 0.0, 20.0]
 gradients:
   white:
-    colours: [0x444f, 0xffff]
+    colours: [0x000000ff, 0xffffffff]
 materials:
   plastic: !Diffuse
     gradient_id: white
@@ -20,11 +21,11 @@ meshes:
   torus: ./assets/meshes/torus.obj
   tree: ./assets/meshes/tree.obj
 instances:
-  hemisphere:
-    mesh_id: hemisphere
-    material_id: plastic
-    scale: 2.0
-    translation: [0.0, 0.0, 2.0]
+  # hemisphere:
+  #   mesh_id: hemisphere
+  #   material_id: plastic
+  #   scale: 2.0
+  #   translation: [0.0, 0.0, 2.0]
   floor:
     mesh_id: square
     material_id: plastic
@@ -70,10 +71,10 @@ instances:
     material_id: plastic
     translation: [0.0, 0.0, 0.0]
 cameras:
-  - position: [12.0, 12.0, 12.0]
+  - position: [8.0, 8.0, 8.0]
     target: [0.0, 0.0, 2.5]
-    field_of_view: 120.0
-    resolution: [4000, 6000]
-    num_tiles: [20, 10]
+    field_of_view: 240.0
+    resolution: [1440, 3440]
+    num_tiles: [20, 40]
     super_samples_per_axis: 1
   

@@ -7,7 +7,7 @@ fn main() {
     // Create output directory if it doesn't exist.
     create_dir_all(Path::new("output")).expect("Unable to create output directory");
 
-    let settings = SettingsBuilder::new("output");
+    let settings = SettingsBuilder::new("output", [0.0, 0.0, 1.0]);
     let gradients = vec![(
         "white".to_string(),
         GradientBuilder::new(vec![0xaaaf, 0xffff]),
