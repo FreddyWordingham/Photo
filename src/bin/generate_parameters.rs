@@ -7,6 +7,8 @@ fn main() {
     // Create output directory if it doesn't exist.
     create_dir_all(Path::new("output")).expect("Unable to create output directory");
 
+    let sun_position = [-3.0, 5.0, 12.0];
+    let smoothing_length = 1.0e-6;
     let min_weight = 0.01;
     let max_loops = 100;
     let mesh_bvh_max_children = 8;
@@ -14,7 +16,8 @@ fn main() {
 
     let settings = SettingsBuilder::new(
         "output",
-        [0.0, 0.0, 1.0],
+        sun_position,
+        smoothing_length,
         min_weight,
         max_loops,
         mesh_bvh_max_children,
@@ -37,20 +40,21 @@ fn main() {
             "mirror".to_string(),
             MaterialBuilder::Reflective {
                 gradient_id: "white".to_string(),
-                reflectivity: 0.9,
+                absorption: 0.9,
             },
         ),
         (
             "glass".to_string(),
             MaterialBuilder::Refractive {
                 gradient_id: "white".to_string(),
+                absorption: 0.5,
                 refractive_index: 1.5,
             },
         ),
     ]
     .into_iter()
     .collect();
-    let meshes = vec![("cube".to_string(), PathBuf::from("resources/cube.obj"))]
+    let meshes = vec![("cube".to_string(), PathBuf::from("assets/meshes/cube.obj"))]
         .into_iter()
         .collect();
     let instances = vec![
@@ -61,7 +65,7 @@ fn main() {
         ),
         (
             "right_cube".to_string(),
-            InstanceBuilder::new("cube".to_string(), "plastic".to_string())
+            InstanceBuilder::new("cube".to_string(), "mirror".to_string())
                 .with_translation([1.0, 0.0, 0.0])
                 .with_rotation([10.0, 15.0, 20.0])
                 .with_scale(0.5),

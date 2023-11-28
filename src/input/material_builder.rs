@@ -10,10 +10,11 @@ pub enum MaterialBuilder {
     },
     Reflective {
         gradient_id: String,
-        reflectivity: f64,
+        absorption: f64,
     },
     Refractive {
         gradient_id: String,
+        absorption: f64,
         refractive_index: f64,
     },
 }
@@ -24,12 +25,19 @@ impl MaterialBuilder {
             Self::Diffuse { gradient_id } => !gradient_id.is_empty(),
             Self::Reflective {
                 gradient_id,
-                reflectivity,
-            } => !gradient_id.is_empty() && reflectivity.is_finite() && reflectivity >= &0.0,
+                absorption,
+            } => !gradient_id.is_empty() && absorption >= &0.0 && absorption <= &1.0,
             Self::Refractive {
                 gradient_id,
+                absorption,
                 refractive_index,
-            } => !gradient_id.is_empty() && refractive_index.is_finite() && refractive_index > &0.0,
+            } => {
+                !gradient_id.is_empty()
+                    && absorption >= &0.0
+                    && absorption <= &1.0
+                    && refractive_index.is_finite()
+                    && refractive_index > &0.0
+            }
         }
     }
 
@@ -48,16 +56,18 @@ impl MaterialBuilder {
             },
             Self::Reflective {
                 gradient_id,
-                reflectivity,
+                absorption,
             } => Material::Reflective {
                 colour: gradients[gradient_id].clone(),
-                reflectivity: *reflectivity,
+                absorption: *absorption,
             },
             Self::Refractive {
                 gradient_id,
+                absorption,
                 refractive_index,
             } => Material::Refractive {
                 colour: gradients[gradient_id].clone(),
+                absorption: *absorption,
                 refractive_index: *refractive_index,
             },
         }

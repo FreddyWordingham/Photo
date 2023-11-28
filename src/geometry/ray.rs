@@ -23,6 +23,11 @@ impl Ray {
         &self.direction
     }
 
+    /// Set the direction.
+    pub fn set_direction(&mut self, direction: Unit<Vector3<f64>>) {
+        self.direction = direction;
+    }
+
     /// Travel (move the origin) along the ray's direction.
     pub fn travel(&mut self, distance: f64) {
         self.origin += distance * self.direction.as_ref();

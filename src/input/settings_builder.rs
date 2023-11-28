@@ -8,6 +8,7 @@ use crate::render::Settings;
 pub struct SettingsBuilder {
     output_directory: PathBuf,
     sun_position: [f64; 3],
+    smoothing_length: f64,
     min_weight: f64,
     max_loops: u16,
     mesh_bvh_max_children: usize,
@@ -19,6 +20,7 @@ impl SettingsBuilder {
     pub fn new(
         output_directory: &str,
         sun_position: [f64; 3],
+        smoothing_length: f64,
         min_weight: f64,
         max_loops: u16,
         mesh_bvh_max_children: usize,
@@ -27,6 +29,7 @@ impl SettingsBuilder {
         let new = Self {
             output_directory: output_directory.into(),
             sun_position,
+            smoothing_length,
             min_weight,
             max_loops,
             mesh_bvh_max_children,
@@ -42,6 +45,7 @@ impl SettingsBuilder {
     pub fn is_valid(&self) -> bool {
         self.output_directory.is_dir()
             && self.sun_position.iter().all(|&x| x.is_finite())
+            && self.smoothing_length > 0.0
             && self.min_weight.is_sign_positive()
             && self.max_loops > 0
             && self.mesh_bvh_max_children >= 2
@@ -53,6 +57,7 @@ impl SettingsBuilder {
         Settings::new(
             &self.output_directory,
             self.sun_position.into(),
+            self.smoothing_length,
             self.min_weight,
             self.max_loops,
             self.mesh_bvh_max_children,
