@@ -104,7 +104,7 @@ materials:
   refractive: !Refractive
     gradient_id: glass
     absorption: 0.3
-    refractive_index: 1.5
+    refractive_index: 1.01
 meshes:
   square: ./assets/meshes/square.obj
   cube: ./assets/meshes/cube.obj
@@ -115,7 +115,7 @@ meshes:
   tree: ./assets/meshes/tree.obj
 instances:
   hemisphere:
-    mesh_id: sphere
+    mesh_id: icosphere
     material_id: refractive
     scale: 5.0
     translation: [0.0, 0.0, 0.0]
@@ -123,7 +123,7 @@ instances:
   floor:
     mesh_id: square
     material_id: forest
-    scale: 5.0
+    scale: 15.0
   tree:
     mesh_id: tree
     material_id: safari
@@ -180,7 +180,7 @@ settings:
 cameras:
   - position: [-5.0, 20.0, 20.0]
     target: [0.0, 0.0, 2.5]
-    field_of_view: 45.0
+    field_of_view: 90.0
     resolution: [1440, 1440]
     num_tiles: [20, 40]
     super_samples_per_axis: 2

@@ -200,7 +200,7 @@ fn _sample_shadow(settings: &Settings, scene: &Scene, pixel_index: [usize; 2], r
 
 fn sample_full(settings: &Settings, scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
     let depth = 0;
-    let current_refractive_index = 1.0;
+    let current_refractive_index = vec![1.0];
     let colour = sample_full_inner(settings, scene, ray, depth, current_refractive_index).unwrap();
     Sample::new(pixel_index, colour)
 }
@@ -210,7 +210,7 @@ fn sample_full_inner(
     scene: &Scene,
     ray: Ray,
     depth: u16,
-    current_refractive_index: f64,
+    mut current_refractive_index: Vec<f64>,
 ) -> Option<LinSrgba> {
     let smoothing_length = settings.smoothing_length();
 
@@ -285,6 +285,14 @@ fn sample_full_inner(
                 c.green *= shadow;
                 c.blue *= shadow;
 
+                let (curr_ref_index, next_ref_index) = if hit.is_inside {
+                    (*refractive_index, current_refractive_index.pop().unwrap())
+                } else {
+                    let prev_ref_index = *current_refractive_index.last().unwrap();
+                    current_refractive_index.push(*refractive_index);
+                    (prev_ref_index, *refractive_index)
+                };
+
                 let reflected_direction = Unit::new_normalize(
                     ray.direction().as_ref()
                         - 2.0
@@ -298,13 +306,13 @@ fn sample_full_inner(
                 if let Some(transmittance) = fresnel_transmittance(
                     ray.direction().as_ref(),
                     &(hit.smooth_normal.as_ref() * if hit.is_inside { -1.0 } else { 1.0 }),
-                    current_refractive_index,
+                    curr_ref_index,
                     *refractive_index,
                 ) {
                     if let Some(refracted_direction) = refract(
                         ray.direction().as_ref(),
                         &(hit.smooth_normal.as_ref() * if hit.is_inside { -1.0 } else { 1.0 }),
-                        *refractive_index,
+                        curr_ref_index / next_ref_index,
                     ) {
                         let mut refracted_ray = Ray::new(hit_position, refracted_direction);
                         refracted_ray.travel(smoothing_length);
@@ -314,14 +322,14 @@ fn sample_full_inner(
                             scene,
                             refracted_ray,
                             depth + 1,
-                            current_refractive_index,
+                            current_refractive_index.clone(),
                         );
                         let refracted_colour = sample_full_inner(
                             settings,
                             scene,
                             refracted_ray,
                             depth + 1,
-                            *refractive_index,
+                            current_refractive_index,
                         );
 
                         if reflected_colour.is_none() && refracted_colour.is_none() {
