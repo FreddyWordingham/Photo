@@ -4,6 +4,7 @@ version = "1.0.0"
 description = "High-precision rendering engine."
 edition = "2021"
 license = "LICENSE"
+readme = "README.md"
 authors = ["Freddy Wordingham <freddy@digilab.co.uk>"]
 documentation = "https://freddywordingham.github.io/photo"
 repository = "https://github.com/FreddyWordingham/photo"
