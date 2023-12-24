@@ -1,8 +1,13 @@
 [package]
 name = "photo"
 version = "1.0.0"
+description = "High-precision rendering engine."
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "LICENSE"
+authors = ["Freddy Wordingham <freddy@digilab.co.uk>"]
+documentation = "https://freddywordingham.github.io/photo"
+repository = "https://github.com/FreddyWordingham/photo"
+keywords = ["rendering", "ray-tracing", "simulation"]
+categories = ["science", "graphics", "simulation"]
 
 [dependencies]
