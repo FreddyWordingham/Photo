@@ -1,3 +1,5 @@
+use photo::VERSION;
+
 fn main() {
-    println!("Hello, world!");
+    println!("Hello, photo! Version: {}", VERSION);
 }

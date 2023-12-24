@@ -1,14 +1,18 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+//! Library core.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// Lints.
+#![warn(
+    clippy::all,
+    clippy::cargo,
+    clippy::complexity,
+    clippy::correctness,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::perf,
+    clippy::restriction,
+    clippy::style,
+    clippy::suspicious
+)]
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+// Constants
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
