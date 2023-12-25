@@ -1,4 +1,4 @@
-//! Bounding Volume Hierarchy node enumeration.
+//! Bounding Volume Hierarchy node structure.
 
 use crate::geometry::Aabb;
 
