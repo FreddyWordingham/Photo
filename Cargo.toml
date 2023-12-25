@@ -12,3 +12,4 @@ keywords = ["rendering", "ray-tracing", "simulation"]
 categories = ["science", "graphics", "simulation"]
 
 [dependencies]
+nalgebra = "0.32.3"

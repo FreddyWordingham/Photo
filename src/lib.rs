@@ -123,6 +123,8 @@
     clippy::wildcard_enum_match_arm
 )]
 #![allow(clippy::mod_module_files)]
+// Temporary.
+#![allow(dead_code)]
 
 // Constants
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
