@@ -1,0 +1,1 @@
+//! Runtime resource collection structure.

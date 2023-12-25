@@ -1,0 +1,1 @@
+//! Core rendering engine functions.

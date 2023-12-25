@@ -1,0 +1,1 @@
+//! Camera builder structure.

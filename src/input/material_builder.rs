@@ -1,0 +1,1 @@
+//! Material builder structure.

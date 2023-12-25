@@ -1,7 +1,7 @@
 # 🌟 `Photo`: Precision Ray-Tracing
 
 <p align="center">
-  <img src="./resources/images/banner.png" alt="Photo logo" width="350" height="200">
+  <img src="./assets/images/banner.png" alt="Photo logo" width="350" height="200">
 </p>
 
 ## 🔭 Overview

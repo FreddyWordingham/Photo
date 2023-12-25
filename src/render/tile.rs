@@ -1,0 +1,1 @@
+//! Image tile structure.
