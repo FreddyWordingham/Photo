@@ -96,7 +96,7 @@
     clippy::shadow_same,
     clippy::shadow_unrelated,
     clippy::single_call_fn,
-    clippy::single_char_lifetime_names,
+    // clippy::single_char_lifetime_names,
     clippy::std_instead_of_alloc,
     clippy::std_instead_of_core,
     clippy::str_to_string,
@@ -122,7 +122,7 @@
     clippy::verbose_file_reads,
     clippy::wildcard_enum_match_arm
 )]
-#![allow(clippy::mod_module_files)]
+#![allow(clippy::multiple_crate_versions, clippy::mod_module_files)]
 // Temporary.
 #![allow(dead_code)]
 

@@ -1,0 +1,19 @@
+{
+  "cSpell.words": ["enterpolation", "Srgba"],
+  "workbench.colorCustomizations": {
+    "commandCenter.border": "#e7e7e799",
+    "sash.hoverBorder": "#e94909",
+    "statusBar.background": "#b83a07",
+    "statusBar.debuggingBackground": "#0785b8",
+    "statusBar.debuggingForeground": "#e7e7e7",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#e94909",
+    "statusBarItem.remoteBackground": "#b83a07",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#b83a07",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#b83a0799",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.color": "#b83a07"
+}

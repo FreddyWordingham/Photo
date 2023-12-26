@@ -12,4 +12,6 @@ keywords = ["rendering", "ray-tracing", "simulation"]
 categories = ["science", "graphics", "simulation"]
 
 [dependencies]
+enterpolation = "0.2.1"
 nalgebra = "0.32.3"
+palette = "0.7.3"
