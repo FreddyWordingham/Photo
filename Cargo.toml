@@ -17,3 +17,4 @@ nalgebra = "0.32.3"
 ndarray = { version = "0.15.6", features = ["rayon"] }
 palette = "0.7.3"
 serde = { "version" = "1.0.193", features = ["derive"] }
+serde_yaml = "0.9.29"

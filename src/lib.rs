@@ -19,7 +19,7 @@
     clippy::create_dir,
     clippy::dbg_macro,
     clippy::decimal_literal_representation,
-    clippy::default_numeric_fallback,
+    // clippy::default_numeric_fallback,
     clippy::default_union_representation,
     clippy::deref_by_slicing,
     clippy::disallowed_script_idents,
@@ -40,7 +40,7 @@
     clippy::host_endian_bytes,
     clippy::if_then_some_else_none,
     clippy::impl_trait_in_params,
-    clippy::implicit_return,
+    // clippy::implicit_return,
     clippy::indexing_slicing,
     clippy::infinite_iter,
     clippy::inline_asm_x86_att_syntax,
@@ -58,7 +58,7 @@
     clippy::missing_asserts_for_indexing,
     clippy::missing_docs_in_private_items,
     clippy::missing_inline_in_public_items,
-    clippy::missing_trait_methods,
+    // clippy::missing_trait_methods,
     clippy::mixed_read_write_in_expression,
     clippy::mod_module_files,
     clippy::modulo_arithmetic,
@@ -71,7 +71,7 @@
     clippy::panic_in_result_fn,
     clippy::panic,
     clippy::partial_pub_fields,
-    clippy::pattern_type_mismatch,
+    // clippy::pattern_type_mismatch,
     clippy::pedantic,
     clippy::perf,
     clippy::print_stderr,
@@ -79,7 +79,7 @@
     // clippy::pub_use,
     clippy::pub_with_shorthand,
     clippy::pub_without_shorthand,
-    clippy::question_mark_used,
+    // clippy::question_mark_used,
     clippy::rc_buffer,
     clippy::rc_mutex,
     clippy::redundant_type_annotations,
@@ -90,10 +90,10 @@
     clippy::semicolon_inside_block,
     clippy::semicolon_outside_block,
     clippy::separated_literal_suffix,
-    clippy::shadow_reuse,
+    // clippy::shadow_reuse,
     clippy::shadow_same,
     clippy::shadow_unrelated,
-    clippy::single_call_fn,
+    // clippy::single_call_fn,
     // clippy::single_char_lifetime_names,
     clippy::std_instead_of_alloc,
     clippy::std_instead_of_core,
@@ -130,6 +130,7 @@
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // Modules
+pub mod error;
 pub mod geometry;
 pub mod input;
 pub mod render;

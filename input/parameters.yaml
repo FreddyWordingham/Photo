@@ -1,0 +1,16 @@
+settings:
+  output_directory: output
+  smoothing_length: 1.0e-2
+  min_weight: 0.01
+  max_loops: 1000
+spectra:
+  grass: [0x000000ff, 0x00dd33ff]
+materials:
+entities:
+cameras:
+  camera_0:
+    position: [10, 8, 6]
+    look_at: [0, 0, 0]
+    field_of_view: 45
+    resolution: [800, 600]
+    num_tiles: [8, 12]
