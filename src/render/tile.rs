@@ -6,6 +6,6 @@ use crate::render::Sample;
 
 /// Image tile.
 pub struct Tile {
-    /// Pixel samples.
+    /// Pixel samples [row, column].
     samples: Array2<Sample>,
 }

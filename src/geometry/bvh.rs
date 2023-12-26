@@ -2,7 +2,7 @@
 
 use crate::geometry::Aabb;
 
-/// Bounding Volume Hierarchy node.
+/// Bounding volume hierarchy node.
 struct BvhNode {
     /// Bounding box.
     aabb: Aabb,
@@ -12,7 +12,7 @@ struct BvhNode {
     count: usize,
 }
 
-/// Bounding Volume Hierarchy.
+/// Bounding volume hierarchy.
 pub struct Bvh {
     /// Indices of objects contained in this node.
     indices: Vec<usize>,

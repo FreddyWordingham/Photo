@@ -10,13 +10,13 @@ use crate::input::{
 #[derive(Deserialize, Serialize)]
 pub struct Parameters {
     /// Camera builder.
-    pub camera: CameraBuilder,
+    camera: CameraBuilder,
     /// Entity builders.
-    pub entities: Vec<EntityBuilder>,
+    entities: Vec<EntityBuilder>,
     /// Material builders.
-    pub materials: Vec<MaterialBuilder>,
+    materials: Vec<MaterialBuilder>,
     /// Settings builder.
-    pub settings: SettingsBuilder,
+    settings: SettingsBuilder,
     /// Spectrum builders.
-    pub spectra: Vec<SpectrumBuilder>,
+    spectra: Vec<SpectrumBuilder>,
 }

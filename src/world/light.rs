@@ -9,6 +9,6 @@ pub struct Light {
     colour: LinSrgba,
     /// Intensity of the light.
     intensity: f64,
-    /// Position of the light.
+    /// Position of the light (meters).
     position: Vector3<f64>,
 }
