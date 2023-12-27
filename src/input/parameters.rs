@@ -48,6 +48,8 @@ impl Parameters {
     /// or if the file cannot be deserialized into a [`Parameters`] object.
     #[inline]
     pub fn load(path: &Path) -> Result<Self, Box<dyn Error>> {
+        debug_assert!(path.is_file(), "Path must be a file!");
+
         let file_string = read_to_string(path)?;
         Ok(serde_yaml::from_str(&file_string)?)
     }

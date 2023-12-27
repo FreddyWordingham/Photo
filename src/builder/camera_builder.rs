@@ -29,7 +29,7 @@ impl CameraBuilder {
     /// Returns a [`ValidationError`] if the position is not finite,
     /// or if the look-at position is not finite,
     /// or if the field of view is not finite, or not positive,
-    /// or if the super-samples per axis is not positive,
+    /// or if the super-samples per axis is not positive, if it is specified,
     /// or if the resolution is not positive along each axis,
     /// or if the number of tiles is not positive along each axis.
     #[inline]

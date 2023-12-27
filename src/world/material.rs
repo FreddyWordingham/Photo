@@ -39,7 +39,12 @@ impl<'a> Material<'a> {
     /// Construct a new Reflective [`Material`] instance.
     #[must_use]
     #[inline]
-    pub const fn new_reflective(spectrum: &'a Spectrum, absorption: f64) -> Self {
+    pub fn new_reflective(spectrum: &'a Spectrum, absorption: f64) -> Self {
+        debug_assert!(
+            !(0.0..=1.0).contains(&absorption),
+            "Absorption must be in the range [0.0, 1.0]!"
+        );
+
         Self::Reflective {
             spectrum,
             absorption,
@@ -49,11 +54,16 @@ impl<'a> Material<'a> {
     /// Construct a new Refractive [`Material`] instance.
     #[must_use]
     #[inline]
-    pub const fn new_refractive(
-        spectrum: &'a Spectrum,
-        absorption: f64,
-        refractive_index: f64,
-    ) -> Self {
+    pub fn new_refractive(spectrum: &'a Spectrum, absorption: f64, refractive_index: f64) -> Self {
+        debug_assert!(
+            !(0.0..=1.0).contains(&absorption),
+            "Absorption must be in the range [0.0, 1.0]!"
+        );
+        debug_assert!(
+            refractive_index >= 1.0,
+            "Refractive index must be greater than or equal to 1.0!"
+        );
+
         Self::Refractive {
             spectrum,
             absorption,

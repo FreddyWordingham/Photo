@@ -47,9 +47,9 @@ impl EntityBuilder {
     ///
     /// Returns a [`ValidationError`] if the [`Mesh`] identifier is empty, or an unknown [`Mesh`] identifier,
     /// or if the [`Material`] identifier is empty, or an unknown [`Material`] identifier,
-    /// or if the translation is not finite,
-    /// or if the rotation is not finite,
-    /// or if the scale is not finite, or not positive.
+    /// or if the translation is not finite, if it is specified,
+    /// or if the rotation is not finite, if it is specified,
+    /// or if the scale is not finite, or not positive, if it is specified.
     #[inline]
     pub fn validate(
         &self,

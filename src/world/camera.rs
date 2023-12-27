@@ -30,6 +30,11 @@ impl Camera {
         resolution: [usize; 2],
         num_tiles: [usize; 2],
     ) -> Self {
+        debug_assert!(
+            position != look_at,
+            "Camera position and look-at must not be equal!"
+        );
+        debug_assert!(field_of_view.is_finite(), "Field of view must be finite!");
         debug_assert!(field_of_view > 0.0, "Field of view must be positive!");
         debug_assert!(
             super_samples_per_axis > 0,
