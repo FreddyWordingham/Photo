@@ -1,8 +1,13 @@
 //! Material builder structure.
 
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
-use crate::error::ValidationError;
+use crate::{
+    error::{BuildError, ValidationError},
+    world::{Material, Spectrum},
+};
 
 /// Builds a [`Material`] instance.
 #[derive(Deserialize, Serialize)]
@@ -11,19 +16,19 @@ pub enum MaterialBuilder {
     /// Opaque material.
     Diffuse {
         /// Spectrum colour of the material.
-        spectrum: String,
+        spectrum_id: String,
     },
     /// Partially reflective material.
     Reflective {
         /// Spectrum colour of the material.
-        spectrum: String,
+        spectrum_id: String,
         /// Fraction of light absorbed by the material.
         absorption: f64,
     },
     /// Partially reflective, partially transmissive material.
     Refractive {
         /// Spectrum colour of the material.
-        spectrum: String,
+        spectrum_id: String,
         /// Fraction of light absorbed by the material.
         absorption: f64,
         /// Refractive index of the material.
@@ -32,6 +37,17 @@ pub enum MaterialBuilder {
 }
 
 impl MaterialBuilder {
+    /// Access the spectrum identifiers.
+    #[must_use]
+    #[inline]
+    pub fn spectrum_ids(&self) -> Vec<&str> {
+        match self {
+            Self::Diffuse { spectrum_id }
+            | Self::Reflective { spectrum_id, .. }
+            | Self::Refractive { spectrum_id, .. } => vec![spectrum_id],
+        }
+    }
+
     /// Check if the build parameters are all valid.
     ///
     /// # Errors
@@ -41,20 +57,20 @@ impl MaterialBuilder {
     /// or if the refractive index value is invalid.
     #[inline]
     pub fn validate(&self, spectra_ids: &[String]) -> Result<(), ValidationError> {
-        let (spectrum, absorption, refractive_index) = match self {
-            Self::Diffuse { spectrum } => (spectrum, None, None),
+        let (spectrum_id, absorption, refractive_index) = match self {
+            Self::Diffuse { spectrum_id } => (spectrum_id, None, None),
             Self::Reflective {
-                spectrum,
+                spectrum_id,
                 absorption,
-            } => (spectrum, Some(absorption), None),
+            } => (spectrum_id, Some(absorption), None),
             Self::Refractive {
-                spectrum,
+                spectrum_id,
                 absorption,
                 refractive_index,
-            } => (spectrum, Some(absorption), Some(refractive_index)),
+            } => (spectrum_id, Some(absorption), Some(refractive_index)),
         };
 
-        Self::validate_spectrum(spectrum, spectra_ids)?;
+        Self::validate_spectrum(spectrum_id, spectra_ids)?;
         if let Some(absorption) = absorption {
             Self::validate_absorption(*absorption)?;
         }
@@ -73,8 +89,7 @@ impl MaterialBuilder {
         }
         if !spectra_ids.contains(spectrum) {
             return Err(ValidationError::new(&format!(
-                "Unknown spectrum identifier {}!",
-                spectrum
+                "Unknown spectrum identifier {spectrum}!",
             )));
         }
         Ok(())
@@ -84,8 +99,7 @@ impl MaterialBuilder {
     fn validate_absorption(absorption: f64) -> Result<(), ValidationError> {
         if !(0.0..=1.0).contains(&absorption) {
             return Err(ValidationError::new(&format!(
-                "Absorption mut be in the range [0.0, 1.0], but it is {}!",
-                absorption
+                "Absorption mut be in the range [0.0, 1.0], but it is {absorption}!",
             )));
         }
         Ok(())
@@ -95,18 +109,55 @@ impl MaterialBuilder {
     fn validate_refractive_index(refractive_index: f64) -> Result<(), ValidationError> {
         if !refractive_index.is_finite() {
             return Err(ValidationError::new(&format!(
-                "Refractive index must be finite, but the value is {}!",
-                refractive_index
+                "Refractive index must be finite, but the value is {refractive_index}!"
             )));
         }
 
         if refractive_index <= 1.0 {
             return Err(ValidationError::new(&format!(
-                "Refractive index must be greater than, or equal to 1.0, but the value is {}!",
-                refractive_index
+                "Refractive index must be greater than, or equal to 1.0, but the value is {refractive_index}!"
             )));
         }
 
         Ok(())
+    }
+
+    /// Build a [`Material`] instance.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`BuildError`] if the spectrum identifier is invalid.
+    #[inline]
+    pub fn build<'a>(
+        &self,
+        spectra: &'a HashMap<String, Spectrum>,
+    ) -> Result<Material<'a>, BuildError> {
+        Ok(match self {
+            Self::Diffuse { spectrum_id } => Material::new_diffuse(
+                spectra
+                    .get(spectrum_id)
+                    .ok_or_else(|| BuildError::SpectrumNotFound(spectrum_id.clone()))?,
+            ),
+            Self::Reflective {
+                spectrum_id,
+                absorption,
+            } => Material::new_reflective(
+                spectra
+                    .get(spectrum_id)
+                    .ok_or_else(|| BuildError::SpectrumNotFound(spectrum_id.clone()))?,
+                *absorption,
+            ),
+            Self::Refractive {
+                spectrum_id,
+                absorption,
+                refractive_index,
+            } => Material::new_refractive(
+                spectra
+                    .get(spectrum_id)
+                    .ok_or_else(|| BuildError::SpectrumNotFound(spectrum_id.clone()))?,
+                *absorption,
+                *refractive_index,
+            ),
+        })
     }
 }

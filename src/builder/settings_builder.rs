@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::ValidationError;
+use crate::{error::ValidationError, render::Settings};
 
 /// Builds a [`Settings`] instance.
 #[derive(Deserialize, Serialize)]
@@ -56,5 +56,17 @@ impl SettingsBuilder {
         }
 
         Ok(())
+    }
+
+    /// Build a [`Settings`] instance.
+    #[must_use]
+    #[inline]
+    pub fn build(&self) -> Settings {
+        Settings::new(
+            self.output_directory.clone(),
+            self.smoothing_length,
+            self.min_weight,
+            self.max_loops,
+        )
     }
 }

@@ -12,5 +12,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Validate parameters
     parameters.validate()?;
 
+    // Build world
+    let _settings = parameters.build_settings();
+    let spectra = parameters.build_spectra()?;
+    let materials = parameters.build_materials(&spectra)?;
+    let meshes = parameters.build_meshes();
+    let _entities = parameters.build_entities(&materials, &meshes)?;
+    let _cameras = parameters.build_cameras();
+    drop(parameters);
+
+    // let scene = parameters.create_scene(&settings, &resources);
+
     Ok(())
 }

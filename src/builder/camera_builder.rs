@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::ValidationError;
+use crate::{error::ValidationError, world::Camera};
 
 /// Builds a [`Camera`] instance.
 #[derive(Deserialize, Serialize)]
@@ -82,5 +82,19 @@ impl CameraBuilder {
         }
 
         Ok(())
+    }
+
+    /// Build a [`Camera`] instance.
+    #[must_use]
+    #[inline]
+    pub fn build(&self) -> Camera {
+        Camera::new(
+            self.position.into(),
+            self.look_at.into(),
+            self.field_of_view.to_radians(),
+            self.super_samples_per_axis.unwrap_or(1),
+            self.resolution,
+            self.num_tiles,
+        )
     }
 }

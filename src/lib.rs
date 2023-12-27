@@ -7,8 +7,8 @@
     clippy::alloc_instead_of_core,
     clippy::allow_attributes_without_reason,
     clippy::allow_attributes,
-    clippy::arithmetic_side_effects,
-    clippy::as_conversions,
+    // clippy::arithmetic_side_effects,
+    // clippy::as_conversions,
     clippy::as_underscore,
     clippy::assertions_on_result_states,
     clippy::big_endian_bytes,
@@ -32,7 +32,7 @@
     clippy::exit,
     clippy::expect_used,
     clippy::filetype_is_file,
-    clippy::float_arithmetic,
+    // clippy::float_arithmetic,
     clippy::float_cmp_const,
     clippy::fn_to_numeric_cast_any,
     clippy::format_push_string,
@@ -41,7 +41,7 @@
     clippy::if_then_some_else_none,
     clippy::impl_trait_in_params,
     // clippy::implicit_return,
-    clippy::indexing_slicing,
+    // clippy::indexing_slicing,
     clippy::infinite_iter,
     clippy::inline_asm_x86_att_syntax,
     clippy::inline_asm_x86_intel_syntax,
@@ -122,7 +122,11 @@
     clippy::verbose_file_reads,
     clippy::wildcard_enum_match_arm
 )]
-#![allow(clippy::multiple_crate_versions, clippy::mod_module_files)]
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::mod_module_files,
+    clippy::multiple_crate_versions
+)]
 // Temporary.
 #![allow(dead_code)]
 
@@ -130,6 +134,7 @@
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // Modules
+pub mod builder;
 pub mod error;
 pub mod geometry;
 pub mod input;

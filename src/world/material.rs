@@ -27,3 +27,37 @@ pub enum Material<'a> {
         refractive_index: f64,
     },
 }
+
+impl<'a> Material<'a> {
+    /// Construct a new Diffuse [`Material`] instance.
+    #[must_use]
+    #[inline]
+    pub const fn new_diffuse(spectrum: &'a Spectrum) -> Self {
+        Self::Diffuse { spectrum }
+    }
+
+    /// Construct a new Reflective [`Material`] instance.
+    #[must_use]
+    #[inline]
+    pub const fn new_reflective(spectrum: &'a Spectrum, absorption: f64) -> Self {
+        Self::Reflective {
+            spectrum,
+            absorption,
+        }
+    }
+
+    /// Construct a new Refractive [`Material`] instance.
+    #[must_use]
+    #[inline]
+    pub const fn new_refractive(
+        spectrum: &'a Spectrum,
+        absorption: f64,
+        refractive_index: f64,
+    ) -> Self {
+        Self::Refractive {
+            spectrum,
+            absorption,
+            refractive_index,
+        }
+    }
+}

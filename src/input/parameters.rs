@@ -1,27 +1,42 @@
 //! Parameters builder structure.
 
-use std::{collections::HashMap, error::Error, fs::read_to_string, path::Path};
+extern crate alloc;
 
+use alloc::borrow::ToOwned;
+use std::{
+    collections::HashMap,
+    error::Error,
+    fs::read_to_string,
+    path::{Path, PathBuf},
+};
+
+use enterpolation::linear::LinearError;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::ValidationError,
-    input::{CameraBuilder, EntityBuilder, MaterialBuilder, SettingsBuilder, SpectrumBuilder},
+    builder::{CameraBuilder, EntityBuilder, MaterialBuilder, SettingsBuilder, SpectrumBuilder},
+    error::{BuildError, ValidationError},
+    geometry::Mesh,
+    render::Settings,
+    world::{Camera, Entity, Material, Spectrum},
 };
 
 /// Input parameters object.
 #[derive(Deserialize, Serialize)]
+#[non_exhaustive]
 pub struct Parameters {
     /// Settings builder.
-    settings: SettingsBuilder,
+    pub settings: SettingsBuilder,
     /// Spectrum builders.
-    spectra: HashMap<String, SpectrumBuilder>,
+    pub spectra: HashMap<String, SpectrumBuilder>,
     /// Material builders.
-    materials: HashMap<String, MaterialBuilder>,
+    pub materials: HashMap<String, MaterialBuilder>,
+    /// Mesh paths.
+    pub meshes: HashMap<String, PathBuf>,
     /// Entity builders.
-    entities: Vec<EntityBuilder>,
+    pub entities: Vec<EntityBuilder>,
     /// Camera builder.
-    cameras: HashMap<String, CameraBuilder>,
+    pub cameras: HashMap<String, CameraBuilder>,
 }
 
 impl Parameters {
@@ -37,11 +52,67 @@ impl Parameters {
         Ok(serde_yaml::from_str(&file_string)?)
     }
 
+    /// Get the list of unique spectrum identifiers that are used by materials which are used by the entities.
+    #[must_use]
+    #[inline]
+    pub fn used_spectrum_ids(&self) -> Vec<String> {
+        let material_ids = self.used_material_ids();
+
+        let mut spectrum_ids = material_ids
+            .iter()
+            .flat_map(|material_id| {
+                self.materials[material_id]
+                    .spectrum_ids()
+                    .into_iter()
+                    .map(ToOwned::to_owned)
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+
+        spectrum_ids.sort();
+        spectrum_ids.dedup();
+
+        spectrum_ids
+    }
+
+    /// Get the list of unique material identifiers that are used by the entities.
+    #[must_use]
+    #[inline]
+    pub fn used_material_ids(&self) -> Vec<String> {
+        let mut material_ids = self
+            .entities
+            .iter()
+            .map(|entity| entity.material_id().to_owned())
+            .collect::<Vec<_>>();
+
+        material_ids.sort();
+        material_ids.dedup();
+
+        material_ids
+    }
+
+    /// Get the list of unique mesh identifiers that are used by the entities.
+    #[must_use]
+    #[inline]
+    pub fn used_mesh_ids(&self) -> Vec<String> {
+        let mut mesh_ids = self
+            .entities
+            .iter()
+            .map(|entity| entity.mesh_id().to_owned())
+            .collect::<Vec<_>>();
+
+        mesh_ids.sort();
+        mesh_ids.dedup();
+
+        mesh_ids
+    }
+
     /// Check if all the parameters are valid.
     ///
     /// # Errors
     ///
     /// Returns a [`ValidationError`] if any of the parameters are invalid,
+    /// or if any of the [`Mesh`] paths are invalid,
     /// or if any of the identifiers are empty.
     #[inline]
     pub fn validate(&self) -> Result<(), ValidationError> {
@@ -53,19 +124,45 @@ impl Parameters {
             }
             SpectrumBuilder::validate(spectrum)
         })?;
-        let spectra_ids = self.spectra.keys().cloned().collect::<Vec<_>>();
+        let spectrum_ids = self
+            .spectra
+            .keys()
+            .map(ToOwned::to_owned)
+            .collect::<Vec<_>>();
 
         self.materials.iter().try_for_each(|(id, material)| {
             if id.is_empty() {
                 return Err(ValidationError::new("Material identifier is empty!"));
             }
-            MaterialBuilder::validate(material, &spectra_ids)
+            MaterialBuilder::validate(material, &spectrum_ids)
         })?;
-        let material_ids = self.materials.keys().cloned().collect::<Vec<_>>();
 
+        self.meshes.iter().try_for_each(|(id, path)| {
+            if id.is_empty() {
+                return Err(ValidationError::new("Mesh identifier is empty!"));
+            }
+            if !path.is_file() {
+                return Err(ValidationError::new(&format!(
+                    "Mesh path does not exist: {}!",
+                    path.display()
+                )));
+            }
+            Ok(())
+        })?;
+
+        let material_ids = self
+            .materials
+            .keys()
+            .map(ToOwned::to_owned)
+            .collect::<Vec<_>>();
+        let mesh_ids = self
+            .meshes
+            .keys()
+            .map(ToOwned::to_owned)
+            .collect::<Vec<_>>();
         self.entities
             .iter()
-            .try_for_each(|entity| EntityBuilder::validate(entity, &spectra_ids, &material_ids))?;
+            .try_for_each(|entity| EntityBuilder::validate(entity, &material_ids, &mesh_ids))?;
 
         self.cameras.iter().try_for_each(|(id, camera)| {
             if id.is_empty() {
@@ -75,5 +172,93 @@ impl Parameters {
         })?;
 
         Ok(())
+    }
+
+    /// Build a [`Settings`] instance.
+    #[must_use]
+    #[inline]
+    pub fn build_settings(&self) -> Settings {
+        self.settings.build()
+    }
+
+    /// Build the collection of [`Spectra`] instances.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`LinearError`] if a [`Spectrum`] cannot be built.
+    #[inline]
+    pub fn build_spectra(&self) -> Result<HashMap<String, Spectrum>, LinearError> {
+        self.used_spectrum_ids()
+            .iter()
+            .map(|id| {
+                let builder = &self.spectra[id];
+                let spectrum = builder.build()?;
+                Ok((id.clone(), spectrum))
+            })
+            .collect()
+    }
+
+    /// Build the collection of [`Material`] instances.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`BuildError`] if a [`Material`] cannot be built.
+    #[inline]
+    pub fn build_materials<'a>(
+        &self,
+        spectra: &'a HashMap<String, Spectrum>,
+    ) -> Result<HashMap<String, Material<'a>>, BuildError> {
+        self.used_material_ids()
+            .iter()
+            .map(|id| {
+                let builder = &self.materials[id];
+                let material = builder.build(spectra)?;
+                Ok((id.clone(), material))
+            })
+            .collect()
+    }
+
+    /// Build the collection of [`Mesh`]es.
+    #[must_use]
+    #[inline]
+    pub fn build_meshes(&self) -> HashMap<String, Mesh> {
+        self.used_mesh_ids()
+            .iter()
+            .map(|id| {
+                let path = &self.meshes[id];
+                let mesh = Mesh::load(path);
+                (id.clone(), mesh)
+            })
+            .collect()
+    }
+
+    /// Build the collection of [`Entity`] instances.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`BuildError`] if an [`Entity`] cannot be built.
+    #[inline]
+    pub fn build_entities<'a>(
+        &self,
+        materials: &'a HashMap<String, Material<'a>>,
+        meshes: &'a HashMap<String, Mesh>,
+    ) -> Result<Vec<Entity<'a>>, BuildError> {
+        self.entities
+            .iter()
+            .map(|builder| builder.build(materials, meshes))
+            .collect()
+    }
+
+    /// Build the collection of [`Camera`] instances.
+    #[must_use]
+    #[inline]
+    pub fn build_cameras(&self) -> HashMap<String, Camera> {
+        self.cameras
+            .iter()
+            .map(|(key, builder)| {
+                let camera = builder.build();
+                (key.clone(), camera)
+            })
+            .collect()
     }
 }

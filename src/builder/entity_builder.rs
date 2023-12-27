@@ -1,8 +1,15 @@
 //! Instance builder structure.
 
+use std::collections::HashMap;
+
+use nalgebra::{Similarity3, Translation3, UnitQuaternion, Vector3};
 use serde::{Deserialize, Serialize};
 
-use crate::error::ValidationError;
+use crate::{
+    error::{BuildError, ValidationError},
+    geometry::Mesh,
+    world::{Entity, Material},
+};
 
 /// Builds an [`Entity`] instance.
 #[derive(Deserialize, Serialize)]
@@ -20,20 +27,34 @@ pub struct EntityBuilder {
 }
 
 impl EntityBuilder {
+    /// Access the [`Mesh`] identifier.
+    #[must_use]
+    #[inline]
+    pub fn mesh_id(&self) -> &str {
+        &self.mesh_id
+    }
+
+    /// Access the [`Material`] identifier.
+    #[must_use]
+    #[inline]
+    pub fn material_id(&self) -> &str {
+        &self.material_id
+    }
+
     /// Check if the build parameters are all valid.
     ///
     /// # Errors
     ///
-    /// Returns a [`ValidationError`] if the mesh identifier is empty, or an unknown mesh identifier,
-    /// or if the material identifier is empty, or an unknown material identifier,
+    /// Returns a [`ValidationError`] if the [`Mesh`] identifier is empty, or an unknown [`Mesh`] identifier,
+    /// or if the [`Material`] identifier is empty, or an unknown [`Material`] identifier,
     /// or if the translation is not finite,
     /// or if the rotation is not finite,
     /// or if the scale is not finite, or not positive.
     #[inline]
     pub fn validate(
         &self,
-        mesh_ids: &[String],
         material_ids: &[String],
+        mesh_ids: &[String],
     ) -> Result<(), ValidationError> {
         if self.mesh_id.is_empty() {
             return Err(ValidationError::new("Mesh identifier may not be empty!"));
@@ -89,5 +110,40 @@ impl EntityBuilder {
         }
 
         Ok(())
+    }
+
+    /// Build an [`Entity`] instance.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`BuildError`] if the [`Mesh`] identifier is unknown,
+    /// or if the [`Material`] identifier is unknown.
+    #[inline]
+    pub fn build<'a>(
+        &self,
+        materials: &'a HashMap<String, Material<'a>>,
+        meshes: &'a HashMap<String, Mesh>,
+    ) -> Result<Entity<'a>, BuildError> {
+        let mesh = meshes
+            .get(&self.mesh_id)
+            .ok_or_else(|| BuildError::MeshNotFound(self.mesh_id.clone()))?;
+        let material = materials
+            .get(&self.material_id)
+            .ok_or_else(|| BuildError::MaterialNotFound(self.material_id.clone()))?;
+
+        let translation = self.translation.unwrap_or([0.0; 3]);
+        let rotation = self.rotation.unwrap_or([0.0; 3]);
+        let scale = self.scale.unwrap_or(1.0);
+        let transformation = Similarity3::from_parts(
+            Translation3::from(Vector3::new(translation[0], translation[1], translation[2])),
+            UnitQuaternion::from_euler_angles(
+                rotation[0].to_radians(),
+                rotation[1].to_radians(),
+                rotation[2].to_radians(),
+            ),
+            scale,
+        );
+
+        Ok(Entity::new(mesh, material, transformation))
     }
 }

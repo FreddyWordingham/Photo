@@ -4,9 +4,24 @@ settings:
   min_weight: 0.01
   max_loops: 1000
 spectra:
-  grass: [0x000000ff, 0x00dd33ff]
+  green: [0x000000ff, 0x00dd33ff]
+  blue: [0x000000ff, 0x0000ffff]
+  yellow: [0xffffffff, 0xffff00ff]
+  gray: [0x444444ff, 0xddddddff]
+meshes:
+  cube: ./assets/meshes/cube.obj
+  icosphere: ./assets/meshes/icosphere.obj
+  square: ./assets/meshes/cube.obj
 materials:
+  grass: !Diffuse
+    spectrum_id: green
+  sky: !Diffuse
+    spectrum_id: blue
 entities:
+  - material_id: sky
+    mesh_id: square
+  - material_id: grass
+    mesh_id: cube
 cameras:
   camera_0:
     position: [10, 8, 6]
