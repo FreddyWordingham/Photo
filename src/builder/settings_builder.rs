@@ -31,26 +31,26 @@ impl SettingsBuilder {
     pub fn validate(&self) -> Result<(), ValidationError> {
         if !self.output_directory.is_dir() {
             return Err(ValidationError::new(
-                "Output directory must already exist, but it does not!",
+                "Settings output directory must already exist, but it does not!",
             ));
         }
 
         if !self.smoothing_length.is_finite() {
             return Err(ValidationError::new(&format!(
-                "Smoothing length muse be finite, but value is {}!",
+                "Settings smoothing length muse be finite, but value is {}!",
                 self.smoothing_length
             )));
         }
         if self.smoothing_length <= 0.0 {
             return Err(ValidationError::new(&format!(
-                "Smoothing length must be positive, but the value is {}!",
+                "Settings smoothing length must be positive, but the value is {}!",
                 self.smoothing_length
             )));
         }
 
         if !(0.0..=1.0).contains(&self.min_weight) {
             return Err(ValidationError::new(&format!(
-                "Minimum weight must be in the range [0.0, 1.0], but the value is {}!",
+                "Settings minimum weight must be in the range [0.0, 1.0], but the value is {}!",
                 self.min_weight
             )));
         }

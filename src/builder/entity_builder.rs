@@ -57,23 +57,25 @@ impl EntityBuilder {
         mesh_ids: &[String],
     ) -> Result<(), ValidationError> {
         if self.mesh_id.is_empty() {
-            return Err(ValidationError::new("Mesh identifier may not be empty!"));
+            return Err(ValidationError::new(
+                "Entity mesh identifier must not be empty!",
+            ));
         }
         if !mesh_ids.contains(&self.mesh_id) {
             return Err(ValidationError::new(&format!(
-                "Unknown mesh identifier: {}!",
+                "Entity contains unknown mesh identifier: {}!",
                 self.mesh_id
             )));
         }
 
         if self.material_id.is_empty() {
             return Err(ValidationError::new(
-                "Material identifier may not be empty!",
+                "Entity material identifier must not be empty!",
             ));
         }
         if !material_ids.contains(&self.material_id) {
             return Err(ValidationError::new(&format!(
-                "Unknown material identifier: {}!",
+                "Entity contains unknown material identifier: {}!",
                 self.material_id
             )));
         }

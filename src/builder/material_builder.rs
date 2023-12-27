@@ -85,11 +85,13 @@ impl MaterialBuilder {
     /// It must be a non-empty string and it must exist in the list of known spectra identifiers.
     fn validate_spectrum(spectrum: &String, spectra_ids: &[String]) -> Result<(), ValidationError> {
         if spectrum.is_empty() {
-            return Err(ValidationError::new("Spectrum identifier is empty!"));
+            return Err(ValidationError::new(
+                "Material spectrum identifier must not be empty!",
+            ));
         }
         if !spectra_ids.contains(spectrum) {
             return Err(ValidationError::new(&format!(
-                "Unknown spectrum identifier {spectrum}!",
+                "Material contains unknown spectrum identifier {spectrum}!",
             )));
         }
         Ok(())
@@ -99,7 +101,7 @@ impl MaterialBuilder {
     fn validate_absorption(absorption: f64) -> Result<(), ValidationError> {
         if !(0.0..=1.0).contains(&absorption) {
             return Err(ValidationError::new(&format!(
-                "Absorption mut be in the range [0.0, 1.0], but it is {absorption}!",
+                "Material absorption coefficient must be in the range [0.0, 1.0], but the value is {absorption}!",
             )));
         }
         Ok(())
@@ -109,13 +111,13 @@ impl MaterialBuilder {
     fn validate_refractive_index(refractive_index: f64) -> Result<(), ValidationError> {
         if !refractive_index.is_finite() {
             return Err(ValidationError::new(&format!(
-                "Refractive index must be finite, but the value is {refractive_index}!"
+                "Material refractive index must be finite, but the value is {refractive_index}!"
             )));
         }
 
         if refractive_index <= 1.0 {
             return Err(ValidationError::new(&format!(
-                "Refractive index must be greater than, or equal to 1.0, but the value is {refractive_index}!"
+                "Material refractive index must be greater than, or equal to 1.0, but the value is {refractive_index}!"
             )));
         }
 

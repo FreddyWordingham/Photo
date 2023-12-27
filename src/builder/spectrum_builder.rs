@@ -19,7 +19,9 @@ impl SpectrumBuilder {
     #[inline]
     pub fn validate(&self) -> Result<(), ValidationError> {
         if self.0.is_empty() {
-            return Err(ValidationError::new("Spectrum is empty!"));
+            return Err(ValidationError::new(
+                "Spectrum colours vector must not be empty!",
+            ));
         }
 
         Ok(())
