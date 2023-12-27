@@ -37,24 +37,17 @@ impl Mesh {
     #[inline]
     pub fn load(path: &Path) -> Result<Self, Box<dyn Error>> {
         let file_string = read_to_string(path)?;
-        let line_tokens: Vec<Vec<_>> = file_string
-            .lines()
-            .map(|line| line.split_whitespace().collect())
-            .collect();
 
-        let mut vertex_positions = Vec::with_capacity(
-            line_tokens
-                .iter()
-                .filter(|tokens| !tokens.is_empty() && tokens[0] == "v")
-                .count(),
-        );
-        let mut vertex_normals = vec![];
-        let mut faces = vec![];
+        let mut vertex_positions = Vec::new();
+        let mut vertex_normals = Vec::new();
+        let mut faces = Vec::new();
 
         let mut mins = Point3::new(f64::MAX, f64::MAX, f64::MAX);
         let mut maxs = Point3::new(f64::MIN, f64::MIN, f64::MIN);
 
-        for tokens in line_tokens {
+        for line in file_string.lines() {
+            let tokens: Vec<&str> = line.split_whitespace().collect();
+
             if tokens.is_empty() {
                 continue;
             }
@@ -64,52 +57,18 @@ impl Mesh {
                 .ok_or_else(|| ParseError::new("Mesh file must specify identifying token!"))?
             {
                 "v" => {
-                    let x = tokens[1].parse::<f64>()?;
-                    let y = tokens[2].parse::<f64>()?;
-                    let z = tokens[3].parse::<f64>()?;
-                    vertex_positions.push(Point3::new(x, y, z));
-
-                    if x < mins.x {
-                        mins.x = x;
-                    }
-                    if y < mins.y {
-                        mins.y = y;
-                    }
-                    if z < mins.z {
-                        mins.z = z;
-                    }
-
-                    if x > maxs.x {
-                        maxs.x = x;
-                    }
-                    if y > maxs.y {
-                        maxs.y = y;
-                    }
-                    if z > maxs.z {
-                        maxs.z = z;
-                    }
+                    let [vertex, min, max] = Self::parse_vertex_position(&tokens[1..])?;
+                    vertex_positions.push(vertex);
+                    mins = mins.inf(&min);
+                    maxs = maxs.sup(&max);
                 }
                 "vn" => {
-                    let xn = tokens[1].parse::<f64>()?;
-                    let yn = tokens[2].parse::<f64>()?;
-                    let zn = tokens[3].parse::<f64>()?;
-                    vertex_normals.push(Unit::new_normalize(Vector3::new(xn, yn, zn)));
+                    let normal = Self::parse_vertex_normal(&tokens[1..])?;
+                    vertex_normals.push(normal);
                 }
                 "f" => {
-                    let mut face = [[0; 3]; 3];
-                    for (i, token) in tokens.iter().skip(1).enumerate() {
-                        let indices: Vec<usize> = token
-                            .split('/')
-                            .map(|index_string| {
-                                index_string.parse::<usize>().map(|index| index - 1)
-                            })
-                            .collect::<Result<Vec<_>, _>>()?;
-                        face[i] = [indices[0], indices[1], indices[2]];
-                    }
-                    faces.push(Face {
-                        position_indices: [face[0][0], face[1][0], face[2][0]],
-                        normal_indices: [face[0][2], face[1][2], face[2][2]],
-                    });
+                    let face = Self::parse_face(&tokens[1..])?;
+                    faces.push(face);
                 }
                 _ => {}
             }
@@ -119,6 +78,63 @@ impl Mesh {
             vertex_positions,
             vertex_normals,
             faces,
+        })
+    }
+
+    /// Parse a vertex position from an .obj file string.
+    #[inline]
+    #[allow(clippy::missing_asserts_for_indexing, clippy::panic_in_result_fn)]
+    fn parse_vertex_position(coords: &[&str]) -> Result<[Point3<f64>; 3], Box<dyn Error>> {
+        assert!(
+            coords.len() == 3,
+            "Vertex position must have exactly 3 coordinates!"
+        );
+
+        let x = coords[0].parse::<f64>()?;
+        let y = coords[1].parse::<f64>()?;
+        let z = coords[2].parse::<f64>()?;
+        let vertex = Point3::new(x, y, z);
+        let min = Point3::new(x, y, z);
+        let max = Point3::new(x, y, z);
+
+        Ok([vertex, min, max])
+    }
+
+    /// Parse a vertex normal from an .obj file string.
+    #[inline]
+    #[allow(clippy::missing_asserts_for_indexing, clippy::panic_in_result_fn)]
+    fn parse_vertex_normal(coords: &[&str]) -> Result<Unit<Vector3<f64>>, Box<dyn Error>> {
+        assert!(
+            coords.len() == 3,
+            "Vertex normal must have exactly 3 coordinates!"
+        );
+
+        let xn = coords[0].parse::<f64>()?;
+        let yn = coords[1].parse::<f64>()?;
+        let zn = coords[2].parse::<f64>()?;
+        let normal = Unit::new_normalize(Vector3::new(xn, yn, zn));
+
+        Ok(normal)
+    }
+
+    /// Parse a face from an .obj file string.
+    #[inline]
+    fn parse_face(tokens: &[&str]) -> Result<Face, Box<dyn Error>> {
+        let mut position_indices = [0; 3];
+        let mut normal_indices = [0; 3];
+
+        for (i, token) in tokens.iter().enumerate() {
+            let indices: Vec<usize> = token
+                .split('/')
+                .map(|index_string| index_string.parse::<usize>().map(|index| index - 1))
+                .collect::<Result<Vec<_>, _>>()?;
+            position_indices[i] = indices[0];
+            normal_indices[i] = indices[2];
+        }
+
+        Ok(Face {
+            position_indices,
+            normal_indices,
         })
     }
 
