@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let _settings = parameters.build_settings();
     let spectra = parameters.build_spectra()?;
     let materials = parameters.build_materials(&spectra)?;
-    let meshes = parameters.build_meshes();
+    let meshes = parameters.build_meshes()?;
     let _entities = parameters.build_entities(&materials, &meshes)?;
     let _lights = parameters.build_lights();
     let _cameras = parameters.build_cameras();

@@ -171,7 +171,7 @@ impl Parameters {
             .iter()
             .try_for_each(|entity| EntityBuilder::validate(entity, &material_ids, &mesh_ids))?;
 
-        self.lights.iter().try_for_each(|light| light.validate())?;
+        self.lights.iter().try_for_each(LightBuilder::validate)?;
 
         self.cameras.iter().try_for_each(|(id, camera)| {
             if id.is_empty() {
@@ -228,15 +228,18 @@ impl Parameters {
     }
 
     /// Build the collection of [`Mesh`] instances.
-    #[must_use]
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`Box<dyn Error>`] if a [`Mesh`] cannot be built.
     #[inline]
-    pub fn build_meshes(&self) -> HashMap<String, Mesh> {
+    pub fn build_meshes(&self) -> Result<HashMap<String, Mesh>, Box<dyn Error>> {
         self.used_mesh_ids()
             .iter()
             .map(|id| {
                 let path = &self.meshes[id];
-                let mesh = Mesh::load(path);
-                (id.clone(), mesh)
+                let mesh = Mesh::load(path)?;
+                Ok((id.clone(), mesh))
             })
             .collect()
     }
@@ -262,7 +265,7 @@ impl Parameters {
     #[must_use]
     #[inline]
     pub fn build_lights(&self) -> Vec<Light> {
-        self.lights.iter().map(|builder| builder.build()).collect()
+        self.lights.iter().map(LightBuilder::build).collect()
     }
 
     /// Build the collection of [`Camera`] instances.

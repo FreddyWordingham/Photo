@@ -1,10 +1,10 @@
 //! Triangle mesh structure.
 
-use std::{fs::read_to_string, path::Path};
+use std::{error::Error, fs::read_to_string, path::Path};
 
 use nalgebra::{Point3, Unit, Vector3};
 
-use crate::geometry::Triangle;
+use crate::{error::ParseError, geometry::Triangle};
 
 /// Triangular face.
 struct Face {
@@ -28,10 +28,15 @@ pub struct Mesh {
 
 impl Mesh {
     /// Load a [`Mesh`] from a wavefront (.obj) file.
-    #[must_use]
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`ParseError`] if the file cannot be read,
+    /// or if the file is not a valid wavefront (.obj) file,
+    /// or if the values in the file can not be parsed.
     #[inline]
-    pub fn load(path: &Path) -> Self {
-        let file_string = read_to_string(path).unwrap();
+    pub fn load(path: &Path) -> Result<Self, Box<dyn Error>> {
+        let file_string = read_to_string(path)?;
         let line_tokens: Vec<Vec<_>> = file_string
             .lines()
             .map(|line| line.split_whitespace().collect())
@@ -54,11 +59,14 @@ impl Mesh {
                 continue;
             }
 
-            match tokens[0] {
+            match *tokens
+                .first()
+                .ok_or_else(|| ParseError::new("Mesh file must specify identifying token!"))?
+            {
                 "v" => {
-                    let x = tokens[1].parse::<f64>().unwrap();
-                    let y = tokens[2].parse::<f64>().unwrap();
-                    let z = tokens[3].parse::<f64>().unwrap();
+                    let x = tokens[1].parse::<f64>()?;
+                    let y = tokens[2].parse::<f64>()?;
+                    let z = tokens[3].parse::<f64>()?;
                     vertex_positions.push(Point3::new(x, y, z));
 
                     if x < mins.x {
@@ -82,18 +90,20 @@ impl Mesh {
                     }
                 }
                 "vn" => {
-                    let xn = tokens[1].parse::<f64>().unwrap();
-                    let yn = tokens[2].parse::<f64>().unwrap();
-                    let zn = tokens[3].parse::<f64>().unwrap();
+                    let xn = tokens[1].parse::<f64>()?;
+                    let yn = tokens[2].parse::<f64>()?;
+                    let zn = tokens[3].parse::<f64>()?;
                     vertex_normals.push(Unit::new_normalize(Vector3::new(xn, yn, zn)));
                 }
                 "f" => {
                     let mut face = [[0; 3]; 3];
                     for (i, token) in tokens.iter().skip(1).enumerate() {
-                        let indices: Vec<_> = token
+                        let indices: Vec<usize> = token
                             .split('/')
-                            .map(|index| index.parse::<usize>().unwrap() - 1)
-                            .collect();
+                            .map(|index_string| {
+                                index_string.parse::<usize>().map(|index| index - 1)
+                            })
+                            .collect::<Result<Vec<_>, _>>()?;
                         face[i] = [indices[0], indices[1], indices[2]];
                     }
                     faces.push(Face {
@@ -105,11 +115,11 @@ impl Mesh {
             }
         }
 
-        Self {
+        Ok(Self {
             vertex_positions,
             vertex_normals,
             faces,
-        }
+        })
     }
 
     /// Iterate over the [`Triangle`]s of the [`Mesh`].

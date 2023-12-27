@@ -2,7 +2,7 @@
 
 use palette::LinSrgba;
 
-/// Convert a 32-bit RGBA colour to a linear sRGBA colour.
+/// Convert a 32-bit RGBA colour to a linear RGBA colour.
 #[must_use]
 #[inline]
 pub fn from_u32(colour: u32) -> LinSrgba {

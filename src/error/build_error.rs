@@ -7,6 +7,7 @@ use std::error::Error;
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum BuildError {
+    IdentifierNotFound(String),
     SpectrumNotFound(String),
     MeshNotFound(String),
     MaterialNotFound(String),
@@ -16,6 +17,9 @@ impl Display for BuildError {
     #[inline]
     fn fmt(&self, formatter: &mut Formatter) -> Result {
         match self {
+            Self::IdentifierNotFound(identifier) => {
+                write!(formatter, "Identifier not found: {identifier}!")
+            }
             Self::SpectrumNotFound(spectrum_id) => {
                 write!(formatter, "Spectrum not found: {spectrum_id}!")
             }
