@@ -31,9 +31,9 @@ impl LightBuilder {
             )));
         }
 
-        if self.intensity <= 0.0 {
+        if !(0.0..=1.0).contains(&self.intensity) {
             return Err(ValidationError::new(&format!(
-                "Light intensity must be positive, but the value is {}!",
+                "Light intensity mut be in the range [0.0, 1.0], but it is {}!",
                 self.intensity
             )));
         }

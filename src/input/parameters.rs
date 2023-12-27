@@ -14,7 +14,10 @@ use enterpolation::linear::LinearError;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    builder::{CameraBuilder, EntityBuilder, MaterialBuilder, SettingsBuilder, SpectrumBuilder},
+    builder::{
+        CameraBuilder, EntityBuilder, LightBuilder, MaterialBuilder, SettingsBuilder,
+        SpectrumBuilder,
+    },
     error::{BuildError, ValidationError},
     geometry::Mesh,
     render::Settings,
@@ -35,6 +38,8 @@ pub struct Parameters {
     pub meshes: HashMap<String, PathBuf>,
     /// Entity builders.
     pub entities: Vec<EntityBuilder>,
+    /// Light builders.
+    pub lights: Vec<LightBuilder>,
     /// Camera builder.
     pub cameras: HashMap<String, CameraBuilder>,
 }
@@ -165,6 +170,8 @@ impl Parameters {
         self.entities
             .iter()
             .try_for_each(|entity| EntityBuilder::validate(entity, &material_ids, &mesh_ids))?;
+
+        self.lights.iter().try_for_each(|light| light.validate())?;
 
         self.cameras.iter().try_for_each(|(id, camera)| {
             if id.is_empty() {
