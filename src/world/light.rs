@@ -12,3 +12,18 @@ pub struct Light {
     /// Position of the light (meters).
     position: Vector3<f64>,
 }
+
+impl Light {
+    /// Construct a new instance.
+    #[must_use]
+    #[inline]
+    pub fn new(position: Vector3<f64>, colour: LinSrgba, intensity: f64) -> Self {
+        debug_assert!(intensity > 0.0, "Light intensity must be positive!");
+
+        Self {
+            colour,
+            intensity,
+            position,
+        }
+    }
+}

@@ -140,4 +140,5 @@ pub mod geometry;
 pub mod input;
 pub mod render;
 pub mod run;
+pub mod utility;
 pub mod world;

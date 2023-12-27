@@ -1,10 +1,9 @@
 //! Spectrum builder structure.
 
 use enterpolation::linear::LinearError;
-use palette::LinSrgba;
 use serde::{Deserialize, Serialize};
 
-use crate::{error::ValidationError, world::Spectrum};
+use crate::{error::ValidationError, utility::colour::from_u32, world::Spectrum};
 
 /// Builds a [`Spectrum`] instance.
 #[derive(Deserialize, Serialize)]
@@ -36,16 +35,8 @@ impl SpectrumBuilder {
         let colours = self
             .0
             .iter()
-            .map(|colour| {
-                let red = ((colour >> 24) & 0xFF) as f32 / 255.0;
-                let green = ((colour >> 16) & 0xFF) as f32 / 255.0;
-                let blue = ((colour >> 8) & 0xFF) as f32 / 255.0;
-                let alpha = (colour & 0xFF) as f32 / 255.0;
-
-                LinSrgba::new(red, green, blue, alpha)
-            })
+            .map(|colour| from_u32(*colour))
             .collect::<Vec<_>>();
-
         Spectrum::new(colours)
     }
 }
