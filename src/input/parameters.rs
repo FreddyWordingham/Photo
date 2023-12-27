@@ -21,7 +21,7 @@ use crate::{
     error::{BuildError, ValidationError},
     geometry::Mesh,
     render::Settings,
-    world::{Camera, Entity, Material, Spectrum},
+    world::{Camera, Entity, Light, Material, Spectrum},
 };
 
 /// Input parameters object.
@@ -183,7 +183,7 @@ impl Parameters {
         Ok(())
     }
 
-    /// Build a [`Settings`] instance.
+    /// Build the [`Settings`] instance.
     #[must_use]
     #[inline]
     pub fn build_settings(&self) -> Settings {
@@ -227,7 +227,7 @@ impl Parameters {
             .collect()
     }
 
-    /// Build the collection of [`Mesh`]es.
+    /// Build the collection of [`Mesh`] instances.
     #[must_use]
     #[inline]
     pub fn build_meshes(&self) -> HashMap<String, Mesh> {
@@ -256,6 +256,13 @@ impl Parameters {
             .iter()
             .map(|builder| builder.build(materials, meshes))
             .collect()
+    }
+
+    /// Build the collection of [`Light`] instances.
+    #[must_use]
+    #[inline]
+    pub fn build_lights(&self) -> Vec<Light> {
+        self.lights.iter().map(|builder| builder.build()).collect()
     }
 
     /// Build the collection of [`Camera`] instances.
