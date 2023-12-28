@@ -2,6 +2,7 @@
 
 #![allow(clippy::module_name_repetitions)]
 
+mod bvh_builder;
 mod camera_builder;
 mod entity_builder;
 mod light_builder;
@@ -9,6 +10,7 @@ mod material_builder;
 mod settings_builder;
 mod spectrum_builder;
 
+pub use bvh_builder::BvhBuilder;
 pub use camera_builder::CameraBuilder;
 pub use entity_builder::EntityBuilder;
 pub use light_builder::LightBuilder;

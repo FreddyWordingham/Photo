@@ -233,12 +233,22 @@ impl Parameters {
     ///
     /// Returns a [`Box<dyn Error>`] if a [`Mesh`] cannot be built.
     #[inline]
-    pub fn build_meshes(&self) -> Result<HashMap<String, Mesh>, Box<dyn Error>> {
+    pub fn build_meshes(
+        &self,
+        bvh_max_children: usize,
+        bvh_max_depth: usize,
+    ) -> Result<HashMap<String, Mesh>, Box<dyn Error>> {
+        debug_assert!(
+            bvh_max_children >= 2,
+            "Mesh BVH max children must be greater than 2!"
+        );
+        debug_assert!(bvh_max_depth > 0, "Mesh BVH max depth must be positive!");
+
         self.used_mesh_ids()
             .iter()
             .map(|id| {
                 let path = &self.meshes[id];
-                let mesh = Mesh::load(path)?;
+                let mesh = Mesh::load(path, bvh_max_children, bvh_max_depth)?;
                 Ok((id.clone(), mesh))
             })
             .collect()

@@ -4,7 +4,11 @@ use std::{error::Error, fs::read_to_string, path::Path};
 
 use nalgebra::{Point3, Unit, Vector3};
 
-use crate::{error::ParseError, geometry::Triangle};
+use crate::{
+    builder::BvhBuilder,
+    error::ParseError,
+    geometry::{Bvh, Triangle},
+};
 
 /// Triangular face.
 struct Face {
@@ -22,8 +26,8 @@ pub struct Mesh {
     vertex_normals: Vec<Unit<Vector3<f64>>>,
     /// List of faces.
     faces: Vec<Face>,
-    // /// Bounding Volume Hierarchy.
-    // bvh: Bvh,
+    /// Bounding Volume Hierarchy.
+    bvh: Bvh,
 }
 
 impl Mesh {
@@ -35,7 +39,17 @@ impl Mesh {
     /// or if the file is not a valid wavefront (.obj) file,
     /// or if the values in the file can not be parsed.
     #[inline]
-    pub fn load(path: &Path) -> Result<Self, Box<dyn Error>> {
+    pub fn load(
+        path: &Path,
+        bvh_max_children: usize,
+        bvh_max_depth: usize,
+    ) -> Result<Self, Box<dyn Error>> {
+        debug_assert!(
+            bvh_max_children >= 2,
+            "Mesh BVH max children must be greater than 2!"
+        );
+        debug_assert!(bvh_max_depth > 0, "Mesh BVH max depth must be positive!");
+
         let file_string = read_to_string(path)?;
 
         let mut vertex_positions = Vec::new();
@@ -74,10 +88,29 @@ impl Mesh {
             }
         }
 
+        let triangles = faces
+            .iter()
+            .map(|face| {
+                Triangle::new(
+                    [
+                        vertex_positions[face.position_indices[0]],
+                        vertex_positions[face.position_indices[1]],
+                        vertex_positions[face.position_indices[2]],
+                    ],
+                    [
+                        vertex_normals[face.normal_indices[0]],
+                        vertex_normals[face.normal_indices[1]],
+                        vertex_normals[face.normal_indices[2]],
+                    ],
+                )
+            })
+            .collect::<Vec<_>>();
+
         Ok(Self {
             vertex_positions,
             vertex_normals,
             faces,
+            bvh: BvhBuilder::new().build(&triangles, bvh_max_children, bvh_max_depth),
         })
     }
 
