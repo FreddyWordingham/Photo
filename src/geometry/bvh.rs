@@ -1,6 +1,9 @@
 //! Bounding Volume Hierarchy node structure.
 
-use crate::geometry::Aabb;
+use crate::{
+    geometry::{Aabb, Collides, Ray},
+    utility::IndexedAccess,
+};
 
 /// Bounding volume hierarchy node.
 #[derive(Clone)]
@@ -38,5 +41,49 @@ impl Bvh {
         );
 
         Self { indices, nodes }
+    }
+
+    /// Check for a [`Ray`] intersection.
+    ///
+    /// # Panics
+    ///
+    /// If the comparison between intersection distances fails.
+    #[must_use]
+    #[inline]
+    #[allow(clippy::unwrap_used)]
+    pub fn ray_intersections<T: Collides, S: IndexedAccess<T>>(
+        &self,
+        ray: &Ray,
+        shapes: &S,
+    ) -> Vec<(usize, f64)> {
+        let mut hits: Vec<(usize, f64)> = Vec::new();
+        self.ray_intersect_node(0, ray, shapes, &mut hits);
+        hits.sort_by(|distance_a, distance_b| distance_a.1.partial_cmp(&distance_b.1).unwrap());
+        hits
+    }
+
+    /// Perform a [`Ray`] intersection with a [`BvhNode`].
+    #[inline]
+    fn ray_intersect_node<T: Collides, S: IndexedAccess<T>>(
+        &self,
+        node_index: usize,
+        ray: &Ray,
+        shapes: &S,
+        hits: &mut Vec<(usize, f64)>,
+    ) {
+        if self.nodes[node_index].aabb.ray_intersect(ray) {
+            if self.nodes[node_index].count == 0 {
+                self.ray_intersect_node(self.nodes[node_index].left_child, ray, shapes, hits);
+                self.ray_intersect_node(self.nodes[node_index].left_child + 1, ray, shapes, hits);
+            } else {
+                for i in 0..self.nodes[node_index].count {
+                    let index = self.indices[self.nodes[node_index].left_child + i];
+                    let aabb = shapes.retrieve(index).aabb();
+                    if let Some(aabb_distance) = aabb.ray_intersect_distance(ray) {
+                        hits.push((index, aabb_distance));
+                    }
+                }
+            }
+        }
     }
 }

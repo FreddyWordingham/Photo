@@ -2,6 +2,8 @@
 
 use nalgebra::{Point3, Unit, Vector3};
 
+use crate::geometry::Ray;
+
 /// Axis-aligned bounding box.
 #[derive(Clone)]
 pub struct Aabb {
@@ -113,5 +115,62 @@ impl Aabb {
         }
 
         (min, max)
+    }
+
+    /// Test for an intersection with a ray.
+    #[must_use]
+    #[inline]
+    pub fn ray_intersect(&self, ray: &Ray) -> bool {
+        let inv_direction = Vector3::new(
+            1.0 / ray.direction().x,
+            1.0 / ray.direction().y,
+            1.0 / ray.direction().z,
+        );
+
+        let t1 = (self.mins - ray.origin()).component_mul(&inv_direction);
+        let t2 = (self.maxs - ray.origin()).component_mul(&inv_direction);
+
+        let t_min = t1.zip_map(&t2, f64::min);
+        let t_max = t1.zip_map(&t2, f64::max);
+
+        let t_min = t_min.x.max(t_min.y).max(t_min.z);
+        let t_max = t_max.x.min(t_max.y).min(t_max.z);
+
+        !(t_max < t_min || t_max < 0.0)
+    }
+
+    /// Test for an intersection distance with a ray.
+    /// Returns the distance along the ray to the intersection point.
+    #[must_use]
+    #[inline]
+    pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
+        let inv_direction = Vector3::new(
+            1.0 / ray.direction().x,
+            1.0 / ray.direction().y,
+            1.0 / ray.direction().z,
+        );
+
+        let t1 = (self.mins - ray.origin()).component_mul(&inv_direction);
+        let t2 = (self.maxs - ray.origin()).component_mul(&inv_direction);
+
+        let t_min = t1.zip_map(&t2, f64::min);
+        let t_max = t1.zip_map(&t2, f64::max);
+
+        let t_min = t_min.x.max(t_min.y).max(t_min.z);
+        let t_max = t_max.x.min(t_max.y).min(t_max.z);
+
+        if t_max < t_min || t_max < 0.0 {
+            return None;
+        }
+
+        Some(t_min.max(0.0))
+    }
+
+    /// Get the point of intersection with a ray.
+    #[must_use]
+    #[inline]
+    pub fn ray_intersect_position(&self, ray: &Ray) -> Option<Point3<f64>> {
+        let distance = self.ray_intersect_distance(ray)?;
+        Some(ray.origin() + distance * ray.direction().as_ref())
     }
 }

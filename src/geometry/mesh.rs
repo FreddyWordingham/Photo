@@ -8,6 +8,7 @@ use crate::{
     builder::BvhBuilder,
     error::ParseError,
     geometry::{Bvh, Triangle},
+    utility::IndexedAccess,
 };
 
 /// Triangular face.
@@ -171,6 +172,25 @@ impl Mesh {
         })
     }
 
+    /// Generate a single [`Triangle`].
+    #[must_use]
+    #[inline]
+    pub fn triangle(&self, index: usize) -> Triangle {
+        let face = &self.faces[index];
+        Triangle::new(
+            [
+                self.vertex_positions[face.position_indices[0]],
+                self.vertex_positions[face.position_indices[1]],
+                self.vertex_positions[face.position_indices[2]],
+            ],
+            [
+                self.vertex_normals[face.normal_indices[0]],
+                self.vertex_normals[face.normal_indices[1]],
+                self.vertex_normals[face.normal_indices[2]],
+            ],
+        )
+    }
+
     /// Iterate over the [`Triangle`]s of the [`Mesh`].
     #[inline]
     pub fn triangles(&self) -> impl Iterator<Item = Triangle> + '_ {
@@ -188,5 +208,12 @@ impl Mesh {
                 ],
             )
         })
+    }
+}
+
+impl IndexedAccess<Triangle> for Mesh {
+    #[inline]
+    fn retrieve(&self, index: usize) -> Triangle {
+        self.triangle(index)
     }
 }
