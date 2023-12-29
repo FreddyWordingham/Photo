@@ -1,6 +1,8 @@
 //! Ray structure.
 
-use nalgebra::{Point3, Unit, Vector3};
+use core::ops::Mul;
+
+use nalgebra::{Point3, Similarity3, Unit, Vector3};
 
 /// Line with a fixed starting location and direction.
 pub struct Ray {
@@ -30,5 +32,19 @@ impl Ray {
     #[inline]
     pub const fn direction(&self) -> Unit<Vector3<f64>> {
         self.direction
+    }
+}
+
+impl Mul<&Similarity3<f64>> for &Ray {
+    type Output = Ray;
+
+    /// Transform a [`Ray`] by a [`Similarity3`].
+    #[must_use]
+    #[inline]
+    fn mul(self, transform: &Similarity3<f64>) -> Self::Output {
+        Self::Output {
+            origin: transform * self.origin,
+            direction: Unit::new_normalize(transform * self.direction.as_ref()),
+        }
     }
 }

@@ -17,3 +17,26 @@ pub struct Contact<'a> {
     /// Material of the surface.
     material: &'a Material<'a>,
 }
+
+impl<'a> Contact<'a> {
+    /// Construct a new instance.
+    #[must_use]
+    #[inline]
+    pub fn new(
+        is_inside: bool,
+        distance: f64,
+        normal: Unit<Vector3<f64>>,
+        smooth_normal: Unit<Vector3<f64>>,
+        material: &'a Material<'a>,
+    ) -> Self {
+        debug_assert!(distance.is_finite(), "Contact distance must be finite!");
+
+        Self {
+            is_inside,
+            distance,
+            normal,
+            smooth_normal,
+            material,
+        }
+    }
+}

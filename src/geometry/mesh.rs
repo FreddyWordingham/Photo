@@ -222,7 +222,7 @@ impl Mesh {
     }
 
     /// Test for an intersection [`Ray`],
-    /// returning the distance to the intersection point, if one exists.
+    /// return the distance to the intersection point, if one exists.
     #[must_use]
     #[inline]
     pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
@@ -238,7 +238,7 @@ impl Mesh {
     }
 
     /// Test for an intersection [`Ray`],
-    /// returning the distance, plane normal and interpolated normal at the intersection point, if one exists.
+    /// return the distance, plane normal and interpolated normal at the intersection point, if one exists.
     #[must_use]
     #[inline]
     #[allow(clippy::complexity)]
