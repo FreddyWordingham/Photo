@@ -11,7 +11,7 @@ spectra:
 meshes:
   cube: ./assets/meshes/cube.obj
   icosphere: ./assets/meshes/icosphere.obj
-  square: ./assets/meshes/cube.obj
+  square: ./assets/meshes/square.obj
 materials:
   grass: !Diffuse
     spectrum_id: green

@@ -1,5 +1,6 @@
 //! Triangle mesh structure.
 
+use core::cmp::Ordering;
 use std::{error::Error, fs::read_to_string, path::Path};
 
 use nalgebra::{Point3, Unit, Vector3};
@@ -7,7 +8,7 @@ use nalgebra::{Point3, Unit, Vector3};
 use crate::{
     builder::BvhBuilder,
     error::ParseError,
-    geometry::{Bvh, Triangle},
+    geometry::{Bvh, Ray, Triangle},
     utility::IndexedAccess,
 };
 
@@ -208,6 +209,57 @@ impl Mesh {
                 ],
             )
         })
+    }
+
+    /// Test for an intersection distance with a [`Ray`].
+    #[must_use]
+    #[inline]
+    pub fn ray_intersect(&self, ray: &Ray) -> bool {
+        self.bvh
+            .ray_intersections(ray, self)
+            .into_iter()
+            .any(|(n, _dist)| self.triangle(n).ray_intersect(ray))
+    }
+
+    /// Test for an intersection [`Ray`],
+    /// returning the distance to the intersection point, if one exists.
+    #[must_use]
+    #[inline]
+    pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
+        self.bvh
+            .ray_intersections(ray, self)
+            .into_iter()
+            .filter_map(|(n, _)| self.triangle(n).ray_intersect_distance(ray))
+            .min_by(|a_distance, b_distance| {
+                a_distance
+                    .partial_cmp(b_distance)
+                    .unwrap_or(Ordering::Equal)
+            })
+    }
+
+    /// Test for an intersection [`Ray`],
+    /// returning the distance, plane normal and interpolated normal at the intersection point, if one exists.
+    #[must_use]
+    #[inline]
+    #[allow(clippy::complexity)]
+    pub fn ray_intersect_distance_normals(
+        &self,
+        ray: &Ray,
+    ) -> Option<(f64, Unit<Vector3<f64>>, Unit<Vector3<f64>>)> {
+        self.bvh
+            .ray_intersections(ray, self)
+            .into_iter()
+            .filter_map(|(n, _)| {
+                self.triangle(n)
+                    .ray_intersect_distance_normals(ray)
+                    .map(|result| (n, result))
+            })
+            .min_by(|(_, (a_distance, _, _)), (_, (b_distance, _, _))| {
+                a_distance
+                    .partial_cmp(b_distance)
+                    .unwrap_or(Ordering::Equal)
+            })
+            .map(|(_, result)| result)
     }
 }
 

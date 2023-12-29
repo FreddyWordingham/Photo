@@ -1,8 +1,10 @@
 //! Smooth triangle structure.
 
+use core::f64::EPSILON;
+
 use nalgebra::{Point3, Unit, Vector3};
 
-use crate::geometry::{Aabb, Collides};
+use crate::geometry::{Aabb, Collides, Ray};
 
 /// Three-dimensional triangle with interpolated surface normals.
 pub struct Triangle {
@@ -58,9 +60,10 @@ impl Triangle {
         Unit::new_normalize(self.vertex_positions[(index + 1) % 3] - self.vertex_positions[index])
     }
 
+    /// Project the [`Triangle`] onto the given axis.
     #[must_use]
     #[inline]
-    pub fn project_onto_axis(&self, axis: &Vector3<f64>) -> (f64, f64) {
+    fn project_onto_axis(&self, axis: &Unit<Vector3<f64>>) -> (f64, f64) {
         let mut min = f64::INFINITY;
         let mut max = f64::NEG_INFINITY;
 
@@ -72,12 +75,140 @@ impl Triangle {
 
         (min, max)
     }
+
+    /// Test for an intersection distance with a [`Ray`].
+    #[must_use]
+    #[inline]
+    #[allow(clippy::many_single_char_names, clippy::min_ident_chars)]
+    pub fn ray_intersect(&self, ray: &Ray) -> bool {
+        let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
+        let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
+        let h = ray.direction().cross(&edge2);
+        let a = edge1.dot(&h);
+
+        if a.abs() < EPSILON {
+            return false;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.origin() - self.vertex_positions[0];
+        let u = f * s.dot(&h);
+
+        if !(0.0..=1.0).contains(&u) {
+            return false;
+        }
+
+        let q = s.cross(&edge1);
+        let v = f * ray.direction().dot(&q);
+
+        if v < 0.0 || u + v > 1.0 {
+            return false;
+        }
+
+        let t = f * edge2.dot(&q);
+
+        t > EPSILON
+    }
+
+    /// Test for an intersection [`Ray`],
+    /// returning the distance to the intersection point, if one exists.
+    #[must_use]
+    #[inline]
+    #[allow(clippy::many_single_char_names, clippy::min_ident_chars)]
+    pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
+        let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
+        let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
+        let h = ray.direction().cross(&edge2);
+        let a = edge1.dot(&h);
+
+        if a.abs() < EPSILON {
+            return None;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.origin() - self.vertex_positions[0];
+        let u = f * s.dot(&h);
+
+        if !(0.0..=1.0).contains(&u) {
+            return None;
+        }
+
+        let q = s.cross(&edge1);
+        let v = f * ray.direction().dot(&q);
+
+        if v < 0.0 || u + v > 1.0 {
+            return None;
+        }
+
+        let t = f * edge2.dot(&q);
+
+        if t > EPSILON {
+            return Some(t);
+        }
+
+        None
+    }
+
+    /// Test for an intersection [`Ray`],
+    /// returning the distance, plane normal and interpolated normal at the intersection point, if one exists.
+    #[must_use]
+    #[inline]
+    #[allow(
+        clippy::complexity,
+        clippy::many_single_char_names,
+        clippy::min_ident_chars
+    )]
+    pub fn ray_intersect_distance_normals(
+        &self,
+        ray: &Ray,
+    ) -> Option<(f64, Unit<Vector3<f64>>, Unit<Vector3<f64>>)> {
+        let edge1 = self.vertex_positions[1] - self.vertex_positions[0];
+        let edge2 = self.vertex_positions[2] - self.vertex_positions[0];
+        let h = ray.direction().cross(&edge2);
+        let a = edge1.dot(&h);
+
+        if a.abs() < EPSILON {
+            return None;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.origin() - self.vertex_positions[0];
+        let u = f * s.dot(&h);
+
+        if !(0.0..=1.0).contains(&u) {
+            return None;
+        }
+
+        let q = s.cross(&edge1);
+        let v = f * ray.direction().dot(&q);
+
+        if v < 0.0 || u + v > 1.0 {
+            return None;
+        }
+
+        let t = f * edge2.dot(&q);
+
+        if t > EPSILON {
+            let w = 1.0 - u - v;
+            return Some((
+                t,
+                self.plane_normal(),
+                Unit::new_normalize(
+                    w * self.vertex_normals[0].as_ref()
+                        + u * self.vertex_normals[1].as_ref()
+                        + v * self.vertex_normals[2].as_ref(),
+                ),
+            ));
+        }
+
+        None
+    }
 }
 
 impl Collides for Triangle {
+    /// Get the [`Aabb`] encompassing the [`Triangle`].
     #[must_use]
     #[inline]
-    /// Get the axis-aligned bounding box of the triangle.
     fn aabb(&self) -> Aabb {
         let mut mins = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
         let mut maxs = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
@@ -98,9 +229,10 @@ impl Collides for Triangle {
         Aabb::new(mins, maxs)
     }
 
+    /// Check if the [`Triangle`] overlaps with the volume of the given [`Aabb`].
     #[must_use]
     #[inline]
-    fn intersect(&self, aabb: &Aabb) -> bool {
+    fn overlap(&self, aabb: &Aabb) -> bool {
         if !triangle_overlaps_aabb_on_box_axes(self, aabb) {
             return false;
         }
