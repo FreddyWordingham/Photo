@@ -4,7 +4,7 @@ use core::f64::EPSILON;
 
 use nalgebra::{Point3, Unit, Vector3};
 
-use crate::geometry::{Aabb, Collides, Ray};
+use crate::geometry::{Aabb, Bounded, Ray};
 
 /// Three-dimensional triangle with interpolated surface normals.
 pub struct Triangle {
@@ -74,6 +74,38 @@ impl Triangle {
         }
 
         (min, max)
+    }
+
+    /// Check if the volume of the [`Aabb`] overlaps with the volume of the [`Triangle`].
+    #[must_use]
+    #[inline]
+    fn overlap(&self, aabb: &Aabb) -> bool {
+        if !triangle_overlaps_aabb_on_box_axes(self, aabb) {
+            return false;
+        }
+
+        let normal = self.plane_normal();
+        if !triangle_overlaps_aabb_on_axis(self, aabb, &normal) {
+            return false;
+        }
+
+        let box_axes = [
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
+            Vector3::new(0.0, 0.0, 1.0),
+        ];
+
+        if !(0..3)
+            .flat_map(|i| box_axes.iter().map(move |box_axis| (i, box_axis)))
+            .all(|(i, box_axis)| {
+                let axis = Unit::new_normalize(self.edge_axis(i).cross(box_axis));
+                triangle_overlaps_aabb_on_axis(self, aabb, &axis)
+            })
+        {
+            return false;
+        }
+
+        true
     }
 
     /// Test for an intersection distance with a [`Ray`].
@@ -205,7 +237,7 @@ impl Triangle {
     }
 }
 
-impl Collides for Triangle {
+impl Bounded for Triangle {
     /// Get the [`Aabb`] encompassing the [`Triangle`].
     #[must_use]
     #[inline]
@@ -227,38 +259,6 @@ impl Collides for Triangle {
         }
 
         Aabb::new(mins, maxs)
-    }
-
-    /// Check if the [`Triangle`] overlaps with the volume of the given [`Aabb`].
-    #[must_use]
-    #[inline]
-    fn overlap(&self, aabb: &Aabb) -> bool {
-        if !triangle_overlaps_aabb_on_box_axes(self, aabb) {
-            return false;
-        }
-
-        let normal = self.plane_normal();
-        if !triangle_overlaps_aabb_on_axis(self, aabb, &normal) {
-            return false;
-        }
-
-        let box_axes = [
-            Vector3::new(1.0, 0.0, 0.0),
-            Vector3::new(0.0, 1.0, 0.0),
-            Vector3::new(0.0, 0.0, 1.0),
-        ];
-
-        if !(0..3)
-            .flat_map(|i| box_axes.iter().map(move |box_axis| (i, box_axis)))
-            .all(|(i, box_axis)| {
-                let axis = Unit::new_normalize(self.edge_axis(i).cross(box_axis));
-                triangle_overlaps_aabb_on_axis(self, aabb, &axis)
-            })
-        {
-            return false;
-        }
-
-        true
     }
 }
 

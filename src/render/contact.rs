@@ -5,17 +5,18 @@ use nalgebra::{Unit, Vector3};
 use crate::world::Material;
 
 /// Surface intersection contact point.
+#[non_exhaustive]
 pub struct Contact<'a> {
     /// True if contact point is within the surface.
-    is_inside: bool,
+    pub is_inside: bool,
     /// Distance to the contact point from the ray origin (meters).
-    distance: f64,
+    pub distance: f64,
     /// Flat normal of the surface at the contact point.
-    normal: Unit<Vector3<f64>>,
+    pub normal: Unit<Vector3<f64>>,
     /// Smooth (interpolated) normal of the surface at the contact point.
-    smooth_normal: Unit<Vector3<f64>>,
+    pub smooth_normal: Unit<Vector3<f64>>,
     /// Material of the surface.
-    material: &'a Material<'a>,
+    pub material: &'a Material<'a>,
 }
 
 impl<'a> Contact<'a> {

@@ -1,6 +1,5 @@
 //! Triangle mesh structure.
 
-use core::cmp::Ordering;
 use std::{error::Error, fs::read_to_string, path::Path};
 
 use nalgebra::{Point3, Unit, Vector3};
@@ -8,8 +7,7 @@ use nalgebra::{Point3, Unit, Vector3};
 use crate::{
     builder::BvhBuilder,
     error::ParseError,
-    geometry::{Bvh, Ray, Triangle},
-    utility::IndexedAccess,
+    geometry::{Aabb, Bounded, Bvh, IndexedBounds, Ray, Triangle},
 };
 
 /// Triangular face.
@@ -223,25 +221,30 @@ impl Mesh {
 
     /// Test for an intersection [`Ray`],
     /// return the distance to the intersection point, if one exists.
+    ///
+    /// # Panics
+    ///
+    /// If the comparison between intersection distances fails.
     #[must_use]
     #[inline]
+    #[allow(clippy::unwrap_used)]
     pub fn ray_intersect_distance(&self, ray: &Ray) -> Option<f64> {
         self.bvh
             .ray_intersections(ray, self)
             .into_iter()
             .filter_map(|(n, _)| self.triangle(n).ray_intersect_distance(ray))
-            .min_by(|a_distance, b_distance| {
-                a_distance
-                    .partial_cmp(b_distance)
-                    .unwrap_or(Ordering::Equal)
-            })
+            .min_by(|a_distance, b_distance| a_distance.partial_cmp(b_distance).unwrap())
     }
 
     /// Test for an intersection [`Ray`],
     /// return the distance, plane normal and interpolated normal at the intersection point, if one exists.
+    ///
+    /// # Panics
+    ///
+    /// If the comparison between intersection distances fails.
     #[must_use]
     #[inline]
-    #[allow(clippy::complexity)]
+    #[allow(clippy::complexity, clippy::unwrap_used)]
     pub fn ray_intersect_distance_normals(
         &self,
         ray: &Ray,
@@ -255,17 +258,15 @@ impl Mesh {
                     .map(|result| (n, result))
             })
             .min_by(|(_, (a_distance, _, _)), (_, (b_distance, _, _))| {
-                a_distance
-                    .partial_cmp(b_distance)
-                    .unwrap_or(Ordering::Equal)
+                a_distance.partial_cmp(b_distance).unwrap()
             })
             .map(|(_, result)| result)
     }
 }
 
-impl IndexedAccess<Triangle> for Mesh {
+impl IndexedBounds<Triangle> for Mesh {
     #[inline]
-    fn retrieve(&self, index: usize) -> Triangle {
-        self.triangle(index)
+    fn indexed_aabb(&self, index: usize) -> Aabb {
+        self.triangle(index).aabb()
     }
 }

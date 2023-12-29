@@ -1,9 +1,6 @@
 //! Bounding Volume Hierarchy node structure.
 
-use crate::{
-    geometry::{Aabb, Collides, Ray},
-    utility::IndexedAccess,
-};
+use crate::geometry::{Aabb, Bounded, IndexedBounds, Ray};
 
 /// Bounding volume hierarchy node.
 #[derive(Clone)]
@@ -51,7 +48,7 @@ impl Bvh {
     #[must_use]
     #[inline]
     #[allow(clippy::unwrap_used)]
-    pub fn ray_intersections<T: Collides, S: IndexedAccess<T>>(
+    pub fn ray_intersections<T: Bounded, S: IndexedBounds<T>>(
         &self,
         ray: &Ray,
         shapes: &S,
@@ -64,7 +61,7 @@ impl Bvh {
 
     /// Perform a [`Ray`] intersection with a [`BvhNode`].
     #[inline]
-    fn ray_intersect_node<T: Collides, S: IndexedAccess<T>>(
+    fn ray_intersect_node<T: Bounded, S: IndexedBounds<T>>(
         &self,
         node_index: usize,
         ray: &Ray,
@@ -78,7 +75,7 @@ impl Bvh {
             } else {
                 for i in 0..self.nodes[node_index].count {
                     let index = self.indices[self.nodes[node_index].left_child + i];
-                    let aabb = shapes.retrieve(index).aabb();
+                    let aabb = shapes.indexed_aabb(index);
                     if let Some(aabb_distance) = aabb.ray_intersect_distance(ray) {
                         hits.push((index, aabb_distance));
                     }

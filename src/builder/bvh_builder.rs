@@ -4,7 +4,7 @@ use core::f64::{INFINITY, NEG_INFINITY};
 
 use nalgebra::Point3;
 
-use crate::geometry::{Aabb, Bvh, BvhNode, Collides};
+use crate::geometry::{Aabb, Bounded, Bvh, BvhNode};
 
 /// Builds a [`Bvh`] instance.
 pub struct BvhBuilder {
@@ -31,12 +31,7 @@ impl BvhBuilder {
     /// Build a [`Bvh`] from a list of shapes.
     #[must_use]
     #[inline]
-    pub fn build<T: Collides>(
-        mut self,
-        shapes: &[T],
-        max_children: usize,
-        max_depth: usize,
-    ) -> Bvh {
+    pub fn build<T: Bounded>(mut self, shapes: &[T], max_children: usize, max_depth: usize) -> Bvh {
         debug_assert!(
             !shapes.is_empty(),
             "Bounding Volume Hierarchy must contain at least one shape!"
@@ -74,7 +69,7 @@ impl BvhBuilder {
 
     /// Expand the bounding box of a node to include all objects contained in the node.
     #[inline]
-    fn update_bounds<T: Collides>(&mut self, index: usize, shapes: &[T]) {
+    fn update_bounds<T: Bounded>(&mut self, index: usize, shapes: &[T]) {
         self.nodes[index].aabb = (0..self.nodes[index].count)
             .map(|i| shapes[self.indices[self.nodes[index].left_child + i]].aabb())
             .fold(self.nodes[index].aabb.clone(), |acc, aabb| acc.union(&aabb));
@@ -83,7 +78,7 @@ impl BvhBuilder {
     /// Subdivide a node into two child nodes if it contains more than `max_children` objects.
     #[inline]
     #[allow(clippy::print_stdout)]
-    fn subdivide<T: Collides>(
+    fn subdivide<T: Bounded>(
         &mut self,
         index: usize,
         shapes: &[T],
