@@ -1,5 +1,6 @@
 //! Material builder structure.
 
+use nalgebra::Point3;
 use serde::{Deserialize, Serialize};
 
 use crate::{engine, engine::Engine, error::ValidationError};
@@ -16,6 +17,8 @@ pub enum EngineBuilder {
     Normal,
     /// Surface [`Material`].
     Material,
+    /// Ambient lighting.
+    Ambient([f64; 3]),
 }
 
 impl EngineBuilder {
@@ -46,6 +49,16 @@ impl EngineBuilder {
             }
             Self::Normal => Ok(()),
             Self::Material => Ok(()),
+            Self::Ambient(sun_position) => {
+                if !sun_position.iter().all(|&x| x.is_finite()) {
+                    return Err(ValidationError::new(&format!(
+                        "Engine-Ambient sun position must be finite, but the value is {:?}!",
+                        sun_position
+                    )));
+                }
+
+                Ok(())
+            }
         }
     }
 
@@ -66,6 +79,14 @@ impl EngineBuilder {
             Self::Material => {
                 Box::new(|scene, pixel_index, ray| engine::material(scene, pixel_index, ray))
             }
+            Self::Ambient(sun_position) => Box::new(move |scene, pixel_index, ray| {
+                engine::ambient(
+                    scene,
+                    pixel_index,
+                    ray,
+                    &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
+                )
+            }),
         }
     }
 }

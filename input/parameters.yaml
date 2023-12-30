@@ -54,10 +54,10 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Material
+    engine: !Ambient [200, 0, 100]
     position: [-5, -10, 4]
     look_at: [0, 0, 0]
-    field_of_view: 30
-    resolution: [800, 1200]
+    field_of_view: 45
+    resolution: [400, 300]
     num_tiles: [8, 12]
-    super_samples_per_axis: 3
+    super_samples_per_axis: 1
