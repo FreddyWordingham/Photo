@@ -88,17 +88,18 @@ impl EngineBuilder {
     #[inline]
     pub fn build(&self) -> Engine {
         match *self {
-            Self::Stencil => {
-                Box::new(|scene, pixel_index, ray| engine::stencil(scene, pixel_index, ray))
-            }
-            Self::Distance(distance) => Box::new(move |scene, pixel_index, ray| {
-                engine::distance(scene, pixel_index, ray, distance)
+            Self::Stencil => Box::new(|settings, scene, pixel_index, ray| {
+                engine::stencil(settings, scene, pixel_index, ray)
             }),
-            Self::Normal => {
-                Box::new(|scene, pixel_index, ray| engine::normal(scene, pixel_index, ray))
-            }
-            Self::Ambient(sun_position) => Box::new(move |scene, pixel_index, ray| {
+            Self::Distance(distance) => Box::new(move |settings, scene, pixel_index, ray| {
+                engine::distance(settings, scene, pixel_index, ray, distance)
+            }),
+            Self::Normal => Box::new(|settings, scene, pixel_index, ray| {
+                engine::normal(settings, scene, pixel_index, ray)
+            }),
+            Self::Ambient(sun_position) => Box::new(move |settings, scene, pixel_index, ray| {
                 engine::ambient(
+                    settings,
                     scene,
                     pixel_index,
                     ray,
@@ -106,8 +107,9 @@ impl EngineBuilder {
                 )
             }),
             Self::Diffuse((sun_position, max_shadow_distance)) => {
-                Box::new(move |scene, pixel_index, ray| {
+                Box::new(move |settings, scene, pixel_index, ray| {
                     engine::diffuse(
+                        settings,
                         scene,
                         pixel_index,
                         ray,
@@ -117,8 +119,9 @@ impl EngineBuilder {
                 })
             }
             Self::Side((sun_position, max_shadow_distance)) => {
-                Box::new(move |scene, pixel_index, ray| {
+                Box::new(move |settings, scene, pixel_index, ray| {
                     engine::side(
+                        settings,
                         scene,
                         pixel_index,
                         ray,

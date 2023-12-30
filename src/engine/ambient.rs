@@ -7,7 +7,7 @@ use palette::LinSrgba;
 
 use crate::{
     geometry::Ray,
-    render::Sample,
+    render::{Sample, Settings},
     world::{Material, Scene},
 };
 
@@ -17,6 +17,7 @@ use crate::{
 #[inline]
 #[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
 pub fn ambient(
+    _settings: &Settings,
     scene: &Scene,
     pixel_index: [usize; 2],
     ray: &Ray,

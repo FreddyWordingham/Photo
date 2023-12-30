@@ -38,10 +38,13 @@ materials:
 entities:
   - material_id: grass
     mesh_id: ground
+    scale: 2.0
   - material_id: stone
     mesh_id: rocks
+    scale: 2.0
   - material_id: foliage
     mesh_id: bushes
+    scale: 2.0
   - material_id: brick
     mesh_id: walls
   - material_id: glass
@@ -54,7 +57,7 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Diffuse [[-10, -4, 5], 1.0]
+    engine: !Diffuse [[-10, -4, 5], 2.0]
     position: [-5, -10, 4]
     look_at: [0, 0, 0]
     field_of_view: 25

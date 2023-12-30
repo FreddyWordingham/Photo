@@ -4,13 +4,17 @@ use std::time::Instant;
 
 use palette::LinSrgba;
 
-use crate::{geometry::Ray, render::Sample, world::Scene};
+use crate::{
+    geometry::Ray,
+    render::{Sample, Settings},
+    world::Scene,
+};
 
 /// Render the surface normals when [`Ray`]s intersect with the [`Scene`].
 #[must_use]
 #[inline]
 #[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
-pub fn normal(scene: &Scene, pixel_index: [usize; 2], ray: &Ray) -> Sample {
+pub fn normal(_settings: &Settings, scene: &Scene, pixel_index: [usize; 2], ray: &Ray) -> Sample {
     let start_time = Instant::now();
 
     let mut r = 0.0;

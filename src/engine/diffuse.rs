@@ -7,7 +7,7 @@ use palette::LinSrgba;
 
 use crate::{
     geometry::Ray,
-    render::Sample,
+    render::{Sample, Settings},
     world::{Material, Scene},
 };
 
@@ -17,6 +17,7 @@ use crate::{
 #[inline]
 #[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
 pub fn diffuse(
+    settings: &Settings,
     scene: &Scene,
     pixel_index: [usize; 2],
     ray: &Ray,
@@ -31,7 +32,7 @@ pub fn diffuse(
         let lightness = (contact.side * contact.smooth_normal.dot(&sun_direction)).max(0.0) as f32;
 
         let shadow_cast_position =
-            contact_position + (0.0001 * contact.side * contact.normal.as_ref());
+            contact_position + (settings.smoothing_length * contact.side * contact.normal.as_ref());
         let shadow_ray = Ray::new(shadow_cast_position, sun_direction);
         let occlusion = scene
             .ray_intersect_distance(&shadow_ray)

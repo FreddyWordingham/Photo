@@ -4,13 +4,18 @@ use std::time::Instant;
 
 use palette::LinSrgba;
 
-use crate::{geometry::Ray, render::Sample, world::Scene};
+use crate::{
+    geometry::Ray,
+    render::{Sample, Settings},
+    world::Scene,
+};
 
 /// Render the distance travelled by [`Ray`]s that intersect with the [`Scene`].
 #[must_use]
 #[inline]
 #[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
 pub fn distance(
+    _settings: &Settings,
     scene: &Scene,
     pixel_index: [usize; 2],
     ray: &Ray,

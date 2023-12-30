@@ -4,13 +4,17 @@ use std::time::Instant;
 
 use palette::LinSrgba;
 
-use crate::{geometry::Ray, render::Sample, world::Scene};
+use crate::{
+    geometry::Ray,
+    render::{Sample, Settings},
+    world::Scene,
+};
 
 /// Stencil whether the [`Ray`] intersects with the [`Scene`].
 #[must_use]
 #[inline]
 #[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
-pub fn stencil(scene: &Scene, pixel_index: [usize; 2], ray: &Ray) -> Sample {
+pub fn stencil(_settings: &Settings, scene: &Scene, pixel_index: [usize; 2], ray: &Ray) -> Sample {
     let start_time = Instant::now();
 
     if scene.ray_intersect(ray) {

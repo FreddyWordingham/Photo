@@ -60,7 +60,7 @@ pub fn parallel(
 #[must_use]
 #[inline]
 fn render_tile(
-    _settings: &Settings,
+    settings: &Settings,
     scene: &Scene,
     camera: &Camera,
     tile_index: [usize; 2],
@@ -79,7 +79,7 @@ fn render_tile(
         for xi in 0..super_samples_per_axis {
             for yi in 0..super_samples_per_axis {
                 let ray = camera.generate_ray(sample.pixel_index, [xi, yi]);
-                sample += engine(scene, sample.pixel_index, &ray);
+                sample += engine(settings, scene, sample.pixel_index, &ray);
             }
         }
         sample *= inv_total_super_samples;
