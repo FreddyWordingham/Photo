@@ -11,10 +11,10 @@ spectra:
   green: [0x006600ff, 0x00dd33ff]
   dark_green: [0x003300ff, 0x00aa00ff]
   blue: [0x000000ff, 0x0000ffff]
-  yellow: [0xffffffff, 0xffff00ff]
+  yellow: [0xcccc00ff, 0xffff00ff]
   gray: [0x444444ff, 0xddddddff]
   purple: [0x330088ff, 0x9900ffff]
-  teal: [0x008888ff, 0x00ffffff]
+  teal: [0x880088ff, 0xdd00ffff]
 meshes:
   bushes: ./assets/meshes/islands/wizard/bushes.obj
   ground: ./assets/meshes/islands/wizard/ground.obj
@@ -30,7 +30,7 @@ materials:
   stone: !Diffuse
     spectrum_id: purple
   glass: !Diffuse
-    spectrum_id: blue
+    spectrum_id: yellow
   brick: !Diffuse
     spectrum_id: gray
   slate: !Diffuse
@@ -58,6 +58,6 @@ cameras:
     position: [-5, -10, 4]
     look_at: [0, 0, 0]
     field_of_view: 30
-    resolution: [800, 600]
+    resolution: [800, 1200]
     num_tiles: [8, 12]
     super_samples_per_axis: 3

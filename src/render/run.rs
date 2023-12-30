@@ -68,7 +68,7 @@ fn render_tile(
     let mut tile = Tile::new(
         tile_index,
         camera.tile_resolution(),
-        [0.0, 0.0, 0.0, 0.0].into(),
+        palette::LinSrgba::new(0.0, 0.0, 0.0, 0.0),
     );
 
     let engine = camera.engine();

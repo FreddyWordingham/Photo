@@ -13,11 +13,17 @@ use crate::{geometry::Ray, render::Sample, world::Scene};
 pub fn stencil(scene: &Scene, pixel_index: [usize; 2], ray: &Ray) -> Sample {
     let start_time = Instant::now();
 
-    let x = if scene.ray_intersect(ray) { 1.0 } else { 0.0 };
-
-    Sample::new(
-        pixel_index,
-        LinSrgba::new(x, x, x, 1.0),
-        start_time.elapsed(),
-    )
+    if scene.ray_intersect(ray) {
+        Sample::new(
+            pixel_index,
+            LinSrgba::new(1.0, 1.0, 1.0, 1.0),
+            start_time.elapsed(),
+        )
+    } else {
+        Sample::new(
+            pixel_index,
+            LinSrgba::new(0.0, 0.0, 0.0, 0.0),
+            start_time.elapsed(),
+        )
+    }
 }
