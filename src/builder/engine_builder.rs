@@ -15,10 +15,10 @@ pub enum EngineBuilder {
     Distance(f64),
     /// Surface normal.
     Normal,
-    /// Surface [`Material`].
-    Material,
     /// Ambient lighting.
     Ambient([f64; 3]),
+    /// Diffuse lighting.
+    Diffuse(([f64; 3], f64)),
 }
 
 impl EngineBuilder {
@@ -44,11 +44,9 @@ impl EngineBuilder {
                         width
                     )));
                 }
-
                 Ok(())
             }
             Self::Normal => Ok(()),
-            Self::Material => Ok(()),
             Self::Ambient(sun_position) => {
                 if !sun_position.iter().all(|&x| x.is_finite()) {
                     return Err(ValidationError::new(&format!(
@@ -56,7 +54,27 @@ impl EngineBuilder {
                         sun_position
                     )));
                 }
-
+                Ok(())
+            }
+            Self::Diffuse((sun_position, max_shadow_distance)) => {
+                if !sun_position.iter().all(|&x| x.is_finite()) {
+                    return Err(ValidationError::new(&format!(
+                        "Engine-Shadow sun position must be finite, but the value is {:?}!",
+                        sun_position
+                    )));
+                }
+                if !max_shadow_distance.is_finite() {
+                    return Err(ValidationError::new(&format!(
+                        "Engine-Shadow max shadow distance must be finite, but the value is {}!",
+                        max_shadow_distance
+                    )));
+                }
+                if *max_shadow_distance <= 0.0 {
+                    return Err(ValidationError::new(&format!(
+                        "Engine-Shadow max shadow distance must be positive, but the value is {}!",
+                        max_shadow_distance
+                    )));
+                }
                 Ok(())
             }
         }
@@ -76,9 +94,6 @@ impl EngineBuilder {
             Self::Normal => {
                 Box::new(|scene, pixel_index, ray| engine::normal(scene, pixel_index, ray))
             }
-            Self::Material => {
-                Box::new(|scene, pixel_index, ray| engine::material(scene, pixel_index, ray))
-            }
             Self::Ambient(sun_position) => Box::new(move |scene, pixel_index, ray| {
                 engine::ambient(
                     scene,
@@ -87,6 +102,17 @@ impl EngineBuilder {
                     &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
                 )
             }),
+            Self::Diffuse((sun_position, max_shadow_distance)) => {
+                Box::new(move |scene, pixel_index, ray| {
+                    engine::diffuse(
+                        scene,
+                        pixel_index,
+                        ray,
+                        &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
+                        max_shadow_distance,
+                    )
+                })
+            }
         }
     }
 }

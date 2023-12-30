@@ -1,14 +1,14 @@
 //! Rendering engine module.
 
 mod ambient;
+mod diffuse;
 mod distance;
-mod material;
 mod normal;
 mod stencil;
 
 pub use ambient::ambient;
+pub use diffuse::diffuse;
 pub use distance::distance;
-pub use material::material;
 pub use normal::normal;
 pub use stencil::stencil;
 

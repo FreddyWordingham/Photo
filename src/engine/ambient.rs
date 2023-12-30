@@ -12,7 +12,7 @@ use crate::{
 };
 
 /// Render the surface [`Material`] [`Spectrum`] when [`Ray`]s intersect with the [`Scene`],
-/// lighting the scene with ambient lighting.
+/// lighting the scene with a single sun light source.
 #[must_use]
 #[inline]
 #[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]

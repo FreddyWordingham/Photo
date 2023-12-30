@@ -16,5 +16,5 @@ IMAGE_PATH=./$1/*.png
 OUTPUT_PATH=./$1/../$IMAGE_NAME.png
 
 # Create montage
-montage -tile 8x12 -geometry +0+0 -background none $IMAGE_PATH $OUTPUT_PATH &&
+montage -tile 10x10 -geometry +0+0 -background none $IMAGE_PATH $OUTPUT_PATH &&
 echo "Montage created at $OUTPUT_PATH"

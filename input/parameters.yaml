@@ -54,10 +54,26 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Ambient [200, 0, 100]
+    engine: !Diffuse [[-10, -4, 5], 1.0]
     position: [-5, -10, 4]
     look_at: [0, 0, 0]
-    field_of_view: 45
+    field_of_view: 25
     resolution: [400, 300]
-    num_tiles: [8, 12]
+    num_tiles: [10, 10]
     super_samples_per_axis: 1
+  # behind_camera:
+  #   engine: !Diffuse [-50, -10, 25] 100.0
+  #   position: [5, 10, 4]
+  #   look_at: [0, 0, 0]
+  #   field_of_view: 30
+  #   resolution: [400, 300]
+  #   num_tiles: [8, 12]
+  #   super_samples_per_axis: 1
+  # side_camera:
+  #   engine: !Diffuse [-50, -10, 25] 100.0
+  #   position: [-10, -5, 4]
+  #   look_at: [0, 0, 0]
+  #   field_of_view: 25
+  #   resolution: [400, 300]
+  #   num_tiles: [8, 12]
+  #   super_samples_per_axis: 1
