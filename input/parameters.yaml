@@ -14,10 +14,14 @@ spectra:
   yellow: [0xffffffff, 0xffff00ff]
   gray: [0x444444ff, 0xddddddff]
   purple: [0x330088ff, 0x9900ffff]
+  teal: [0x008888ff, 0x00ffffff]
 meshes:
   bushes: ./assets/meshes/islands/wizard/bushes.obj
   ground: ./assets/meshes/islands/wizard/ground.obj
   rocks: ./assets/meshes/islands/wizard/rocks.obj
+  walls: ./assets/meshes/islands/wizard/walls.obj
+  windows: ./assets/meshes/islands/wizard/windows.obj
+  roofs: ./assets/meshes/islands/wizard/roofs.obj
 materials:
   grass: !Diffuse
     spectrum_id: green
@@ -25,6 +29,12 @@ materials:
     spectrum_id: dark_green
   stone: !Diffuse
     spectrum_id: purple
+  glass: !Diffuse
+    spectrum_id: blue
+  brick: !Diffuse
+    spectrum_id: gray
+  slate: !Diffuse
+    spectrum_id: teal
 entities:
   - material_id: grass
     mesh_id: ground
@@ -32,16 +42,22 @@ entities:
     mesh_id: rocks
   - material_id: foliage
     mesh_id: bushes
+  - material_id: brick
+    mesh_id: walls
+  - material_id: glass
+    mesh_id: windows
+  - material_id: slate
+    mesh_id: roofs
 lights:
   - position: [10, 30, 200]
     intensity: 1.0
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Normal
-    position: [-10, -10, 10]
+    engine: !Material
+    position: [-5, -10, 4]
     look_at: [0, 0, 0]
     field_of_view: 30
-    resolution: [8000, 6000]
+    resolution: [800, 600]
     num_tiles: [8, 12]
     super_samples_per_axis: 3

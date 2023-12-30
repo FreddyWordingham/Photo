@@ -14,6 +14,8 @@ pub enum EngineBuilder {
     Distance(f64),
     /// Surface normal.
     Normal,
+    /// Surface [`Material`].
+    Material,
 }
 
 impl EngineBuilder {
@@ -43,6 +45,7 @@ impl EngineBuilder {
                 Ok(())
             }
             Self::Normal => Ok(()),
+            Self::Material => Ok(()),
         }
     }
 
@@ -59,6 +62,9 @@ impl EngineBuilder {
             }),
             Self::Normal => {
                 Box::new(|scene, pixel_index, ray| engine::normal(scene, pixel_index, ray))
+            }
+            Self::Material => {
+                Box::new(|scene, pixel_index, ray| engine::material(scene, pixel_index, ray))
             }
         }
     }

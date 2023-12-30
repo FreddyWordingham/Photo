@@ -1,9 +1,6 @@
 //! Colour spectra structure.
 
-use enterpolation::{
-    linear::{Linear, LinearError},
-    Identity, Sorted,
-};
+use enterpolation::{linear::Linear, linear::LinearError, Generator, Identity, Sorted};
 use palette::LinSrgba;
 
 /// Sampleable colour map.
@@ -35,5 +32,13 @@ impl Spectrum {
                 )
                 .build()?,
         })
+    }
+
+    /// Sample the gradient for a colour at a given point in the range [0, 1].
+    #[must_use]
+    #[inline]
+    pub fn sample(&self, t: f32) -> LinSrgba {
+        debug_assert!(t >= 0.0 && t <= 1.0);
+        self.colours.sample([t]).collect::<Vec<_>>()[0]
     }
 }
