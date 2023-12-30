@@ -63,7 +63,7 @@ impl SettingsBuilder {
             )));
         }
 
-        if self.mesh_bvh_max_children <= 2 {
+        if self.mesh_bvh_max_children <= 1 {
             return Err(ValidationError::new(&format!(
                 "Mesh BVH max children must be at least 2, but the value is {}!",
                 self.mesh_bvh_max_children
@@ -77,7 +77,7 @@ impl SettingsBuilder {
             )));
         }
 
-        if self.scene_bvh_max_children <= 2 {
+        if self.scene_bvh_max_children <= 1 {
             return Err(ValidationError::new(&format!(
                 "Scene BVH max children must be at least 2, but the value is {}!",
                 self.scene_bvh_max_children

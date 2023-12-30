@@ -52,7 +52,7 @@ impl Settings {
             "Mesh BVH max children must be at least 2!"
         );
         debug_assert!(
-            mesh_bvh_max_depth > 0,
+            mesh_bvh_max_depth != 0,
             "Mesh BVH max depth must be positive!"
         );
         debug_assert!(
@@ -60,7 +60,7 @@ impl Settings {
             "Scene BVH max children must be at least 2!"
         );
         debug_assert!(
-            scene_bvh_max_depth > 0,
+            scene_bvh_max_depth != 0,
             "Scene BVH max depth must be positive!"
         );
 
