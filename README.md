@@ -46,10 +46,16 @@ Build the package using Cargo:
 cargo build --release
 ```
 
-And then run one of the binary, targetting an input parameters file:
+And then run the binary, targetting an input parameters file:
 
 ```shell
 cargo run --release ./input/parameters.json
+```
+
+You can then use the included script to stitch the tiles together into a single image:
+
+```shell
+sh scripts/stitch.sh path/to/tile/directory
 ```
 
 ## 📖 Details
