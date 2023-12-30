@@ -3,6 +3,10 @@ settings:
   smoothing_length: 1.0e-2
   min_weight: 0.01
   max_loops: 1000
+  mesh_bvh_max_children: 2
+  mesh_bvh_max_depth: 100
+  scene_bvh_max_children: 2
+  scene_bvh_max_depth: 100
 spectra:
   green: [0x000000ff, 0x00dd33ff]
   blue: [0x000000ff, 0x0000ffff]

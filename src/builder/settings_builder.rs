@@ -17,6 +17,14 @@ pub struct SettingsBuilder {
     min_weight: f64,
     /// Maximum number of path tracing iterations.
     max_loops: u32,
+    /// Target maximum number of [`Triangle`] per [`Bvh`] node for [`Mesh`]es.
+    mesh_bvh_max_children: usize,
+    /// Maximum tree depth for [`Mesh`] [`Bvh`]s.
+    mesh_bvh_max_depth: usize,
+    /// Target maximum number of [`Entity`]s per [`Bvh`] node for [`Scene`]s.
+    scene_bvh_max_children: usize,
+    /// Maximum tree depth for [`Entity`] [`Bvh`]s.
+    scene_bvh_max_depth: usize,
 }
 
 impl SettingsBuilder {
@@ -55,6 +63,34 @@ impl SettingsBuilder {
             )));
         }
 
+        if self.mesh_bvh_max_children <= 2 {
+            return Err(ValidationError::new(&format!(
+                "Mesh BVH max children must be at least 2, but the value is {}!",
+                self.mesh_bvh_max_children
+            )));
+        }
+
+        if self.mesh_bvh_max_depth == 0 {
+            return Err(ValidationError::new(&format!(
+                "Mesh BVH max depth must be positive, but the value is {}!",
+                self.mesh_bvh_max_depth
+            )));
+        }
+
+        if self.scene_bvh_max_children <= 2 {
+            return Err(ValidationError::new(&format!(
+                "Scene BVH max children must be at least 2, but the value is {}!",
+                self.scene_bvh_max_children
+            )));
+        }
+
+        if self.scene_bvh_max_depth == 0 {
+            return Err(ValidationError::new(&format!(
+                "Scene BVH max depth must be positive, but the value is {}!",
+                self.scene_bvh_max_depth
+            )));
+        }
+
         Ok(())
     }
 
@@ -67,6 +103,10 @@ impl SettingsBuilder {
             self.smoothing_length,
             self.min_weight,
             self.max_loops,
+            self.mesh_bvh_max_children,
+            self.mesh_bvh_max_depth,
+            self.scene_bvh_max_children,
+            self.scene_bvh_max_depth,
         )
     }
 }
