@@ -157,12 +157,8 @@ impl Mesh {
         let mut normal_indices = [0; 3];
 
         for (i, token) in tokens.iter().enumerate() {
-            let indices: Vec<usize> = token
-                .split('/')
-                .map(|index_string| index_string.parse::<usize>().map(|index| index - 1))
-                .collect::<Result<Vec<_>, _>>()?;
-            position_indices[i] = indices[0];
-            normal_indices[i] = indices[2];
+            position_indices[i] = token.split('/').next().unwrap().parse::<usize>()? - 1;
+            normal_indices[i] = token.split('/').last().unwrap().parse::<usize>()? - 1;
         }
 
         Ok(Face {

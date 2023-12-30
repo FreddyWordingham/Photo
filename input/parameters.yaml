@@ -8,47 +8,38 @@ settings:
   scene_bvh_max_children: 2
   scene_bvh_max_depth: 100
 spectra:
-  green: [0x000000ff, 0x00dd33ff]
+  green: [0x006600ff, 0x00dd33ff]
+  dark_green: [0x003300ff, 0x00aa00ff]
   blue: [0x000000ff, 0x0000ffff]
   yellow: [0xffffffff, 0xffff00ff]
   gray: [0x444444ff, 0xddddddff]
+  purple: [0x330088ff, 0x9900ffff]
 meshes:
-  cube: ./assets/meshes/shapes/simple/cube.obj
-  icosphere: ./assets/meshes/shapes/simple/icosphere.obj
-  square: ./assets/meshes/shapes/simple/square.obj
+  bushes: ./assets/meshes/islands/wizard/bushes.obj
+  ground: ./assets/meshes/islands/wizard/ground.obj
+  rocks: ./assets/meshes/islands/wizard/rocks.obj
 materials:
   grass: !Diffuse
     spectrum_id: green
-  sky: !Diffuse
-    spectrum_id: blue
+  foliage: !Diffuse
+    spectrum_id: dark_green
+  stone: !Diffuse
+    spectrum_id: purple
 entities:
   - material_id: grass
-    mesh_id: square
-    scale: 0.2
-  - material_id: grass
-    mesh_id: square
-    scale: 0.2
-    translation: [0, 0.5, 0]
-  - material_id: grass
-    mesh_id: square
-    scale: 0.2
-    translation: [0, 0.5, -1]
-  - material_id: grass
-    mesh_id: square
-    scale: 0.2
-    translation: [0, 0.5, -2]
-  - material_id: grass
-    mesh_id: square
-    scale: 0.2
-    translation: [0, 0.5, -3]
+    mesh_id: ground
+  - material_id: stone
+    mesh_id: rocks
+  - material_id: foliage
+    mesh_id: bushes
 lights:
   - position: [10, 30, 200]
     intensity: 1.0
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Distance 8.0
-    position: [1, -1, 5]
+    engine: !Stencil
+    position: [10, 10, 10]
     look_at: [0, 0, 0]
     field_of_view: 30
     resolution: [800, 600]
