@@ -10,8 +10,8 @@ use crate::{engine, engine::Engine, error::ValidationError};
 pub enum EngineBuilder {
     /// Stencil.
     Stencil,
-    /// Outlined.
-    Outlined(f64),
+    /// Distance.
+    Distance(f64),
 }
 
 impl EngineBuilder {
@@ -24,16 +24,16 @@ impl EngineBuilder {
     pub fn validate(&self) -> Result<(), ValidationError> {
         match self {
             Self::Stencil => Ok(()),
-            Self::Outlined(width) => {
+            Self::Distance(width) => {
                 if !width.is_finite() {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Outline: width parameter must be finite, but the value is {}!",
+                        "Engine-Distance: parameter must be finite, but the value is {}!",
                         width
                     )));
                 }
                 if *width < 0.0 {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Outline: width parameter must be positive, but the value is {}!",
+                        "Engine-Distance: parameter must be positive, but the value is {}!",
                         width
                     )));
                 }
@@ -47,14 +47,13 @@ impl EngineBuilder {
     #[must_use]
     #[inline]
     pub fn build(&self) -> Engine {
-        match self {
+        match *self {
             Self::Stencil => {
                 Box::new(|scene, pixel_index, ray| engine::stencil(scene, pixel_index, ray))
             }
-            Self::Outlined(width) => {
-                println!("Outline width: {}", width);
-                Box::new(|scene, pixel_index, ray| engine::stencil(scene, pixel_index, ray))
-            }
+            Self::Distance(distance) => Box::new(move |scene, pixel_index, ray| {
+                engine::distance(scene, pixel_index, ray, distance)
+            }),
         }
     }
 }

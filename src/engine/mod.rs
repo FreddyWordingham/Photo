@@ -1,7 +1,9 @@
 //! Rendering engine module.
 
+mod distance;
 mod stencil;
 
+pub use distance::distance;
 pub use stencil::stencil;
 
 use crate::{geometry::Ray, render::Sample, world::Scene};

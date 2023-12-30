@@ -26,23 +26,31 @@ entities:
     mesh_id: square
     scale: 0.2
   - material_id: grass
-    mesh_id: icosphere
+    mesh_id: square
     scale: 0.2
     translation: [0, 0.5, 0]
   - material_id: grass
-    mesh_id: icosphere
+    mesh_id: square
     scale: 0.2
-    translation: [0, 0.5, 100]
+    translation: [0, 0.5, -1]
+  - material_id: grass
+    mesh_id: square
+    scale: 0.2
+    translation: [0, 0.5, -2]
+  - material_id: grass
+    mesh_id: square
+    scale: 0.2
+    translation: [0, 0.5, -3]
 lights:
   - position: [10, 30, 200]
     intensity: 1.0
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Outlined 2.0
-    position: [-10, 8, 6]
+    engine: !Distance 8.0
+    position: [1, -1, 5]
     look_at: [0, 0, 0]
-    field_of_view: 15
-    resolution: [8000, 6000]
+    field_of_view: 30
+    resolution: [800, 600]
     num_tiles: [8, 12]
-    super_samples_per_axis: 2
+    super_samples_per_axis: 1
