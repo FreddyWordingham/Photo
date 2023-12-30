@@ -20,7 +20,7 @@ pub fn ambient(
     _settings: &Settings,
     scene: &Scene,
     pixel_index: [usize; 2],
-    ray: &Ray,
+    ray: Ray,
     sun_position: &Point3<f64>,
 ) -> Sample {
     let start_time = Instant::now();

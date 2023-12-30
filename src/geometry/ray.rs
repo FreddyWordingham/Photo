@@ -33,6 +33,23 @@ impl Ray {
     pub const fn direction(&self) -> Unit<Vector3<f64>> {
         self.direction
     }
+
+    /// Travel the origin along the [`Ray`]'s direction (meters).
+    #[inline]
+    pub fn travel(&mut self, distance: f64) {
+        debug_assert!(distance.is_finite(), "Distance must be finite.");
+        debug_assert!(distance >= 0.0, "Distance must be positive.");
+
+        self.origin += self.direction.as_ref() * distance;
+    }
+
+    /// Reflect the direction about a normal.
+    #[inline]
+    pub fn reflect(&mut self, normal: Unit<Vector3<f64>>) {
+        let i = self.direction.as_ref();
+        let n = normal.as_ref();
+        self.direction = Unit::new_normalize(i - 2.0 * i.dot(&n) * n);
+    }
 }
 
 impl Mul<&Similarity3<f64>> for &Ray {

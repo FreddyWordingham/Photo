@@ -10,7 +10,7 @@ settings:
 spectra:
   green: [0x006600ff, 0x00dd33ff]
   dark_green: [0x003300ff, 0x00aa00ff]
-  blue: [0x000000ff, 0x0000ffff]
+  blue: [0x0033aaff, 0x0077ffff]
   yellow: [0xcccc00ff, 0xffff00ff]
   gray: [0x444444ff, 0xddddddff]
   purple: [0x330088ff, 0x9900ffff]
@@ -22,6 +22,8 @@ meshes:
   walls: ./assets/meshes/islands/wizard/walls.obj
   windows: ./assets/meshes/islands/wizard/windows.obj
   roofs: ./assets/meshes/islands/wizard/roofs.obj
+  puddle_blob: ./assets/meshes/natural/water/puddle_blob.obj
+  puddle_splat: ./assets/meshes/natural/water/puddle_splat.obj
 materials:
   grass: !Diffuse
     spectrum_id: green
@@ -35,6 +37,9 @@ materials:
     spectrum_id: gray
   slate: !Diffuse
     spectrum_id: teal
+  water: !Reflective
+    spectrum_id: blue
+    absorption: 0.4
 entities:
   - material_id: grass
     mesh_id: ground
@@ -51,21 +56,31 @@ entities:
     mesh_id: windows
   - material_id: slate
     mesh_id: roofs
+  - material_id: water
+    mesh_id: puddle_blob
+    rotation: [0, 0, 270]
+    translation: [-0.7, -0.1, 0]
+    scale: 0.04
+  - material_id: water
+    mesh_id: puddle_splat
+    rotation: [0, 0, 230]
+    translation: [0.6, -0.7, 0]
+    scale: 0.03
 lights:
   - position: [10, 30, 200]
     intensity: 1.0
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Diffuse [[-10, -4, 5], 2.0]
+    engine: !Reflective [[-10, -4, 5], 2.0]
     position: [-5, -10, 4]
     look_at: [0, 0, 0]
     field_of_view: 25
-    resolution: [400, 300]
+    resolution: [200, 150]
     num_tiles: [10, 10]
     super_samples_per_axis: 1
   # behind_camera:
-  #   engine: !Diffuse [-50, -10, 25] 100.0
+  #   engine: !Reflective [-50, -10, 25] 100.0
   #   position: [5, 10, 4]
   #   look_at: [0, 0, 0]
   #   field_of_view: 30
@@ -73,7 +88,7 @@ cameras:
   #   num_tiles: [8, 12]
   #   super_samples_per_axis: 1
   # side_camera:
-  #   engine: !Diffuse [-50, -10, 25] 100.0
+  #   engine: !Reflective [-50, -10, 25] 100.0
   #   position: [-10, -5, 4]
   #   look_at: [0, 0, 0]
   #   field_of_view: 25

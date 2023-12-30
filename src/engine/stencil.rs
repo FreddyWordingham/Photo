@@ -14,10 +14,10 @@ use crate::{
 #[must_use]
 #[inline]
 #[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
-pub fn stencil(_settings: &Settings, scene: &Scene, pixel_index: [usize; 2], ray: &Ray) -> Sample {
+pub fn stencil(_settings: &Settings, scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
     let start_time = Instant::now();
 
-    if scene.ray_intersect(ray) {
+    if scene.ray_intersect(&ray) {
         Sample::new(
             pixel_index,
             LinSrgba::new(1.0, 1.0, 1.0, 1.0),

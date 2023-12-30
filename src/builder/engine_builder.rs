@@ -19,6 +19,8 @@ pub enum EngineBuilder {
     Ambient([f64; 3]),
     /// Diffuse lighting.
     Diffuse(([f64; 3], f64)),
+    /// Reflective lighting.
+    Reflective(([f64; 3], f64)),
     /// Mesh side.
     Side(([f64; 3], f64)),
 }
@@ -59,6 +61,7 @@ impl EngineBuilder {
                 Ok(())
             }
             Self::Diffuse((sun_position, max_shadow_distance))
+            | Self::Reflective((sun_position, max_shadow_distance))
             | Self::Side((sun_position, max_shadow_distance)) => {
                 if !sun_position.iter().all(|&x| x.is_finite()) {
                     return Err(ValidationError::new(&format!(
@@ -109,6 +112,18 @@ impl EngineBuilder {
             Self::Diffuse((sun_position, max_shadow_distance)) => {
                 Box::new(move |settings, scene, pixel_index, ray| {
                     engine::diffuse(
+                        settings,
+                        scene,
+                        pixel_index,
+                        ray,
+                        &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
+                        max_shadow_distance,
+                    )
+                })
+            }
+            Self::Reflective((sun_position, max_shadow_distance)) => {
+                Box::new(move |settings, scene, pixel_index, ray| {
+                    engine::reflective(
                         settings,
                         scene,
                         pixel_index,

@@ -20,7 +20,7 @@ pub fn side(
     settings: &Settings,
     scene: &Scene,
     pixel_index: [usize; 2],
-    ray: &Ray,
+    ray: Ray,
     sun_position: &Point3<f64>,
     max_shadow_distance: f64,
 ) -> Sample {

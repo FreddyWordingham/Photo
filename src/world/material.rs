@@ -41,7 +41,7 @@ impl<'a> Material<'a> {
     #[inline]
     pub fn new_reflective(spectrum: &'a Spectrum, absorption: f64) -> Self {
         debug_assert!(
-            !(0.0..=1.0).contains(&absorption),
+            (0.0..=1.0).contains(&absorption),
             "Absorption must be in the range [0.0, 1.0]!"
         );
 
@@ -56,7 +56,7 @@ impl<'a> Material<'a> {
     #[inline]
     pub fn new_refractive(spectrum: &'a Spectrum, absorption: f64, refractive_index: f64) -> Self {
         debug_assert!(
-            !(0.0..=1.0).contains(&absorption),
+            (0.0..=1.0).contains(&absorption),
             "Absorption must be in the range [0.0, 1.0]!"
         );
         debug_assert!(

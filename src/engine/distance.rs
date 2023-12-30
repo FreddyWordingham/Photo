@@ -18,7 +18,7 @@ pub fn distance(
     _settings: &Settings,
     scene: &Scene,
     pixel_index: [usize; 2],
-    ray: &Ray,
+    ray: Ray,
     distance_normaliser: f64,
 ) -> Sample {
     debug_assert!(
@@ -32,7 +32,7 @@ pub fn distance(
 
     let start_time = Instant::now();
 
-    let x = if let Some(distance) = scene.ray_intersect_distance(ray) {
+    let x = if let Some(distance) = scene.ray_intersect_distance(&ray) {
         (distance / distance_normaliser) as f32
     } else {
         0.0
