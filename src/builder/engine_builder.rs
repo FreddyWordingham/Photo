@@ -12,6 +12,8 @@ pub enum EngineBuilder {
     Stencil,
     /// Distance.
     Distance(f64),
+    /// Surface normal.
+    Normal,
 }
 
 impl EngineBuilder {
@@ -40,6 +42,7 @@ impl EngineBuilder {
 
                 Ok(())
             }
+            Self::Normal => Ok(()),
         }
     }
 
@@ -54,6 +57,9 @@ impl EngineBuilder {
             Self::Distance(distance) => Box::new(move |scene, pixel_index, ray| {
                 engine::distance(scene, pixel_index, ray, distance)
             }),
+            Self::Normal => {
+                Box::new(|scene, pixel_index, ray| engine::normal(scene, pixel_index, ray))
+            }
         }
     }
 }
