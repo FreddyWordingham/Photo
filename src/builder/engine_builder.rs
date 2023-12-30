@@ -19,6 +19,8 @@ pub enum EngineBuilder {
     Ambient([f64; 3]),
     /// Diffuse lighting.
     Diffuse(([f64; 3], f64)),
+    /// Mesh side.
+    Side(([f64; 3], f64)),
 }
 
 impl EngineBuilder {
@@ -56,22 +58,23 @@ impl EngineBuilder {
                 }
                 Ok(())
             }
-            Self::Diffuse((sun_position, max_shadow_distance)) => {
+            Self::Diffuse((sun_position, max_shadow_distance))
+            | Self::Side((sun_position, max_shadow_distance)) => {
                 if !sun_position.iter().all(|&x| x.is_finite()) {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Shadow sun position must be finite, but the value is {:?}!",
+                        "Engine-Sun position must be finite, but the value is {:?}!",
                         sun_position
                     )));
                 }
                 if !max_shadow_distance.is_finite() {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Shadow max shadow distance must be finite, but the value is {}!",
+                        "Engine-Max shadow distance must be finite, but the value is {}!",
                         max_shadow_distance
                     )));
                 }
                 if *max_shadow_distance <= 0.0 {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Shadow max shadow distance must be positive, but the value is {}!",
+                        "Engine-Max shadow distance must be positive, but the value is {}!",
                         max_shadow_distance
                     )));
                 }
@@ -105,6 +108,17 @@ impl EngineBuilder {
             Self::Diffuse((sun_position, max_shadow_distance)) => {
                 Box::new(move |scene, pixel_index, ray| {
                     engine::diffuse(
+                        scene,
+                        pixel_index,
+                        ray,
+                        &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
+                        max_shadow_distance,
+                    )
+                })
+            }
+            Self::Side((sun_position, max_shadow_distance)) => {
+                Box::new(move |scene, pixel_index, ray| {
+                    engine::side(
                         scene,
                         pixel_index,
                         ray,

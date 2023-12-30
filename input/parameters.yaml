@@ -8,72 +8,38 @@ settings:
   scene_bvh_max_children: 2
   scene_bvh_max_depth: 100
 spectra:
-  green: [0x006600ff, 0x00dd33ff]
-  dark_green: [0x003300ff, 0x00aa00ff]
-  blue: [0x000000ff, 0x0000ffff]
-  yellow: [0xcccc00ff, 0xffff00ff]
-  gray: [0x444444ff, 0xddddddff]
-  purple: [0x330088ff, 0x9900ffff]
-  teal: [0x880088ff, 0xdd00ffff]
+  white: [0x444444ff, 0xffffffff]
 meshes:
-  bushes: ./assets/meshes/islands/wizard/bushes.obj
-  ground: ./assets/meshes/islands/wizard/ground.obj
-  rocks: ./assets/meshes/islands/wizard/rocks.obj
-  walls: ./assets/meshes/islands/wizard/walls.obj
-  windows: ./assets/meshes/islands/wizard/windows.obj
-  roofs: ./assets/meshes/islands/wizard/roofs.obj
+  hemisphere: ./assets/meshes/shapes/simple/hemisphere.obj
+  hemisphere_inverted: ./assets/meshes/shapes/simple/hemisphere_inverted.obj
 materials:
-  grass: !Diffuse
-    spectrum_id: green
-  foliage: !Diffuse
-    spectrum_id: dark_green
-  stone: !Diffuse
-    spectrum_id: purple
-  glass: !Diffuse
-    spectrum_id: yellow
-  brick: !Diffuse
-    spectrum_id: gray
-  slate: !Diffuse
-    spectrum_id: teal
+  plastic: !Diffuse
+    spectrum_id: white
 entities:
-  - material_id: grass
-    mesh_id: ground
-  - material_id: stone
-    mesh_id: rocks
-  - material_id: foliage
-    mesh_id: bushes
-  - material_id: brick
-    mesh_id: walls
-  - material_id: glass
-    mesh_id: windows
-  - material_id: slate
-    mesh_id: roofs
+  - material_id: plastic
+    mesh_id: hemisphere
+    rotation: [180, 0, 0]
+    translation: [0, 2, 0]
+  - material_id: plastic
+    mesh_id: hemisphere
+    translation: [0, 2, 0]
+  - material_id: plastic
+    mesh_id: hemisphere_inverted
+    rotation: [180, 0, 0]
+    translation: [0, -2, 0]
+  - material_id: plastic
+    mesh_id: hemisphere_inverted
+    translation: [0, -2, 0]
 lights:
   - position: [10, 30, 200]
     intensity: 1.0
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Diffuse [[-10, -4, 5], 1.0]
-    position: [-5, -10, 4]
+    engine: !Diffuse [[-10, 0, 15], 1.0]
+    position: [-6, -6, 3]
     look_at: [0, 0, 0]
-    field_of_view: 25
+    field_of_view: 90
     resolution: [400, 300]
     num_tiles: [10, 10]
     super_samples_per_axis: 1
-  # behind_camera:
-  #   engine: !Diffuse [-50, -10, 25] 100.0
-  #   position: [5, 10, 4]
-  #   look_at: [0, 0, 0]
-  #   field_of_view: 30
-  #   resolution: [400, 300]
-  #   num_tiles: [8, 12]
-  #   super_samples_per_axis: 1
-  # side_camera:
-  #   engine: !Diffuse [-50, -10, 25] 100.0
-  #   position: [-10, -5, 4]
-  #   look_at: [0, 0, 0]
-  #   field_of_view: 25
-  #   resolution: [400, 300]
-  #   num_tiles: [8, 12]
-  #   super_samples_per_axis: 1

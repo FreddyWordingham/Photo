@@ -7,8 +7,8 @@ use crate::world::Material;
 /// Surface intersection contact point.
 #[non_exhaustive]
 pub struct Contact<'a> {
-    /// True if contact point is within the surface.
-    pub is_inside: bool,
+    /// One if the contact point is on the outside of the surface, negative one if it is on the inside.
+    pub side: f64,
     /// Distance to the contact point from the ray origin (meters).
     pub distance: f64,
     /// Flat normal of the surface at the contact point.
@@ -33,7 +33,7 @@ impl<'a> Contact<'a> {
         debug_assert!(distance.is_finite(), "Contact distance must be finite!");
 
         Self {
-            is_inside,
+            side: if is_inside { -1.0 } else { 1.0 },
             distance,
             normal,
             smooth_normal,
