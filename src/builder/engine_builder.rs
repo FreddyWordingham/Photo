@@ -2,16 +2,16 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{engine, error::ValidationError, geometry::Ray, render::Sample, world::Scene};
+use crate::{engine, engine::Engine, error::ValidationError};
 
 /// Parametrises an [`engine`] function.
 #[derive(Deserialize, Serialize)]
 #[non_exhaustive]
 pub enum EngineBuilder {
     /// Stencil.
-    Stencil {},
+    Stencil,
     /// Outlined.
-    Outlined { width: f64 },
+    Outlined(f64),
 }
 
 impl EngineBuilder {
@@ -23,17 +23,17 @@ impl EngineBuilder {
     #[inline]
     pub fn validate(&self) -> Result<(), ValidationError> {
         match self {
-            Self::Stencil {} => Ok(()),
-            Self::Outlined { width } => {
+            Self::Stencil => Ok(()),
+            Self::Outlined(width) => {
                 if !width.is_finite() {
                     return Err(ValidationError::new(&format!(
-                        "Outline width must be finite, but the value is {}!",
+                        "Engine-Outline: width parameter must be finite, but the value is {}!",
                         width
                     )));
                 }
                 if *width < 0.0 {
                     return Err(ValidationError::new(&format!(
-                        "Outline width must be positive, but the value is {}!",
+                        "Engine-Outline: width parameter must be positive, but the value is {}!",
                         width
                     )));
                 }
@@ -46,10 +46,15 @@ impl EngineBuilder {
     /// Build a [`engine`] function handle.
     #[must_use]
     #[inline]
-    pub fn build(&self) -> fn(&Scene, [usize; 2], &Ray) -> Sample {
+    pub fn build(&self) -> Engine {
         match self {
-            Self::Stencil {} => engine::stencil,
-            Self::Outlined { width } => engine::outlined(*width),
+            Self::Stencil => {
+                Box::new(|scene, pixel_index, ray| engine::stencil(scene, pixel_index, ray))
+            }
+            Self::Outlined(width) => {
+                println!("Outline width: {}", width);
+                Box::new(|scene, pixel_index, ray| engine::stencil(scene, pixel_index, ray))
+            }
         }
     }
 }

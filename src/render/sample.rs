@@ -1,7 +1,7 @@
 //! Single ray sampling structure.
 
 use core::{
-    ops::{AddAssign, DivAssign},
+    ops::{AddAssign, MulAssign},
     time::Duration,
 };
 
@@ -44,16 +44,15 @@ impl AddAssign for Sample {
     }
 }
 
-impl DivAssign<f32> for Sample {
+impl MulAssign<f32> for Sample {
     #[inline]
-    fn div_assign(&mut self, rhs: f32) {
-        debug_assert!(rhs.is_finite(), "Colour divisor must be finite.");
-        debug_assert!(rhs != 0.0, "Colour divisor must not be zero.");
+    fn mul_assign(&mut self, rhs: f32) {
+        debug_assert!(rhs.is_finite(), "Sample multiplier must be finite.");
 
-        self.colour.red /= rhs;
-        self.colour.green /= rhs;
-        self.colour.blue /= rhs;
-        self.colour.alpha /= rhs;
+        self.colour.red *= rhs;
+        self.colour.green *= rhs;
+        self.colour.blue *= rhs;
+        self.colour.alpha *= rhs;
 
         debug_assert!(
             (0.0..=1.0).contains(&self.colour.red),

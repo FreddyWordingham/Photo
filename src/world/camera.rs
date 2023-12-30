@@ -2,12 +2,12 @@
 
 use nalgebra::{Point3, Rotation3, Unit};
 
-use crate::{geometry::Ray, render::Sample, world::Scene};
+use crate::{engine::Engine, geometry::Ray};
 
 /// Generates sampling rays to form an image.
 pub struct Camera {
     /// Rendering engine.
-    engine: fn(&Scene, [usize; 2], &Ray) -> Sample,
+    engine: Engine,
     /// Observation position (metres).
     position: Point3<f64>,
     /// View target (metres).
@@ -27,7 +27,7 @@ impl Camera {
     #[must_use]
     #[inline]
     pub fn new(
-        engine: fn(&Scene, [usize; 2], &Ray) -> Sample,
+        engine: Engine,
         position: Point3<f64>,
         look_at: Point3<f64>,
         field_of_view: f64,
@@ -63,6 +63,13 @@ impl Camera {
             tile_resolution,
             num_tiles,
         }
+    }
+
+    /// Get the rendering [`Engine`] function handle.
+    #[must_use]
+    #[inline]
+    pub const fn engine(&self) -> &Engine {
+        &self.engine
     }
 
     /// Get the number of samples along each axis.

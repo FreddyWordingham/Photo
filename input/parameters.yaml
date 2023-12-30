@@ -39,10 +39,10 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Stencil
+    engine: !Outlined 2.0
     position: [-10, 8, 6]
     look_at: [0, 0, 0]
     field_of_view: 15
-    resolution: [80, 60]
+    resolution: [8000, 6000]
     num_tiles: [8, 12]
-    super_samples_per_axis: 1
+    super_samples_per_axis: 2

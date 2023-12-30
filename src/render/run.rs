@@ -5,7 +5,6 @@ use std::{fs::create_dir_all, io::Error};
 use indicatif::{ProgressBar, ProgressStyle};
 
 use crate::{
-    engine,
     render::{Settings, Tile},
     world::{Camera, Scene},
 };
@@ -72,14 +71,18 @@ fn render_tile(
         [0.0, 0.0, 0.0, 0.0].into(),
     );
 
+    let engine = camera.engine();
+    let super_samples_per_axis = camera.super_samples_per_axis();
+    let inv_total_super_samples = 1.0 / (super_samples_per_axis * super_samples_per_axis) as f32;
+
     tile.samples.par_mapv_inplace(|mut sample| {
-        for xi in 0..camera.super_samples_per_axis() {
-            for yi in 0..camera.super_samples_per_axis() {
+        for xi in 0..super_samples_per_axis {
+            for yi in 0..super_samples_per_axis {
                 let ray = camera.generate_ray(sample.pixel_index, [xi, yi]);
-                sample += engine::stencil(scene, sample.pixel_index, &ray);
+                sample += engine(scene, sample.pixel_index, &ray);
             }
         }
-        sample /= (camera.super_samples_per_axis() * camera.super_samples_per_axis()) as f32;
+        sample *= inv_total_super_samples;
         sample
     });
 
