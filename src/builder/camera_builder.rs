@@ -2,11 +2,13 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{error::ValidationError, world::Camera};
+use crate::{builder::EngineBuilder, error::ValidationError, world::Camera};
 
 /// Builds a [`Camera`] instance.
 #[derive(Deserialize, Serialize)]
 pub struct CameraBuilder {
+    /// Rendering engine.
+    engine: EngineBuilder,
     /// Observation position [x, y, z] (meters).
     position: [f64; 3],
     /// View target [x, y, z] (meters).
@@ -26,7 +28,8 @@ impl CameraBuilder {
     ///
     /// # Errors
     ///
-    /// Returns a [`ValidationError`] if the position is not finite,
+    /// Returns a [`ValidationError`] if the engine is not valid,
+    /// or if the position is not finite,
     /// or if the look-at position is not finite,
     /// or if the field of view is not finite, or not positive,
     /// or if the super-samples per axis is not positive, if it is specified,
@@ -102,6 +105,7 @@ impl CameraBuilder {
     #[allow(clippy::integer_division)]
     pub fn build(&self) -> Camera {
         Camera::new(
+            self.engine.build(),
             self.position.into(),
             self.look_at.into(),
             self.field_of_view.to_radians(),

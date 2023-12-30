@@ -13,9 +13,9 @@ spectra:
   yellow: [0xffffffff, 0xffff00ff]
   gray: [0x444444ff, 0xddddddff]
 meshes:
-  cube: ./assets/meshes/shapes/cube.obj
-  icosphere: ./assets/meshes/shapes/icosphere.obj
-  square: ./assets/meshes/shapes/square.obj
+  cube: ./assets/meshes/shapes/simple/cube.obj
+  icosphere: ./assets/meshes/shapes/simple/icosphere.obj
+  square: ./assets/meshes/shapes/simple/square.obj
 materials:
   grass: !Diffuse
     spectrum_id: green
@@ -39,8 +39,10 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
+    engine: !Stencil
     position: [-10, 8, 6]
     look_at: [0, 0, 0]
     field_of_view: 15
-    resolution: [800, 600]
+    resolution: [80, 60]
     num_tiles: [8, 12]
+    super_samples_per_axis: 1
