@@ -130,15 +130,12 @@
 // Temporary.
 #![allow(dead_code)]
 
-// Constants
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-
 // Modules
 pub mod builder;
+pub mod engine;
 pub mod error;
 pub mod geometry;
 pub mod input;
 pub mod render;
-pub mod run;
 pub mod utility;
 pub mod world;

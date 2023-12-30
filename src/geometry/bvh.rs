@@ -21,13 +21,15 @@ pub struct Bvh {
     indices: Vec<usize>,
     /// List of nodes.
     nodes: Vec<BvhNode>,
+    /// Depth of the tree.
+    depth: usize,
 }
 
 impl Bvh {
     /// Construct a new instance.
     #[inline]
     #[must_use]
-    pub fn new(indices: Vec<usize>, nodes: Vec<BvhNode>) -> Self {
+    pub fn new(indices: Vec<usize>, nodes: Vec<BvhNode>, depth: usize) -> Self {
         debug_assert!(
             !indices.is_empty(),
             "Bounding Volume Hierarchy must contain at least one object!"
@@ -37,7 +39,11 @@ impl Bvh {
             "Bounding Volume Hierarchy must contain at least one node!"
         );
 
-        Self { indices, nodes }
+        Self {
+            indices,
+            nodes,
+            depth,
+        }
     }
 
     /// Check for a [`Ray`] intersection.

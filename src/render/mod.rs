@@ -1,6 +1,7 @@
 //! Rendering module.
 
 mod contact;
+pub mod run;
 mod sample;
 mod settings;
 mod tile;

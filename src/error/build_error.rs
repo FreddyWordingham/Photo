@@ -18,16 +18,19 @@ impl Display for BuildError {
     fn fmt(&self, formatter: &mut Formatter) -> Result {
         match self {
             Self::IdentifierNotFound(identifier) => {
-                write!(formatter, "Identifier not found: {identifier}!")
+                write!(
+                    formatter,
+                    "Build error: identifier not found: {identifier}!"
+                )
             }
             Self::SpectrumNotFound(spectrum_id) => {
-                write!(formatter, "Spectrum not found: {spectrum_id}!")
+                write!(formatter, "Build error: spectrum not found: {spectrum_id}!")
             }
             Self::MeshNotFound(mesh_id) => {
-                write!(formatter, "Mesh not found: {mesh_id}!")
+                write!(formatter, "Build error: mesh not found: {mesh_id}!")
             }
             Self::MaterialNotFound(material_id) => {
-                write!(formatter, "Material not found: {material_id}!")
+                write!(formatter, "Build error: material not found: {material_id}!")
             }
         }
     }

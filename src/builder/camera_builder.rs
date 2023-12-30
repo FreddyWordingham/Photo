@@ -73,6 +73,18 @@ impl CameraBuilder {
                 self.resolution[0], self.resolution[1]
             )));
         }
+        if self.resolution[0] % self.num_tiles[0] != 0 {
+            return Err(ValidationError::new(&format!(
+                "Camera resolution width must be divisible by the number of tiles width, but the values are {} and {}!",
+                self.resolution[0], self.num_tiles[0]
+            )));
+        }
+        if self.resolution[1] % self.num_tiles[1] != 0 {
+            return Err(ValidationError::new(&format!(
+                "Camera resolution height must be divisible by the number of tiles height, but the values are {} and {}!",
+                self.resolution[1], self.num_tiles[1]
+            )));
+        }
 
         if !self.num_tiles.iter().all(|component| component > &0) {
             return Err(ValidationError::new(&format!(
@@ -87,14 +99,18 @@ impl CameraBuilder {
     /// Build a [`Camera`] instance.
     #[must_use]
     #[inline]
+    #[allow(clippy::integer_division)]
     pub fn build(&self) -> Camera {
         Camera::new(
             self.position.into(),
             self.look_at.into(),
             self.field_of_view.to_radians(),
             self.super_samples_per_axis.unwrap_or(1),
-            self.resolution,
-            self.num_tiles,
+            [
+                self.resolution[1] / self.num_tiles[1],
+                self.resolution[0] / self.num_tiles[0],
+            ],
+            [self.num_tiles[1], self.num_tiles[0]],
         )
     }
 }

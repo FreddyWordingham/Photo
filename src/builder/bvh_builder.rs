@@ -8,7 +8,7 @@ use crate::geometry::{Aabb, Bounded, Bvh, BvhNode};
 
 /// Builds a [`Bvh`] instance.
 pub struct BvhBuilder {
-    /// Indices of objects contained in this node.
+    /// Indices of shapes contained in this node.
     indices: Vec<usize>,
     /// List of nodes.
     nodes: Vec<BvhNode>,
@@ -60,14 +60,15 @@ impl BvhBuilder {
         self.nodes_used = 1;
 
         self.update_bounds(0, shapes);
-        self.subdivide(0, shapes, max_children, max_depth, 1);
+        let depth = self.subdivide(0, shapes, max_children, max_depth, 0);
 
         self.nodes.truncate(self.nodes_used);
+        self.nodes.shrink_to_fit();
 
-        Bvh::new(self.indices, self.nodes)
+        Bvh::new(self.indices, self.nodes, depth)
     }
 
-    /// Expand the bounding box of a node to include all objects contained in the node.
+    /// Expand the bounding box of a node to include all shapes contained in the node.
     #[inline]
     fn update_bounds<T: Bounded>(&mut self, index: usize, shapes: &[T]) {
         self.nodes[index].aabb = (0..self.nodes[index].count)
@@ -75,7 +76,7 @@ impl BvhBuilder {
             .fold(self.nodes[index].aabb.clone(), |acc, aabb| acc.union(&aabb));
     }
 
-    /// Subdivide a node into two child nodes if it contains more than `max_children` objects.
+    /// Subdivide a node into two child nodes if it contains more than `max_children` shapes.
     #[inline]
     #[allow(clippy::print_stdout)]
     fn subdivide<T: Bounded>(
@@ -85,14 +86,14 @@ impl BvhBuilder {
         max_children: usize,
         max_depth: usize,
         current_depth: usize,
-    ) {
+    ) -> usize {
         debug_assert!(
             max_children >= 2,
             "BVH max children must be greater than 2!"
         );
 
         if (self.nodes[index].count <= max_children) || (current_depth > max_depth) {
-            return;
+            return current_depth;
         }
 
         let extent = [
@@ -124,7 +125,7 @@ impl BvhBuilder {
                         "MESH BVH WARNING j == 0, when count is {}",
                         self.nodes[index].count
                     );
-                    return;
+                    return current_depth;
                 }
 
                 j -= 1;
@@ -133,7 +134,7 @@ impl BvhBuilder {
 
         let left_count = i - self.nodes[index].left_child;
         if (left_count == 0) || (left_count == self.nodes[index].count) {
-            return;
+            return current_depth;
         }
 
         let left_child_index = self.nodes_used;
@@ -152,20 +153,22 @@ impl BvhBuilder {
 
         self.update_bounds(left_child_index, shapes);
         self.update_bounds(right_child_index, shapes);
-        self.subdivide(
+        let left_depth = self.subdivide(
             left_child_index,
             shapes,
             max_children,
             max_depth,
             current_depth + 1,
         );
-        self.subdivide(
+        let right_depth = self.subdivide(
             right_child_index,
             shapes,
             max_children,
             max_depth,
             current_depth + 1,
         );
+
+        left_depth.max(right_depth)
     }
 }
 

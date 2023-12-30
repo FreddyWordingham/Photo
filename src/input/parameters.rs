@@ -240,7 +240,7 @@ impl Parameters {
     ) -> Result<HashMap<String, Mesh>, Box<dyn Error>> {
         debug_assert!(
             bvh_max_children >= 2,
-            "Mesh BVH max children must be greater than 2!"
+            "Mesh BVH max children must be at least 2!"
         );
         debug_assert!(bvh_max_depth > 0, "Mesh BVH max depth must be positive!");
 

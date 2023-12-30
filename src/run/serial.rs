@@ -1,1 +1,0 @@
-//! Single-threaded rendering functions.

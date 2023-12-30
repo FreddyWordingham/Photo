@@ -3,15 +3,16 @@
 use std::path::PathBuf;
 
 /// Runtime settings.
+#[non_exhaustive]
 pub struct Settings {
     /// Output directory for save files.
-    output_directory: PathBuf,
+    pub output_directory: PathBuf,
     /// Numerical smoothing length (meters).
-    smoothing_length: f64,
+    pub smoothing_length: f64,
     /// Minimum weight of sampling.
-    min_weight: f64,
+    pub min_weight: f64,
     /// Maximum number of path tracing iterations.
-    max_loops: u32,
+    pub max_loops: u32,
 }
 
 impl Settings {
