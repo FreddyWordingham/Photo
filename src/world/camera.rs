@@ -87,6 +87,13 @@ impl Camera {
         self.num_tiles
     }
 
+    /// Get the total number of tiles.
+    #[must_use]
+    #[inline]
+    pub const fn total_num_tiles(&self) -> usize {
+        self.num_tiles[0] * self.num_tiles[1]
+    }
+
     /// Calculate the resolution of each tile.
     #[must_use]
     #[inline]

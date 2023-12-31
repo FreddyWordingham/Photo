@@ -1,62 +1,28 @@
 //! Orchestrates the rendering of photographs imaging a scene.
 
-use std::{fs::create_dir_all, io::Error};
-
-use indicatif::{ProgressBar, ProgressStyle};
-
 use crate::{
     render::{Settings, Tile},
     world::{Camera, Scene},
 };
 
-/// Render an photograph use multiple threads.
-///
-/// # Errors
-///
-/// Returns a [`Box<dyn Error>`] if the output directory cannot be created,
-/// or if an error occurs while rendering.
-///
-/// # Panics
-///
-/// Panics a [`Tile`] cannot be saved.
-#[inline]
-#[allow(clippy::expect_used, clippy::integer_division)]
-pub fn parallel(
-    settings: &Settings,
-    scene: &Scene,
-    camera: &Camera,
-    image_name: &str,
-) -> Result<(), Error> {
-    let output_directory = settings.output_directory.join(image_name);
-    create_dir_all(&output_directory)?;
-
+/// Render all the [`Tile`]s of a photograph.
+pub fn render_tiles<'a>(
+    settings: &'a Settings,
+    scene: &'a Scene,
+    camera: &'a Camera,
+) -> impl Iterator<Item = Tile> + 'a {
     let [rows, columns] = camera.num_tiles();
     let total_num_tiles = rows * columns;
 
-    let pb = ProgressBar::new(total_num_tiles as u64).with_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.green/red}] [{pos}/{len}] {percent}% ({eta}) {msg}")
-            .expect("Failed to set progress-bar style.")
-            .progress_chars("\\/"),
-    );
-    (0..total_num_tiles).for_each(|n| {
-        pb.inc(1);
+    (0..total_num_tiles).map(move |n| {
         let row = n % rows;
         let column = n / rows;
         let tile_index = [row, column];
-
-        let tile = render_tile(settings, scene, camera, tile_index);
-        tile.save(&output_directory).expect("Failed to save tile.");
-    });
-    pb.finish_with_message(format!(
-        "Completed rendering {}",
-        output_directory.display()
-    ));
-
-    Ok(())
+        render_tile(settings, scene, camera, tile_index)
+    })
 }
 
-/// Render a tile of a photograph.
+/// Render an individual [`Tile`] of a photograph.
 #[must_use]
 #[inline]
 fn render_tile(
@@ -71,8 +37,7 @@ fn render_tile(
     let super_samples_per_axis = camera.super_samples_per_axis();
     let inv_total_super_samples = 1.0 / (super_samples_per_axis * super_samples_per_axis) as f32;
 
-    // tile.samples.par_mapv_inplace(|mut sample| {
-    tile.samples.mapv_inplace(|mut sample| {
+    tile.samples.par_mapv_inplace(|mut sample| {
         let start_time = std::time::Instant::now();
         for xi in 0..super_samples_per_axis {
             for yi in 0..super_samples_per_axis {

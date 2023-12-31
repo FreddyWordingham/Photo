@@ -43,6 +43,7 @@ impl Spectrum {
             (0.0..=1.0).contains(&t),
             "Sample point must be in the range [0, 1]!"
         );
+
         self.colours.sample([t]).collect::<Vec<_>>()[0]
     }
 }
