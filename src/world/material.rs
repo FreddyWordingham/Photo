@@ -42,8 +42,9 @@ impl<'a> Material<'a> {
     pub const fn absorption(&self) -> f64 {
         match self {
             Self::Diffuse { .. } => 1.0,
-            Self::Reflective { absorption, .. } => *absorption,
-            Self::Refractive { absorption, .. } => *absorption,
+            Self::Reflective { absorption, .. } | Self::Refractive { absorption, .. } => {
+                *absorption
+            }
         }
     }
 

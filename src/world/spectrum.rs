@@ -34,11 +34,15 @@ impl Spectrum {
         })
     }
 
-    /// Sample the gradient for a colour at a given point in the range [0, 1].
+    /// Sample the gradient linearly for a colour at a given point in the range [0, 1].
     #[must_use]
     #[inline]
+    #[allow(clippy::min_ident_chars)]
     pub fn sample(&self, t: f32) -> LinSrgba {
-        debug_assert!(t >= 0.0 && t <= 1.0);
+        debug_assert!(
+            (0.0..=1.0).contains(&t),
+            "Sample point must be in the range [0, 1]!"
+        );
         self.colours.sample([t]).collect::<Vec<_>>()[0]
     }
 }

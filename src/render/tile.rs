@@ -1,5 +1,6 @@
 //! Image tile structure.
 
+use core::num::TryFromIntError;
 use std::{error::Error, path::Path};
 
 use image::{ImageBuffer, Rgba};
@@ -66,10 +67,7 @@ impl Tile {
         let raw_samples: Vec<_> = self
             .samples
             .iter()
-            .flat_map(|sample| {
-                let raw: [u8; 4] = sample.colour.into_format().into();
-                raw
-            })
+            .flat_map(|sample| -> [u8; 4] { sample.colour.into_format().into() })
             .collect();
 
         let width = self.samples.dim().1.try_into()?;
@@ -87,16 +85,18 @@ impl Tile {
     /// Returns an error if the [`Tile`] cannot be encoded as a PNG file,
     /// or if the file cannot be saved.
     #[inline]
+    #[allow(clippy::integer_division, clippy::cast_lossless)]
     fn save_time(&self, file_name: &Path) -> Result<(), Box<dyn Error>> {
         let raw_samples: Vec<_> = self
             .samples
             .iter()
-            .flat_map(|sample| {
-                let r = (sample.time / 16).clamp(0, u8::MAX as u128) as u8;
-                let g = (sample.time / 32).clamp(0, u8::MAX as u128) as u8;
-                let b = (sample.time / 64).clamp(0, u8::MAX as u128) as u8;
-                [r, g, b, u8::MAX]
+            .flat_map(|sample| -> Result<[u8; 4], TryFromIntError> {
+                let red = u8::try_from((sample.time / 16).clamp(0, u8::MAX as u128))?;
+                let green = u8::try_from((sample.time / 32).clamp(0, u8::MAX as u128))?;
+                let blue = u8::try_from((sample.time / 64).clamp(0, u8::MAX as u128))?;
+                Ok([red, green, blue, u8::MAX])
             })
+            .flatten()
             .collect();
 
         let width = self.samples.dim().1.try_into()?;

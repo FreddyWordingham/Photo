@@ -59,7 +59,7 @@ impl Bvh {
         ray: &Ray,
         shapes: &S,
     ) -> Vec<(usize, f64)> {
-        let mut hits: Vec<(usize, f64)> = Vec::new();
+        let mut hits = Vec::new();
         self.ray_intersect_node(0, ray, shapes, &mut hits);
         hits.sort_by(|distance_a, distance_b| distance_a.1.partial_cmp(&distance_b.1).unwrap());
         hits
@@ -82,7 +82,7 @@ impl Bvh {
                 for i in 0..self.nodes[node_index].count {
                     let index = self.indices[self.nodes[node_index].left_child + i];
                     let aabb = shapes.indexed_aabb(index);
-                    if let Some(aabb_distance) = aabb.ray_intersect_distance(ray) {
+                    if let Some(aabb_distance) = aabb.ray_intersect_distance(&ray) {
                         hits.push((index, aabb_distance));
                     }
                 }
