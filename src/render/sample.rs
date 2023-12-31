@@ -43,6 +43,7 @@ impl AddAssign for Sample {
 
 impl MulAssign<f32> for Sample {
     #[inline]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn mul_assign(&mut self, rhs: f32) {
         debug_assert!(rhs.is_finite(), "Sample multiplier must be finite.");
 

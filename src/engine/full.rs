@@ -1,5 +1,7 @@
 //! Full [`Ray`]-traced render engine function.
 
+use core::mem::swap;
+
 use nalgebra::{Point3, Unit, Vector3};
 use palette::LinSrgba;
 
@@ -13,7 +15,11 @@ use crate::{
 /// lighting the scene with a single sun light source, casting shadows with reflections.
 #[must_use]
 #[inline]
-#[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::min_ident_chars,
+    clippy::too_many_lines
+)]
 pub fn full(
     settings: &Settings,
     scene: &Scene,
@@ -22,7 +28,6 @@ pub fn full(
     current_refractive_index: f64,
     mut weight: f64,
     sun_position: &Point3<f64>,
-    max_shadow_distance: f64,
 ) -> LinSrgba {
     debug_assert!(
         current_refractive_index.is_finite(),
@@ -84,11 +89,8 @@ pub fn full(
                     let mut c_ref_index = current_refractive_index;
                     let mut n_ref_index = *next_refractive_index;
                     if contact.side < 0.0 {
-                        std::mem::swap(&mut c_ref_index, &mut n_ref_index);
+                        swap(&mut c_ref_index, &mut n_ref_index);
                     }
-
-                    let surface_colour = spectrum.sample((lightness * darkness) as f32);
-                    colour += surface_colour * (weight * absorption) as f32;
 
                     ray.travel(contact.distance);
 
@@ -117,7 +119,6 @@ pub fn full(
                         c_ref_index,
                         reflected_weight,
                         sun_position,
-                        max_shadow_distance,
                     );
 
                     let mut refracted_ray = ray.clone();
@@ -135,7 +136,6 @@ pub fn full(
                         n_ref_index,
                         transmitted_weight,
                         sun_position,
-                        max_shadow_distance,
                     );
 
                     colour += (surface_colour * absorbed_weight as f32) +  // Absorption
@@ -156,6 +156,9 @@ pub fn full(
     colour
 }
 
+/// Calculate the Fresnel reflection and transmission probabilities.
+#[must_use]
+#[inline]
 fn fresnel(
     incoming: Unit<Vector3<f64>>,
     normal: Unit<Vector3<f64>>,
@@ -163,7 +166,7 @@ fn fresnel(
     n2: f64,
 ) -> (f64, f64) {
     let cos_i = incoming.dot(&normal).abs();
-    let sin_t2 = n1 * n1 * (1.0 - cos_i * cos_i) / (n2 * n2);
+    let sin_t2 = n1 * n1 * cos_i.mul_add(-cos_i, 1.0) / (n2 * n2);
 
     if sin_t2 > 1.0 {
         // Total internal reflection
@@ -172,10 +175,10 @@ fn fresnel(
 
     let cos_t = (1.0 - sin_t2).sqrt();
 
-    let rs = ((n2 * cos_i) - (n1 * cos_t)) / ((n2 * cos_i) + (n1 * cos_t));
-    let rp = ((n1 * cos_i) - (n2 * cos_t)) / ((n1 * cos_i) + (n2 * cos_t));
+    let rs = n2.mul_add(cos_i, -n1 * cos_t) / n2.mul_add(cos_i, n1 * cos_t);
+    let rp = n1.mul_add(cos_i, -n2 * cos_t) / n1.mul_add(cos_i, n2 * cos_t);
 
-    let reflection_prob = (rs * rs + rp * rp) / 2.0;
+    let reflection_prob = rs.mul_add(rs, rp * rp) * 0.5;
     let transmission_prob = 1.0 - reflection_prob;
 
     (reflection_prob, transmission_prob)

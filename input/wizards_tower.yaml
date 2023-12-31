@@ -47,10 +47,6 @@ materials:
     spectrum_id: blue
     absorption: 0.1
     refractive_index: 1.5
-  glass1: !Refractive
-    spectrum_id: blue
-    absorption: 0.1
-    refractive_index: 1.2
 entities:
   - material_id: grass
     mesh_id: ground
@@ -88,21 +84,21 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Full [[-10, -4, 5], 2.0]
+    engine: !Full [-10, -4, 5]
     position: [-35, -50, 25]
     look_at: [0, 0, 0]
     field_of_view: 25
-    resolution: [5440, 1440]
+    resolution: [600, 400]
     num_tiles: [10, 10]
-    super_samples_per_axis: 2
+    super_samples_per_axis: 1
   far_camera:
-    engine: !Full [[-50, -10, 25], 100.0]
+    engine: !Full [-50, -10, 25]
     position: [-100, -100, 100]
     look_at: [0, 0, 0]
     field_of_view: 5
-    resolution: [5440, 1440]
+    resolution: [600, 400]
     num_tiles: [10, 10]
-    super_samples_per_axis: 2
+    super_samples_per_axis: 1
   # behind_camera:
   #   engine: !Reflective [[-50, -10, 25], 100.0]
   #   position: [5, 10, 4]

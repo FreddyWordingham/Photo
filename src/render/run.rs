@@ -1,11 +1,15 @@
 //! Orchestrates the rendering of photographs imaging a scene.
 
+use std::time::Instant;
+
 use crate::{
     render::{Settings, Tile},
     world::{Camera, Scene},
 };
 
 /// Render all the [`Tile`]s of a photograph.
+#[inline]
+#[allow(clippy::integer_division)]
 pub fn render_tiles<'a>(
     settings: &'a Settings,
     scene: &'a Scene,
@@ -25,7 +29,7 @@ pub fn render_tiles<'a>(
 /// Render an individual [`Tile`] of a photograph.
 #[must_use]
 #[inline]
-fn render_tile(
+pub fn render_tile(
     settings: &Settings,
     scene: &Scene,
     camera: &Camera,
@@ -38,7 +42,7 @@ fn render_tile(
     let inv_total_super_samples = 1.0 / (super_samples_per_axis * super_samples_per_axis) as f32;
 
     tile.samples.par_mapv_inplace(|mut sample| {
-        let start_time = std::time::Instant::now();
+        let start_time = Instant::now();
         for xi in 0..super_samples_per_axis {
             for yi in 0..super_samples_per_axis {
                 let ray = camera.generate_ray(sample.pixel_index, [xi, yi]);

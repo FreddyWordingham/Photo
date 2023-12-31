@@ -49,7 +49,7 @@ impl Ray {
     pub fn reflect(&mut self, normal: Unit<Vector3<f64>>) {
         let i = self.direction.as_ref();
         let n = normal.as_ref();
-        self.direction = Unit::new_normalize(i - 2.0 * i.dot(&n) * n);
+        self.direction = Unit::new_normalize(i - 2.0 * i.dot(n) * n);
     }
 
     #[inline]
@@ -62,9 +62,11 @@ impl Ray {
         let i = self.direction.as_ref();
         let n = normal.as_ref();
         let eta = current_refractive_index / next_refractive_index;
-        let cos_theta_i = -i.dot(&n);
-        let cos_theta_t = (1.0 - eta * eta * (1.0 - cos_theta_i * cos_theta_i)).sqrt();
-        self.direction = Unit::new_normalize(eta * i + (eta * cos_theta_i - cos_theta_t) * n);
+        let cos_theta_i = -i.dot(n);
+        let cos_theta_t = (eta * eta)
+            .mul_add(-cos_theta_i.mul_add(-cos_theta_i, 1.0), 1.0)
+            .sqrt();
+        self.direction = Unit::new_normalize(eta * i + eta.mul_add(cos_theta_i, -cos_theta_t) * n);
     }
 }
 

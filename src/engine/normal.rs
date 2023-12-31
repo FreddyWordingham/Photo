@@ -7,7 +7,11 @@ use crate::{geometry::Ray, render::Settings, world::Scene};
 /// Render the surface normals when [`Ray`]s intersect with the [`Scene`].
 #[must_use]
 #[inline]
-#[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::min_ident_chars,
+    clippy::needless_pass_by_value
+)]
 pub fn normal(_settings: &Settings, scene: &Scene, ray: Ray) -> LinSrgba {
     let mut r = 0.0;
     let mut g = 0.0;

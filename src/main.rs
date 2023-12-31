@@ -9,11 +9,11 @@ use photo::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // Load parameters from file.
+    // Load [`Parameters`] from file.
     let parameters = load_parameters()?;
     parameters.validate()?;
 
-    // Build world components.
+    // Build [`world`] components.
     let settings = parameters.build_settings();
     let spectra = parameters.build_spectra()?;
     let materials = parameters.build_materials(&spectra)?;
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cameras = parameters.build_cameras();
     drop(parameters);
 
-    // Build scene.
+    // Build the [`Scene`]
     let scene = Scene::new(
         lights,
         entities,
@@ -95,6 +95,7 @@ pub fn render_camera_photo(
         tile.save(&output_directory).expect("Failed to save tile.");
     }
     pb.finish();
+    println!("Finished rendering `{}`.", image_name);
 
     Ok(())
 }
@@ -103,7 +104,7 @@ pub fn render_camera_photo(
 #[must_use]
 #[inline]
 fn create_progress_bar(ticks: u64) -> ProgressBar {
-    ProgressBar::new(ticks as u64).with_style(
+    ProgressBar::new(ticks).with_style(
         ProgressStyle::default_bar()
             .template("{spinner:.green} [{elapsed_precise}] [{bar:40.green/red}] [{pos}/{len}] {percent}% ({eta}) {msg}")
             .expect("Failed to set progress-bar style.")

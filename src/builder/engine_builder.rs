@@ -17,10 +17,10 @@ pub enum EngineBuilder {
     Normal,
     /// Ambient lighting.
     Ambient([f64; 3]),
+    /// Full [`Ray`]-traced lighting.
+    Full([f64; 3]),
     /// Diffuse lighting.
     Diffuse(([f64; 3], f64)),
-    /// Full [`Ray`]-traced lighting.
-    Full(([f64; 3], f64)),
     /// Mesh side.
     Side(([f64; 3], f64)),
 }
@@ -34,51 +34,43 @@ impl EngineBuilder {
     #[inline]
     pub fn validate(&self) -> Result<(), ValidationError> {
         match self {
-            Self::Stencil => Ok(()),
+            Self::Stencil | Self::Normal => Ok(()),
             Self::Distance(width) => {
                 if !width.is_finite() {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Distance: parameter must be finite, but the value is {}!",
-                        width
+                        "Engine-Distance: parameter must be finite, but the value is {width}!",
                     )));
                 }
                 if *width < 0.0 {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Distance: parameter must be positive, but the value is {}!",
-                        width
+                        "Engine-Distance: parameter must be positive, but the value is {width}!",
                     )));
                 }
                 Ok(())
             }
-            Self::Normal => Ok(()),
-            Self::Ambient(sun_position) => {
+            Self::Ambient(sun_position) | Self::Full(sun_position) => {
                 if !sun_position.iter().all(|&x| x.is_finite()) {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Ambient sun position must be finite, but the value is {:?}!",
-                        sun_position
+                        "Engine-Ambient sun position must be finite, but the value is {sun_position:?}!"
                     )));
                 }
                 Ok(())
             }
             Self::Diffuse((sun_position, max_shadow_distance))
-            | Self::Full((sun_position, max_shadow_distance))
             | Self::Side((sun_position, max_shadow_distance)) => {
                 if !sun_position.iter().all(|&x| x.is_finite()) {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Sun position must be finite, but the value is {:?}!",
-                        sun_position
+                        "Engine-Sun position must be finite, but the value is {sun_position:?}!"
                     )));
                 }
                 if !max_shadow_distance.is_finite() {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Max shadow distance must be finite, but the value is {}!",
-                        max_shadow_distance
+                        "Engine-Max shadow distance must be finite, but the value is {max_shadow_distance}!"
                     )));
                 }
                 if *max_shadow_distance <= 0.0 {
                     return Err(ValidationError::new(&format!(
-                        "Engine-Max shadow distance must be positive, but the value is {}!",
-                        max_shadow_distance
+                        "Engine-Max shadow distance must be positive, but the value is {max_shadow_distance}!"
                     )));
                 }
                 Ok(())
@@ -91,11 +83,11 @@ impl EngineBuilder {
     #[inline]
     pub fn build(&self) -> Engine {
         match *self {
-            Self::Stencil => Box::new(|settings, scene, ray| engine::stencil(settings, scene, ray)),
+            Self::Stencil => Box::new(engine::stencil),
             Self::Distance(distance) => Box::new(move |settings, scene, ray| {
                 engine::distance(settings, scene, ray, distance)
             }),
-            Self::Normal => Box::new(|settings, scene, ray| engine::normal(settings, scene, ray)),
+            Self::Normal => Box::new(engine::normal),
             Self::Ambient(sun_position) => Box::new(move |settings, scene, ray| {
                 engine::ambient(
                     settings,
@@ -115,20 +107,17 @@ impl EngineBuilder {
                     )
                 })
             }
-            Self::Full((sun_position, max_shadow_distance)) => {
-                Box::new(move |settings, scene, ray| {
-                    engine::full(
-                        settings,
-                        scene,
-                        ray,
-                        0,
-                        1.0,
-                        1.0,
-                        &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
-                        max_shadow_distance,
-                    )
-                })
-            }
+            Self::Full(sun_position) => Box::new(move |settings, scene, ray| {
+                engine::full(
+                    settings,
+                    scene,
+                    ray,
+                    0,
+                    1.0,
+                    1.0,
+                    &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
+                )
+            }),
             Self::Side((sun_position, max_shadow_distance)) => {
                 Box::new(move |settings, scene, ray| {
                     engine::side(

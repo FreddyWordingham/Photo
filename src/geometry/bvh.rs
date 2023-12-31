@@ -82,7 +82,7 @@ impl Bvh {
                 for i in 0..self.nodes[node_index].count {
                     let index = self.indices[self.nodes[node_index].left_child + i];
                     let aabb = shapes.indexed_aabb(index);
-                    if let Some(aabb_distance) = aabb.ray_intersect_distance(&ray) {
+                    if let Some(aabb_distance) = aabb.ray_intersect_distance(ray) {
                         hits.push((index, aabb_distance));
                     }
                 }

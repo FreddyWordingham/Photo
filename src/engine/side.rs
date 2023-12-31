@@ -11,9 +11,18 @@ use crate::{
 
 /// Render the surface [`Material`] [`Spectrum`] when [`Ray`]s intersect with the [`Scene`],
 /// colour blue for the outside, and red for the inside.
+///
+/// # Panics
+///
+/// Panics if the [`Spectrum`] cannot be built.
 #[must_use]
 #[inline]
-#[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::expect_used,
+    clippy::min_ident_chars,
+    clippy::needless_pass_by_value
+)]
 pub fn side(
     settings: &Settings,
     scene: &Scene,
@@ -32,31 +41,34 @@ pub fn side(
     ])
     .expect("Failed to build colour gradient!");
 
-    if let Some(contact) = scene.ray_intersect_contact(&ray) {
-        let contact_position = ray.origin() + ray.direction().as_ref() * contact.distance;
-        let sun_direction = Unit::new_normalize(sun_position - contact_position);
-        let lightness = (contact.side * contact.smooth_normal.dot(&sun_direction)).max(0.0) as f32;
+    scene.ray_intersect_contact(&ray).map_or_else(
+        || LinSrgba::new(0.0, 0.0, 0.0, 0.0),
+        |contact| {
+            let contact_position = ray.origin() + ray.direction().as_ref() * contact.distance;
+            let sun_direction = Unit::new_normalize(sun_position - contact_position);
+            let lightness =
+                (contact.side * contact.smooth_normal.dot(&sun_direction)).max(0.0) as f32;
 
-        let shadow_cast_position =
-            contact_position + (settings.smoothing_length * contact.side * contact.normal.as_ref());
-        let shadow_ray = Ray::new(shadow_cast_position, sun_direction);
-        let occlusion = scene
-            .ray_intersect_distance(&shadow_ray)
-            .map(|distance| (1.0 - (distance / max_shadow_distance)).clamp(0.0, 1.0))
-            .unwrap_or(0.0) as f32;
+            let shadow_cast_position = contact_position
+                + (settings.smoothing_length * contact.side * contact.normal.as_ref());
+            let shadow_ray = Ray::new(shadow_cast_position, sun_direction);
+            let occlusion = scene
+                .ray_intersect_distance(&shadow_ray)
+                .map_or(0.0, |distance| {
+                    (1.0 - (distance / max_shadow_distance)).clamp(0.0, 1.0)
+                }) as f32;
 
-        match contact.material {
-            Material::Diffuse { .. }
-            | Material::Reflective { .. }
-            | Material::Refractive { .. } => {
-                if contact.side < 0.0 {
-                    red.sample(lightness * (1.0 - occlusion))
-                } else {
-                    blue.sample(lightness * (1.0 - occlusion))
+            match contact.material {
+                Material::Diffuse { .. }
+                | Material::Reflective { .. }
+                | Material::Refractive { .. } => {
+                    if contact.side < 0.0 {
+                        red.sample(lightness * (1.0 - occlusion))
+                    } else {
+                        blue.sample(lightness * (1.0 - occlusion))
+                    }
                 }
             }
-        }
-    } else {
-        LinSrgba::new(0.0, 0.0, 0.0, 0.0)
-    }
+        },
+    )
 }

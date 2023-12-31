@@ -7,7 +7,11 @@ use crate::{geometry::Ray, render::Settings, world::Scene};
 /// Render the distance travelled by [`Ray`]s that intersect with the [`Scene`].
 #[must_use]
 #[inline]
-#[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::min_ident_chars,
+    clippy::needless_pass_by_value
+)]
 pub fn distance(
     _settings: &Settings,
     scene: &Scene,
@@ -23,12 +27,10 @@ pub fn distance(
         "Distance normaliser must be positive."
     );
 
-    let x = if let Some(distance) = scene.ray_intersect_distance(&ray) {
-        (distance / distance_normaliser) as f32
-    } else {
-        0.0
-    }
-    .clamp(0.0, 1.0);
+    let x = scene
+        .ray_intersect_distance(&ray)
+        .map_or(0.0, |distance| (distance / distance_normaliser) as f32)
+        .clamp(0.0, 1.0);
 
     LinSrgba::new(x, x, x, 1.0)
 }

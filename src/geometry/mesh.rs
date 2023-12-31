@@ -157,8 +157,18 @@ impl Mesh {
         let mut normal_indices = [0; 3];
 
         for (i, token) in tokens.iter().enumerate() {
-            position_indices[i] = token.split('/').next().unwrap().parse::<usize>()? - 1;
-            normal_indices[i] = token.split('/').last().unwrap().parse::<usize>()? - 1;
+            position_indices[i] = token
+                .split('/')
+                .next()
+                .ok_or_else(|| ParseError::new("Face must specify a vertex position index!"))?
+                .parse::<usize>()?
+                - 1;
+            normal_indices[i] = token
+                .split('/')
+                .last()
+                .ok_or_else(|| ParseError::new("Face must specify a vertex normal index!"))?
+                .parse::<usize>()?
+                - 1;
         }
 
         Ok(Face {
