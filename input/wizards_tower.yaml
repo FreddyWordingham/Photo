@@ -2,7 +2,7 @@ settings:
   output_directory: output
   smoothing_length: 1.0e-2
   min_weight: 0.01
-  max_recursions: 4
+  max_recursions: 40
   max_loops: 10
   mesh_bvh_max_children: 2
   mesh_bvh_max_depth: 100
@@ -92,17 +92,17 @@ cameras:
     position: [-35, -50, 25]
     look_at: [0, 0, 0]
     field_of_view: 25
-    resolution: [600, 450]
+    resolution: [5440, 1440]
     num_tiles: [10, 10]
-    super_samples_per_axis: 1
+    super_samples_per_axis: 2
   far_camera:
     engine: !Full [[-50, -10, 25], 100.0]
     position: [-100, -100, 100]
     look_at: [0, 0, 0]
     field_of_view: 5
-    resolution: [600, 450]
+    resolution: [5440, 1440]
     num_tiles: [10, 10]
-    super_samples_per_axis: 1
+    super_samples_per_axis: 2
   # behind_camera:
   #   engine: !Reflective [[-50, -10, 25], 100.0]
   #   position: [5, 10, 4]

@@ -43,10 +43,10 @@ pub fn parallel(
         pb.inc(1);
         let row = n % rows;
         let column = n / rows;
-        let file_name = output_directory.join(format!("tile_{row:03}_{column:03}.png"));
+        let tile_index = [row, column];
 
-        let tile = render_tile(settings, scene, camera, [row, column]);
-        tile.save(&file_name).expect("Failed to save tile.");
+        let tile = render_tile(settings, scene, camera, tile_index);
+        tile.save(&output_directory).expect("Failed to save tile.");
     });
     pb.finish_with_message(format!(
         "Completed rendering {}",

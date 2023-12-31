@@ -2,7 +2,7 @@ settings:
   output_directory: output
   smoothing_length: 1.0e-2
   min_weight: 0.01
-  max_recursions: 4
+  max_recursions: 40
   max_loops: 10
   mesh_bvh_max_children: 2
   mesh_bvh_max_depth: 100
