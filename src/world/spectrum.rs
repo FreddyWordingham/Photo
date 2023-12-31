@@ -44,6 +44,27 @@ impl Spectrum {
             "Sample point must be in the range [0, 1]!"
         );
 
+        // let t = round_to_nearest(t, 0.33);
+
         self.colours.sample([t]).collect::<Vec<_>>()[0]
+    }
+
+    /// Sample the gradient linearly for a colour at a given point in the range [0, 1], in steps.
+    #[must_use]
+    #[inline]
+    #[allow(clippy::min_ident_chars)]
+    pub fn sample_in_steps(&self, t: f32, step: f32) -> LinSrgba {
+        debug_assert!(
+            (0.0..=1.0).contains(&t),
+            "Sample point must be in the range [0, 1]!"
+        );
+        debug_assert!(
+            (0.0..=1.0).contains(&step),
+            "Sample step must be in the range [0, 1]!"
+        );
+
+        self.colours
+            .sample([(t / step).round() * step])
+            .collect::<Vec<_>>()[0]
     }
 }

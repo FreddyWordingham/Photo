@@ -100,7 +100,7 @@ pub fn render_camera_photo(
     Ok(())
 }
 
-/// Create a progress bar for rendering a photograph.
+/// Create a styled progress bar.
 #[must_use]
 #[inline]
 fn create_progress_bar(ticks: u64) -> ProgressBar {
