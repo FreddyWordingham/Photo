@@ -5,6 +5,7 @@ use core::ops::Mul;
 use nalgebra::{Point3, Similarity3, Unit, Vector3};
 
 /// Line with a fixed starting location and direction.
+#[derive(Clone)]
 pub struct Ray {
     /// Starting point.
     origin: Point3<f64>,
@@ -49,6 +50,21 @@ impl Ray {
         let i = self.direction.as_ref();
         let n = normal.as_ref();
         self.direction = Unit::new_normalize(i - 2.0 * i.dot(&n) * n);
+    }
+
+    #[inline]
+    pub fn refract(
+        &mut self,
+        normal: Unit<Vector3<f64>>,
+        current_refractive_index: f64,
+        next_refractive_index: f64,
+    ) {
+        let i = self.direction.as_ref();
+        let n = normal.as_ref();
+        let eta = current_refractive_index / next_refractive_index;
+        let cos_theta_i = -i.dot(&n);
+        let cos_theta_t = (1.0 - eta * eta * (1.0 - cos_theta_i * cos_theta_i)).sqrt();
+        self.direction = Unit::new_normalize(eta * i + (eta * cos_theta_i - cos_theta_t) * n);
     }
 }
 

@@ -17,6 +17,8 @@ pub struct SettingsBuilder {
     min_weight: f64,
     /// Maximum number of path tracing iterations.
     max_loops: u32,
+    /// Maximum path tracing recursion depth.
+    max_recursions: u32,
     /// Target maximum number of [`Triangle`] per [`Bvh`] node for [`Mesh`]es.
     mesh_bvh_max_children: usize,
     /// Maximum tree depth for [`Mesh`] [`Bvh`]s.
@@ -103,6 +105,7 @@ impl SettingsBuilder {
             self.smoothing_length,
             self.min_weight,
             self.max_loops,
+            self.max_recursions,
             self.mesh_bvh_max_children,
             self.mesh_bvh_max_depth,
             self.scene_bvh_max_children,

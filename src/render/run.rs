@@ -65,23 +65,22 @@ fn render_tile(
     camera: &Camera,
     tile_index: [usize; 2],
 ) -> Tile {
-    let mut tile = Tile::new(
-        tile_index,
-        camera.tile_resolution(),
-        palette::LinSrgba::new(0.0, 0.0, 0.0, 0.0),
-    );
+    let mut tile = Tile::new(tile_index, camera.tile_resolution());
 
     let engine = camera.engine();
     let super_samples_per_axis = camera.super_samples_per_axis();
     let inv_total_super_samples = 1.0 / (super_samples_per_axis * super_samples_per_axis) as f32;
 
-    tile.samples.par_mapv_inplace(|mut sample| {
+    // tile.samples.par_mapv_inplace(|mut sample| {
+    tile.samples.mapv_inplace(|mut sample| {
+        let start_time = std::time::Instant::now();
         for xi in 0..super_samples_per_axis {
             for yi in 0..super_samples_per_axis {
                 let ray = camera.generate_ray(sample.pixel_index, [xi, yi]);
-                sample += engine(settings, scene, sample.pixel_index, ray);
+                sample.colour += engine(settings, scene, ray);
             }
         }
+        sample.time = start_time.elapsed().as_nanos();
         sample *= inv_total_super_samples;
         sample
     });

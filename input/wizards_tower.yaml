@@ -2,7 +2,8 @@ settings:
   output_directory: output
   smoothing_length: 1.0e-2
   min_weight: 0.01
-  max_loops: 1000
+  max_recursions: 4
+  max_loops: 10
   mesh_bvh_max_children: 2
   mesh_bvh_max_depth: 100
   scene_bvh_max_children: 2
@@ -24,6 +25,8 @@ meshes:
   roofs: ./assets/meshes/islands/wizard/roofs.obj
   puddle_blob: ./assets/meshes/natural/water/puddle_blob.obj
   puddle_splat: ./assets/meshes/natural/water/puddle_splat.obj
+  icosphere: ./assets/meshes/shapes/simple/icosphere.obj
+  cube: ./assets/meshes/shapes/simple/cube.obj
 materials:
   grass: !Diffuse
     spectrum_id: green
@@ -31,7 +34,7 @@ materials:
     spectrum_id: dark_green
   stone: !Diffuse
     spectrum_id: purple
-  glass: !Diffuse
+  crystal: !Diffuse
     spectrum_id: yellow
   brick: !Diffuse
     spectrum_id: gray
@@ -40,6 +43,14 @@ materials:
   water: !Reflective
     spectrum_id: blue
     absorption: 0.4
+  glass: !Refractive
+    spectrum_id: blue
+    absorption: 0.1
+    refractive_index: 1.5
+  glass1: !Refractive
+    spectrum_id: blue
+    absorption: 0.1
+    refractive_index: 1.2
 entities:
   - material_id: grass
     mesh_id: ground
@@ -52,7 +63,7 @@ entities:
     scale: 2.0
   - material_id: brick
     mesh_id: walls
-  - material_id: glass
+  - material_id: crystal
     mesh_id: windows
   - material_id: slate
     mesh_id: roofs
@@ -66,32 +77,45 @@ entities:
     rotation: [0, 0, 230]
     translation: [0.6, -0.7, 0]
     scale: 0.03
+  - material_id: glass
+    translation: [-0.5, -0.4, 0.5]
+    rotation: [0, 25, 45]
+    mesh_id: icosphere
+    scale: 2.0
 lights:
   - position: [10, 30, 200]
     intensity: 1.0
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Reflective [[-10, -4, 5], 2.0]
-    position: [-5, -10, 4]
+    engine: !Full [[-10, -4, 5], 2.0]
+    position: [-35, -50, 25]
     look_at: [0, 0, 0]
     field_of_view: 25
-    resolution: [200, 150]
+    resolution: [600, 450]
+    num_tiles: [10, 10]
+    super_samples_per_axis: 1
+  far_camera:
+    engine: !Full [[-50, -10, 25], 100.0]
+    position: [-100, -100, 100]
+    look_at: [0, 0, 0]
+    field_of_view: 5
+    resolution: [600, 450]
     num_tiles: [10, 10]
     super_samples_per_axis: 1
   # behind_camera:
-  #   engine: !Reflective [-50, -10, 25] 100.0
+  #   engine: !Reflective [[-50, -10, 25], 100.0]
   #   position: [5, 10, 4]
   #   look_at: [0, 0, 0]
   #   field_of_view: 30
-  #   resolution: [400, 300]
-  #   num_tiles: [8, 12]
+  #   resolution: [600, 450]
+  #   num_tiles: [10, 10]
   #   super_samples_per_axis: 1
   # side_camera:
-  #   engine: !Reflective [-50, -10, 25] 100.0
+  #   engine: !Reflective [[-50, -10, 25], 100.0]
   #   position: [-10, -5, 4]
   #   look_at: [0, 0, 0]
   #   field_of_view: 25
-  #   resolution: [400, 300]
-  #   num_tiles: [8, 12]
+  #   resolution: [600, 450]
+  #   num_tiles: [10, 10]
   #   super_samples_per_axis: 1

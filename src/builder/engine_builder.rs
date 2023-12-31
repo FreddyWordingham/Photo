@@ -19,8 +19,8 @@ pub enum EngineBuilder {
     Ambient([f64; 3]),
     /// Diffuse lighting.
     Diffuse(([f64; 3], f64)),
-    /// Reflective lighting.
-    Reflective(([f64; 3], f64)),
+    /// Full [`Ray`]-traced lighting.
+    Full(([f64; 3], f64)),
     /// Mesh side.
     Side(([f64; 3], f64)),
 }
@@ -61,7 +61,7 @@ impl EngineBuilder {
                 Ok(())
             }
             Self::Diffuse((sun_position, max_shadow_distance))
-            | Self::Reflective((sun_position, max_shadow_distance))
+            | Self::Full((sun_position, max_shadow_distance))
             | Self::Side((sun_position, max_shadow_distance)) => {
                 if !sun_position.iter().all(|&x| x.is_finite()) {
                     return Err(ValidationError::new(&format!(
@@ -91,54 +91,49 @@ impl EngineBuilder {
     #[inline]
     pub fn build(&self) -> Engine {
         match *self {
-            Self::Stencil => Box::new(|settings, scene, pixel_index, ray| {
-                engine::stencil(settings, scene, pixel_index, ray)
+            Self::Stencil => Box::new(|settings, scene, ray| engine::stencil(settings, scene, ray)),
+            Self::Distance(distance) => Box::new(move |settings, scene, ray| {
+                engine::distance(settings, scene, ray, distance)
             }),
-            Self::Distance(distance) => Box::new(move |settings, scene, pixel_index, ray| {
-                engine::distance(settings, scene, pixel_index, ray, distance)
-            }),
-            Self::Normal => Box::new(|settings, scene, pixel_index, ray| {
-                engine::normal(settings, scene, pixel_index, ray)
-            }),
-            Self::Ambient(sun_position) => Box::new(move |settings, scene, pixel_index, ray| {
+            Self::Normal => Box::new(|settings, scene, ray| engine::normal(settings, scene, ray)),
+            Self::Ambient(sun_position) => Box::new(move |settings, scene, ray| {
                 engine::ambient(
                     settings,
                     scene,
-                    pixel_index,
                     ray,
                     &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
                 )
             }),
             Self::Diffuse((sun_position, max_shadow_distance)) => {
-                Box::new(move |settings, scene, pixel_index, ray| {
+                Box::new(move |settings, scene, ray| {
                     engine::diffuse(
                         settings,
                         scene,
-                        pixel_index,
                         ray,
                         &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
                         max_shadow_distance,
                     )
                 })
             }
-            Self::Reflective((sun_position, max_shadow_distance)) => {
-                Box::new(move |settings, scene, pixel_index, ray| {
-                    engine::reflective(
+            Self::Full((sun_position, max_shadow_distance)) => {
+                Box::new(move |settings, scene, ray| {
+                    engine::full(
                         settings,
                         scene,
-                        pixel_index,
                         ray,
+                        0,
+                        1.0,
+                        1.0,
                         &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
                         max_shadow_distance,
                     )
                 })
             }
             Self::Side((sun_position, max_shadow_distance)) => {
-                Box::new(move |settings, scene, pixel_index, ray| {
+                Box::new(move |settings, scene, ray| {
                     engine::side(
                         settings,
                         scene,
-                        pixel_index,
                         ray,
                         &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
                         max_shadow_distance,

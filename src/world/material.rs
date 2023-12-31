@@ -36,6 +36,17 @@ impl<'a> Material<'a> {
         Self::Diffuse { spectrum }
     }
 
+    /// Get the absorption coefficient of the [`Material`].
+    #[must_use]
+    #[inline]
+    pub const fn absorption(&self) -> f64 {
+        match self {
+            Self::Diffuse { .. } => 1.0,
+            Self::Reflective { absorption, .. } => *absorption,
+            Self::Refractive { absorption, .. } => *absorption,
+        }
+    }
+
     /// Construct a new Reflective [`Material`] instance.
     #[must_use]
     #[inline]

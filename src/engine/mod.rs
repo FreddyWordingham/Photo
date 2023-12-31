@@ -3,23 +3,21 @@
 mod ambient;
 mod diffuse;
 mod distance;
+mod full;
 mod normal;
-mod reflective;
 mod side;
 mod stencil;
 
 pub use ambient::ambient;
 pub use diffuse::diffuse;
 pub use distance::distance;
+pub use full::full;
 pub use normal::normal;
-pub use reflective::reflective;
 pub use side::side;
 pub use stencil::stencil;
 
-use crate::{
-    geometry::Ray,
-    render::{Sample, Settings},
-    world::Scene,
-};
+use palette::LinSrgba;
 
-pub type Engine = Box<dyn Fn(&Settings, &Scene, [usize; 2], Ray) -> Sample + Send + Sync>;
+use crate::{geometry::Ray, render::Settings, world::Scene};
+
+pub type Engine = Box<dyn Fn(&Settings, &Scene, Ray) -> LinSrgba + Send + Sync>;

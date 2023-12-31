@@ -13,6 +13,8 @@ pub struct Settings {
     pub min_weight: f64,
     /// Maximum number of path tracing iterations.
     pub max_loops: u32,
+    /// Maximum path tracing recursion depth.
+    pub max_recursions: u32,
     /// Target maximum number of [`Triangle`] per [`Bvh`] node for [`Mesh`]es.
     pub mesh_bvh_max_children: usize,
     /// Maximum tree depth for [`Mesh`] [`Bvh`]s.
@@ -33,6 +35,7 @@ impl Settings {
         smoothing_length: f64,
         min_weight: f64,
         max_loops: u32,
+        max_recursions: u32,
         mesh_bvh_max_children: usize,
         mesh_bvh_max_depth: usize,
         scene_bvh_max_children: usize,
@@ -70,6 +73,7 @@ impl Settings {
             smoothing_length,
             min_weight,
             max_loops,
+            max_recursions,
             mesh_bvh_max_children,
             mesh_bvh_max_depth,
             scene_bvh_max_children,

@@ -1,9 +1,6 @@
 //! Single ray sampling structure.
 
-use core::{
-    ops::{AddAssign, MulAssign},
-    time::Duration,
-};
+use core::ops::{AddAssign, MulAssign};
 
 use palette::LinSrgba;
 
@@ -15,19 +12,19 @@ pub struct Sample {
     pub pixel_index: [usize; 2],
     /// Total colour.
     pub colour: LinSrgba,
-    /// Total time.
-    pub time: Duration,
+    /// Total time (nanoseconds).
+    pub time: u128,
 }
 
 impl Sample {
     /// Construct a new instance.
     #[inline]
     #[must_use]
-    pub const fn new(pixel_index: [usize; 2], colour: LinSrgba, time: Duration) -> Self {
+    pub const fn new(pixel_index: [usize; 2]) -> Self {
         Self {
             pixel_index,
-            colour,
-            time,
+            colour: LinSrgba::new(0.0, 0.0, 0.0, 0.0),
+            time: 0,
         }
     }
 }
@@ -53,6 +50,8 @@ impl MulAssign<f32> for Sample {
         self.colour.green *= rhs;
         self.colour.blue *= rhs;
         self.colour.alpha *= rhs;
+
+        self.time = ((self.time as f32) * rhs) as u128;
 
         debug_assert!(
             (0.0..=1.0).contains(&self.colour.red),

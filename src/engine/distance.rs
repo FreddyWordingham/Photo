@@ -1,14 +1,8 @@
 //! Distance render engine function.
 
-use std::time::Instant;
-
 use palette::LinSrgba;
 
-use crate::{
-    geometry::Ray,
-    render::{Sample, Settings},
-    world::Scene,
-};
+use crate::{geometry::Ray, render::Settings, world::Scene};
 
 /// Render the distance travelled by [`Ray`]s that intersect with the [`Scene`].
 #[must_use]
@@ -17,10 +11,9 @@ use crate::{
 pub fn distance(
     _settings: &Settings,
     scene: &Scene,
-    pixel_index: [usize; 2],
     ray: Ray,
     distance_normaliser: f64,
-) -> Sample {
+) -> LinSrgba {
     debug_assert!(
         distance_normaliser.is_finite(),
         "Distance normaliser must be finite."
@@ -30,8 +23,6 @@ pub fn distance(
         "Distance normaliser must be positive."
     );
 
-    let start_time = Instant::now();
-
     let x = if let Some(distance) = scene.ray_intersect_distance(&ray) {
         (distance / distance_normaliser) as f32
     } else {
@@ -39,9 +30,5 @@ pub fn distance(
     }
     .clamp(0.0, 1.0);
 
-    Sample::new(
-        pixel_index,
-        LinSrgba::new(x, x, x, 1.0),
-        start_time.elapsed(),
-    )
+    LinSrgba::new(x, x, x, 1.0)
 }

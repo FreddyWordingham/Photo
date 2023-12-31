@@ -1,13 +1,11 @@
 //! Diffuse lighting render engine function.
 
-use std::time::Instant;
-
 use nalgebra::{Point3, Unit};
 use palette::LinSrgba;
 
 use crate::{
     geometry::Ray,
-    render::{Sample, Settings},
+    render::Settings,
     world::{Material, Scene},
 };
 
@@ -19,13 +17,10 @@ use crate::{
 pub fn diffuse(
     settings: &Settings,
     scene: &Scene,
-    pixel_index: [usize; 2],
     ray: Ray,
     sun_position: &Point3<f64>,
     max_shadow_distance: f64,
-) -> Sample {
-    let start_time = Instant::now();
-
+) -> LinSrgba {
     if let Some(contact) = scene.ray_intersect_contact(&ray) {
         let contact_position = ray.origin() + ray.direction().as_ref() * contact.distance;
         let sun_direction = Unit::new_normalize(sun_position - contact_position);
@@ -43,15 +38,10 @@ pub fn diffuse(
             Material::Diffuse { spectrum }
             | Material::Reflective { spectrum, .. }
             | Material::Refractive { spectrum, .. } => {
-                let colour = spectrum.sample(lightness * (1.0 - occlusion));
-                Sample::new(pixel_index, colour, start_time.elapsed())
+                spectrum.sample(lightness * (1.0 - occlusion))
             }
         }
     } else {
-        Sample::new(
-            pixel_index,
-            LinSrgba::new(0.0, 0.0, 0.0, 0.0),
-            start_time.elapsed(),
-        )
+        LinSrgba::new(0.0, 0.0, 0.0, 0.0)
     }
 }

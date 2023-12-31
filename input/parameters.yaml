@@ -2,42 +2,43 @@ settings:
   output_directory: output
   smoothing_length: 1.0e-2
   min_weight: 0.01
-  max_loops: 1000
+  max_recursions: 4
+  max_loops: 10
   mesh_bvh_max_children: 2
   mesh_bvh_max_depth: 100
   scene_bvh_max_children: 2
   scene_bvh_max_depth: 100
 spectra:
   white: [0x444444ff, 0xffffffff]
+  green: [0x44aa44ff, 0x00ff00ff]
+  blue: [0x4444aaff, 0x0000ffff]
 meshes:
-  hemisphere: ./assets/meshes/shapes/simple/hemisphere.obj
-  hemisphere_inverted: ./assets/meshes/shapes/simple/hemisphere_inverted.obj
+  square: ./assets/meshes/shapes/simple/square.obj
+  cube: ./assets/meshes/shapes/simple/cube.obj
 materials:
-  plastic: !Diffuse
-    spectrum_id: white
+  ground: !Diffuse
+    spectrum_id: green
+  crystal: !Refractive
+    absorption: 0.1
+    refractive_index: 1.1
+    spectrum_id: blue
 entities:
-  - material_id: plastic
-    mesh_id: hemisphere
-    rotation: [180, 0, 0]
-    translation: [0, 2, 0]
-  - material_id: plastic
-    mesh_id: hemisphere
-    translation: [0, 2, 0]
-  - material_id: plastic
-    mesh_id: hemisphere_inverted
-    rotation: [180, 0, 0]
-    translation: [0, -2, 0]
-  - material_id: plastic
-    mesh_id: hemisphere_inverted
-    translation: [0, -2, 0]
+  - material_id: ground
+    mesh_id: square
+    scale: 10.0
+    translation: [0, 0, -1.02]
+  - material_id: crystal
+    mesh_id: cube
+    translation: [0, 0, 1.02]
+    rotation: [45, 0, 0]
 lights:
   - position: [10, 30, 200]
     intensity: 1.0
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Diffuse [[-10, 0, 15], 1.0]
-    position: [-6, -6, 3]
+    engine: !Full [[-10, 0, 15], 1.0]
+    position: [0, -6, 6]
     look_at: [0, 0, 0]
     field_of_view: 90
     resolution: [400, 300]

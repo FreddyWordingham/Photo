@@ -1,11 +1,9 @@
 //! Image tile structure.
 
-use core::time::Duration;
 use std::{error::Error, path::Path};
 
 use image::{ImageBuffer, Rgba};
 use ndarray::Array2;
-use palette::LinSrgba;
 
 use crate::{error::SaveError, render::Sample};
 
@@ -20,14 +18,14 @@ impl Tile {
     /// Construct a new instance.
     #[must_use]
     #[inline]
-    pub fn new(tile_index: [usize; 2], resolution: [usize; 2], colour: LinSrgba) -> Self {
+    pub fn new(tile_index: [usize; 2], resolution: [usize; 2]) -> Self {
         debug_assert!(resolution[0] > 0, "Resolution must be positive.");
         debug_assert!(resolution[1] > 0, "Resolution must be positive.");
 
         let offset = [tile_index[0] * resolution[0], tile_index[1] * resolution[1]];
         let samples = Array2::from_shape_fn(resolution, |index| {
             let pixel_index = [offset[0] + index.0, offset[1] + index.1];
-            Sample::new(pixel_index, colour, Duration::default())
+            Sample::new(pixel_index)
         });
 
         Self { samples }

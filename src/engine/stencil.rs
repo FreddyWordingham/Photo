@@ -1,33 +1,17 @@
 //! Stencil render engine function.
 
-use std::time::Instant;
-
 use palette::LinSrgba;
 
-use crate::{
-    geometry::Ray,
-    render::{Sample, Settings},
-    world::Scene,
-};
+use crate::{geometry::Ray, render::Settings, world::Scene};
 
 /// Stencil whether the [`Ray`] intersects with the [`Scene`].
 #[must_use]
 #[inline]
 #[allow(clippy::cast_possible_truncation, clippy::min_ident_chars)]
-pub fn stencil(_settings: &Settings, scene: &Scene, pixel_index: [usize; 2], ray: Ray) -> Sample {
-    let start_time = Instant::now();
-
+pub fn stencil(_settings: &Settings, scene: &Scene, ray: Ray) -> LinSrgba {
     if scene.ray_intersect(&ray) {
-        Sample::new(
-            pixel_index,
-            LinSrgba::new(1.0, 1.0, 1.0, 1.0),
-            start_time.elapsed(),
-        )
+        LinSrgba::new(1.0, 1.0, 1.0, 1.0)
     } else {
-        Sample::new(
-            pixel_index,
-            LinSrgba::new(0.0, 0.0, 0.0, 0.0),
-            start_time.elapsed(),
-        )
+        LinSrgba::new(0.0, 0.0, 0.0, 0.0)
     }
 }
