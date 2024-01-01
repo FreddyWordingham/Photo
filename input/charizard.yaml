@@ -16,7 +16,7 @@ spectra:
   fire: [0x000000ff, 0x440000ff, 0x880000ff, 0xcc0000ff, 0xff0000ff]
   purple: [0x330033ff, 0x660066ff, 0x990099ff, 0xcc00ccff, 0xff00ffff]
   blue: [0x000033ff, 0x000066ff, 0x000099ff, 0x0000ccff, 0x0000ffff]
-  bone: [0x000000ff, 0x444444ff, 0x888888ff, 0xccccccff, 0xffffffff]
+  grey: [0x000000ff, 0x444444ff, 0x888888ff, 0xccccccff]
   yellow: [0x000000ff, 0x444400ff, 0x888800ff, 0xcccc00ff, 0xffff00ff]
 meshes:
   circle: ./assets/meshes/shapes/simple/circle.obj
@@ -39,9 +39,9 @@ materials:
   wings: !Diffuse
     spectrum_id: blue
   bone: !Diffuse
-    spectrum_id: yellow
+    spectrum_id: grey
   plasma: !Diffuse
-    spectrum_id: purple
+    spectrum_id: yellow
   fire: !Refractive
     spectrum_id: fire
     absorption: 0.5
@@ -74,26 +74,19 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Full [-100, -100, 100]
+    engine: !Test [-100, -100, 100]
     position: [0, -200, 50]
     look_at: [0, 0, 0.5]
-    field_of_view: 1.5
-    resolution: [512, 512]
-    num_tiles: [2, 2]
-    super_samples_per_axis: 3
-  left_camera:
-    engine: !Full [-100, -100, 100]
-    position: [-200, 0.5, 50]
-    look_at: [0, 0.5, 0.5]
-    field_of_view: 1.5
-    resolution: [512, 512]
-    num_tiles: [2, 2]
-    super_samples_per_axis: 3
-  far_camera:
-    engine: !Full [-100, -100, 100]
-    position: [200, -200, 200]
+    field_of_view: 1.0
+    resolution: [1024, 1024]
+    num_tiles: [4, 4]
+    super_samples_per_axis: 2
+  outline_camera:
+    engine: !Ambient
+    effects: [!Outline ]
+    position: [0, -200, 50]
     look_at: [0, 0, 0.5]
-    field_of_view: 1.5
-    resolution: [512, 512]
-    num_tiles: [2, 2]
-    super_samples_per_axis: 3
+    field_of_view: 1.0
+    resolution: [1024, 1024]
+    num_tiles: [4, 4]
+    super_samples_per_axis: 2
