@@ -19,6 +19,8 @@ pub enum EngineBuilder {
     Ambient([f64; 3]),
     /// Full [`Ray`]-traced lighting.
     Full([f64; 3]),
+    /// Test engine.
+    Test([f64; 3]),
     /// Diffuse lighting.
     Diffuse(([f64; 3], f64)),
     /// Mesh side.
@@ -48,7 +50,7 @@ impl EngineBuilder {
                 }
                 Ok(())
             }
-            Self::Ambient(sun_position) | Self::Full(sun_position) => {
+            Self::Ambient(sun_position) | Self::Full(sun_position) | Self::Test(sun_position) => {
                 if !sun_position.iter().all(|&x| x.is_finite()) {
                     return Err(ValidationError::new(&format!(
                         "Engine-Ambient sun position must be finite, but the value is {sun_position:?}!"
@@ -109,6 +111,17 @@ impl EngineBuilder {
             }
             Self::Full(sun_position) => Box::new(move |settings, scene, ray| {
                 engine::full(
+                    settings,
+                    scene,
+                    ray,
+                    0,
+                    1.0,
+                    1.0,
+                    &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
+                )
+            }),
+            Self::Test(sun_position) => Box::new(move |settings, scene, ray| {
+                engine::test(
                     settings,
                     scene,
                     ray,

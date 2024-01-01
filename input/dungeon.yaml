@@ -1,0 +1,79 @@
+settings:
+  output_directory: output
+  smoothing_length: 1.0e-2
+  min_weight: 0.01
+  max_recursions: 40
+  max_loops: 10
+  mesh_bvh_max_children: 2
+  mesh_bvh_max_depth: 100
+  scene_bvh_max_children: 2
+  scene_bvh_max_depth: 100
+spectra:
+  grey: [0x000000ff, 0x444444ff, 0xffffffff]
+  brown: [0x654321ff, 0x8B4513ff, 0xCD853Fff]
+  white: [0xA9A9A9ff, 0xD3D3D3ff, 0xFFFFFFFF]
+meshes:
+  floor: ./assets/meshes/floor.obj
+  walls: ./assets/meshes/walls.obj
+  stairs: ./assets/meshes/stairs.obj
+  boxes: ./assets/meshes/boxes.obj
+  barrels: ./assets/meshes/barrels.obj
+  bags: ./assets/meshes/bags.obj
+  shelf: ./assets/meshes/shelf.obj
+  tables: ./assets/meshes/tables.obj
+  torches: ./assets/meshes/torches.obj
+materials:
+  marble: !Diffuse
+    spectrum_id: white
+  stone: !Diffuse
+    spectrum_id: grey
+  wood: !Diffuse
+    spectrum_id: brown
+entities:
+  - material_id: marble
+    mesh_id: floor
+  - material_id: stone
+    mesh_id: walls
+  - material_id: stone
+    mesh_id: stairs
+  - material_id: wood
+    mesh_id: boxes
+  - material_id: wood
+    mesh_id: barrels
+  - material_id: wood
+    mesh_id: bags
+  - material_id: wood
+    mesh_id: shelf
+  - material_id: wood
+    mesh_id: tables
+  - material_id: wood
+    mesh_id: torches
+lights:
+  - position: [10, 30, 200]
+    intensity: 1.0
+    colour: 0xffffaaff
+cameras:
+  main_camera:
+    engine: !Full [100, 100, 100]
+    position: [-1, -18, -1]
+    look_at: [0, -18, -1]
+    field_of_view: 180
+    resolution: [512, 512]
+    num_tiles: [2, 2]
+    super_samples_per_axis: 3
+  # left_camera:
+  #   engine: !Full [-100, -100, 100]
+  #   position: [-200, 0.5, 50]
+  #   look_at: [0, 0.5, 0.5]
+  #   field_of_view: 1.5
+  #   resolution: [512, 512]
+  #   num_tiles: [2, 2]
+  #   super_samples_per_axis: 3
+  far_camera:
+    engine: !Full [100, 100, 100]
+    position: [-200, 200, 200]
+    look_at: [0, -20, 0]
+    field_of_view: 20
+    resolution: [1024, 512]
+    num_tiles: [2, 2]
+    super_samples_per_axis: 3

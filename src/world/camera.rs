@@ -133,7 +133,7 @@ impl Camera {
 
         let aspect_ratio = (self.num_tiles[0] * self.tile_resolution[0]) as f64
             / (self.num_tiles[1] * self.tile_resolution[1]) as f64;
-        let d_theta = d_col * (self.field_of_view * 0.5);
+        let d_theta = -d_col * (self.field_of_view * 0.5);
         let d_phi = -d_row * (self.field_of_view * aspect_ratio * 0.5);
 
         let forward = Unit::new_normalize(self.look_at - self.position);

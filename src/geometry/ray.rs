@@ -2,7 +2,7 @@
 
 use core::ops::Mul;
 
-use nalgebra::{Point3, Similarity3, Unit, Vector3};
+use nalgebra::{Point3, Rotation3, Similarity3, Unit, Vector3};
 
 /// Line with a fixed starting location and direction.
 #[derive(Clone)]
@@ -42,6 +42,24 @@ impl Ray {
         debug_assert!(distance >= 0.0, "Distance must be positive.");
 
         self.origin += self.direction.as_ref() * distance;
+    }
+
+    /// Rotate the [`Ray`] with a given pitch and subsequent roll manoeuvre.
+    #[inline]
+    pub fn rotate(&mut self, pitch: f64, roll: f64) {
+        let arbitrary_axis = if (1.0 - self.direction.z.abs()) >= 1.0e-1 {
+            Vector3::z_axis()
+        } else {
+            Vector3::y_axis()
+        };
+
+        let pitch_axis = Unit::new_normalize(self.direction.cross(&arbitrary_axis));
+        let pitch_rot = Rotation3::from_axis_angle(&pitch_axis, pitch);
+
+        let roll_rot = Rotation3::from_axis_angle(&self.direction, roll);
+
+        self.direction = roll_rot * pitch_rot * self.direction;
+        self.direction.renormalize();
     }
 
     /// Reflect the direction about a normal.

@@ -7,6 +7,7 @@ mod full;
 mod normal;
 mod side;
 mod stencil;
+mod test;
 
 pub use ambient::ambient;
 pub use diffuse::diffuse;
@@ -15,6 +16,7 @@ pub use full::full;
 pub use normal::normal;
 pub use side::side;
 pub use stencil::stencil;
+pub use test::test;
 
 use palette::LinSrgba;
 

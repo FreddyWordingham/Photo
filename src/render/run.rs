@@ -41,7 +41,8 @@ pub fn render_tile(
     let super_samples_per_axis = camera.super_samples_per_axis();
     let inv_total_super_samples = 1.0 / (super_samples_per_axis * super_samples_per_axis) as f32;
 
-    tile.samples.par_mapv_inplace(|mut sample| {
+    // tile.samples.par_mapv_inplace(|mut sample| {
+    tile.samples.mapv_inplace(|mut sample| {
         let start_time = Instant::now();
         for xi in 0..super_samples_per_axis {
             for yi in 0..super_samples_per_axis {
