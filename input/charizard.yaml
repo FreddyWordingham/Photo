@@ -1,6 +1,6 @@
 settings:
   output_directory: output
-  smoothing_length: 1.0e-2
+  smoothing_length: 1.0e-3
   min_weight: 0.01
   max_recursions: 40
   max_loops: 10
@@ -62,7 +62,7 @@ entities:
     mesh_id: horns
   - material_id: bone
     mesh_id: claws
-  - material_id: fire
+  - material_id: plasma
     mesh_id: tail
   - material_id: fire
     mesh_id: fire
@@ -75,9 +75,10 @@ lights:
 cameras:
   main_camera:
     engine: !Test [-100, -100, 100]
+    # engine: !Xray
     position: [0, -200, 50]
     look_at: [0, 0, 0.5]
-    field_of_view: 1.0
+    field_of_view: 1.5
     resolution: [1024, 1024]
     num_tiles: [4, 4]
     super_samples_per_axis: 2
@@ -86,7 +87,7 @@ cameras:
     effects: [!Outline ]
     position: [0, -200, 50]
     look_at: [0, 0, 0.5]
-    field_of_view: 1.0
+    field_of_view: 1.5
     resolution: [1024, 1024]
     num_tiles: [4, 4]
     super_samples_per_axis: 2

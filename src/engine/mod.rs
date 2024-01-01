@@ -9,6 +9,7 @@ mod occlusion;
 mod side;
 mod stencil;
 mod test;
+mod xray;
 
 pub use ambient::ambient;
 pub use diffuse::diffuse;
@@ -19,6 +20,7 @@ pub use occlusion::occlusion;
 pub use side::side;
 pub use stencil::stencil;
 pub use test::test;
+pub use xray::xray;
 
 use palette::LinSrgba;
 

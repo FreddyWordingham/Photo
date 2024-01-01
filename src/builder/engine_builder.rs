@@ -9,6 +9,8 @@ use crate::{engine, engine::Engine, error::ValidationError};
 #[derive(Deserialize, Serialize)]
 #[non_exhaustive]
 pub enum EngineBuilder {
+    /// X-ray.
+    Xray,
     /// Stencil.
     Stencil,
     /// Distance.
@@ -38,7 +40,7 @@ impl EngineBuilder {
     #[inline]
     pub fn validate(&self) -> Result<(), ValidationError> {
         match self {
-            Self::Stencil | Self::Normal | Self::Ambient => Ok(()),
+            Self::Xray | Self::Stencil | Self::Normal | Self::Ambient => Ok(()),
             Self::Distance(width) => {
                 if !width.is_finite() {
                     return Err(ValidationError::new(&format!(
@@ -87,6 +89,7 @@ impl EngineBuilder {
     #[inline]
     pub fn build(&self) -> Engine {
         match *self {
+            Self::Xray => Box::new(engine::xray),
             Self::Stencil => Box::new(engine::stencil),
             Self::Distance(distance) => Box::new(move |settings, scene, ray| {
                 engine::distance(settings, scene, ray, distance)
