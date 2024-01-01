@@ -48,7 +48,7 @@ cameras:
     position: [15, -15, 15]
     look_at: [0, 0, 0]
     field_of_view: 90
-    resolution: [512, 512]
+    resolution: [128, 128]
     num_tiles: [8, 8]
     super_samples_per_axis: 1
   # near_camera:
