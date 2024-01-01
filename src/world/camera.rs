@@ -2,12 +2,14 @@
 
 use nalgebra::{Point3, Rotation3, Unit};
 
-use crate::{engine::Engine, geometry::Ray};
+use crate::{effects::Effect, engine::Engine, geometry::Ray};
 
 /// Generates sampling rays to form an image.
 pub struct Camera {
     /// Rendering engine.
     engine: Engine,
+    /// Post-processing effects.
+    effects: Vec<Effect>,
     /// Observation position (metres).
     position: Point3<f64>,
     /// View target (metres).
@@ -28,6 +30,7 @@ impl Camera {
     #[inline]
     pub fn new(
         engine: Engine,
+        effects: Vec<Effect>,
         position: Point3<f64>,
         look_at: Point3<f64>,
         field_of_view: f64,
@@ -56,6 +59,7 @@ impl Camera {
 
         Self {
             engine,
+            effects,
             position,
             look_at,
             field_of_view,
@@ -70,6 +74,13 @@ impl Camera {
     #[inline]
     pub const fn engine(&self) -> &Engine {
         &self.engine
+    }
+
+    /// Get the post-processing [`Effect`]s.
+    #[must_use]
+    #[inline]
+    pub fn effects(&self) -> &[Effect] {
+        &self.effects
     }
 
     /// Get the number of samples along each axis.

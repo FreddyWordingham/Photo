@@ -91,8 +91,9 @@ pub fn render_camera_photo(
 
     let pb = create_progress_bar(camera.total_num_tiles() as u64);
     for mut tile in render_tiles(settings, scene, camera) {
-        // tile = photo::effects::outline(tile);
-        // tile = photo::effects::outline(tile);
+        for effect in camera.effects() {
+            tile = effect(tile);
+        }
         pb.inc(1);
         tile.save(&output_directory).expect("Failed to save tile.");
     }

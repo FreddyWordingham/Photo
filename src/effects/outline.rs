@@ -7,12 +7,12 @@ use crate::render::Tile;
 /// Colour all colours with a different adjacent colour black.
 #[must_use]
 #[inline]
-pub fn outline(tile: Tile) -> Tile {
+pub fn outline(mut tile: Tile, overlay: bool) -> Tile {
     let shape = tile.samples.shape();
     let num_rows = shape[0];
     let num_cols = shape[1];
 
-    let mut new_tile = Tile::new(tile.tile_index, [num_rows, num_cols]);
+    let mut buffer_tile = Tile::new(tile.tile_index, [num_rows, num_cols]);
 
     for row in 0..num_rows {
         for col in 0..num_cols {
@@ -29,10 +29,24 @@ pub fn outline(tile: Tile) -> Tile {
                 .iter()
                 .any(|&adj_colour| adj_colour.map_or(false, |c| c != current_colour))
             {
-                new_tile.samples[[row, col]].colour = LinSrgba::new(0.0, 0.0, 0.0, 1.0);
+                buffer_tile.samples[[row, col]].colour = LinSrgba::new(0.0, 0.0, 0.0, 1.0);
             }
         }
     }
 
-    new_tile
+    if overlay {
+        for row in 0..num_rows {
+            for col in 0..num_cols {
+                if buffer_tile.samples[[row, col]].colour.alpha > 0.0 {
+                    tile.samples[[row, col]].colour = buffer_tile.samples[[row, col]].colour;
+                }
+            }
+        }
+    }
+
+    if overlay {
+        tile
+    } else {
+        buffer_tile
+    }
 }

@@ -44,18 +44,20 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Ambient
+    engine: !Diffuse [[10, 20, 40], 10]
+    effects: [!OutlineOverlay ]
     position: [15, -15, 15]
     look_at: [0, 0, 0]
     field_of_view: 90
     resolution: [1280, 1280]
     num_tiles: [8, 8]
     super_samples_per_axis: 1
-  # near_camera:
-  #   engine: !Full [10, 10, 10]
-  #   position: [11, -11, 11]
-  #   look_at: [0, 0, 0]
-  #   field_of_view: 180
-  #   resolution: [512, 512]
-  #   num_tiles: [8, 8]
-  #   super_samples_per_axis: 3
+  outline_camera:
+    engine: !Ambient
+    effects: [!Outline , !OutlineOverlay ]
+    position: [15, -15, 15]
+    look_at: [0, 0, 0]
+    field_of_view: 90
+    resolution: [1280, 1280]
+    num_tiles: [8, 8]
+    super_samples_per_axis: 1

@@ -6,4 +6,4 @@ pub use outline::outline;
 
 use crate::render::Tile;
 
-pub type Effect = Box<dyn Fn(Tile) -> Tile>;
+pub type Effect = Box<dyn Fn(Tile) -> Tile + Send + Sync>;

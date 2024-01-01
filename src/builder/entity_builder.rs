@@ -1,4 +1,4 @@
-//! Instance builder structure.
+//! [`Entity`] builder structure.
 
 use std::collections::HashMap;
 

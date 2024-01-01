@@ -1,4 +1,4 @@
-//! Settings builder structure.
+//! [`Settings`] builder structure.
 
 use std::path::PathBuf;
 

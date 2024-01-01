@@ -1,4 +1,4 @@
-//! Light source builder structure.
+//! [`Light`] source builder structure.
 
 use serde::{Deserialize, Serialize};
 

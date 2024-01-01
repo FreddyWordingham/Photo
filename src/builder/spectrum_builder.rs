@@ -1,4 +1,4 @@
-//! Spectrum builder structure.
+//! [`Spectrum`] builder structure.
 
 use enterpolation::linear::LinearError;
 use serde::{Deserialize, Serialize};
@@ -14,7 +14,7 @@ impl SpectrumBuilder {
     ///
     /// # Errors
     ///
-    /// Returns a [`ValidationError`] if the spectrum is empty,
+    /// Returns a [`ValidationError`] if the spectrum colour list is empty,
     /// or if any of the colours are not a valid 32-bit RGBA colour.
     #[inline]
     pub fn validate(&self) -> Result<(), ValidationError> {

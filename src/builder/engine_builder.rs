@@ -1,4 +1,4 @@
-//! Material builder structure.
+//! [`Engine`] builder structure.
 
 use nalgebra::Point3;
 use serde::{Deserialize, Serialize};

@@ -1,14 +1,20 @@
-//! Camera builder structure.
+//! [`Camera`] builder structure.
 
 use serde::{Deserialize, Serialize};
 
-use crate::{builder::EngineBuilder, error::ValidationError, world::Camera};
+use crate::{
+    builder::{EffectBuilder, EngineBuilder},
+    error::ValidationError,
+    world::Camera,
+};
 
 /// Builds a [`Camera`] instance.
 #[derive(Deserialize, Serialize)]
 pub struct CameraBuilder {
-    /// Rendering engine.
+    /// Rendering engine function builder.
     engine: EngineBuilder,
+    /// Post-processing effects.
+    effects: Option<Vec<EffectBuilder>>,
     /// Observation position [x, y, z] (meters).
     position: [f64; 3],
     /// View target [x, y, z] (meters).
@@ -106,6 +112,9 @@ impl CameraBuilder {
     pub fn build(&self) -> Camera {
         Camera::new(
             self.engine.build(),
+            self.effects.as_ref().map_or(Vec::new(), |effects| {
+                effects.iter().map(|effect| effect.build()).collect()
+            }),
             self.position.into(),
             self.look_at.into(),
             self.field_of_view.to_radians(),

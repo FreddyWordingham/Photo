@@ -1,4 +1,4 @@
-//! Material builder structure.
+//! [`Material`] builder structure.
 
 use std::collections::HashMap;
 
