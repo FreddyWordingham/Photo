@@ -95,9 +95,7 @@ impl EngineBuilder {
                 engine::distance(settings, scene, ray, distance)
             }),
             Self::Normal => Box::new(engine::normal),
-            Self::Ambient => {
-                Box::new(move |settings, scene, ray| engine::ambient(settings, scene, ray))
-            }
+            Self::Ambient => Box::new(engine::ambient),
             Self::Diffuse((sun_position, max_shadow_distance)) => {
                 Box::new(move |settings, scene, ray| {
                     engine::diffuse(

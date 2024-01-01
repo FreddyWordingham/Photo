@@ -7,8 +7,10 @@ use crate::render::Tile;
 /// Colour all colours with a different adjacent colour black.
 #[must_use]
 #[inline]
+#[allow(clippy::min_ident_chars, clippy::missing_asserts_for_indexing)]
 pub fn outline(mut tile: Tile, overlay: bool) -> Tile {
     let shape = tile.samples.shape();
+
     let num_rows = shape[0];
     let num_cols = shape[1];
 

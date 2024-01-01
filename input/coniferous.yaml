@@ -1,0 +1,64 @@
+settings:
+  output_directory: output
+  smoothing_length: 1.0e-3
+  min_weight: 0.01
+  max_recursions: 40
+  max_loops: 10
+  mesh_bvh_max_children: 2
+  mesh_bvh_max_depth: 100
+  scene_bvh_max_children: 2
+  scene_bvh_max_depth: 100
+spectra:
+  white: [0x000000ff, 0x444444ff, 0xffffffff]
+  green: [0x000000ff, 0x004400ff, 0x00ff00ff]
+  red: [0x330000ff, 0x770000ff, 0xaa1100ff, 0xdd1100ff]
+  orange: [0xbb0000ff, 0xdd1100ff, 0xff3300ff, 0xff6600ff]
+  fire: [0x000000ff, 0x440000ff, 0x880000ff, 0xcc0000ff, 0xff0000ff]
+  purple: [0x330033ff, 0x660066ff, 0x990099ff, 0xcc00ccff, 0xff00ffff]
+  blue: [0x000033ff, 0x000066ff, 0x000099ff, 0x0000ccff, 0x0000ffff]
+  grey: [0x000000ff, 0x444444ff, 0x888888ff, 0xccccccff]
+  yellow: [0x000000ff, 0x444400ff, 0x888800ff, 0xcccc00ff, 0xffff00ff]
+  brown: [0x000000ff, 0x442200ff, 0x884400ff, 0xcc8800ff, 0xffbb00ff]
+  transparent: [0x00000000, 0x00000000]
+meshes:
+  circle: ./assets/meshes/shapes/simple/circle.obj
+  leaves: ./assets/meshes/natural/trees/coniferous/leaves.obj
+  trunk: ./assets/meshes/natural/trees/coniferous/trunk.obj
+materials:
+  glass: !Diffuse
+    spectrum_id: transparent
+  grass: !Diffuse
+    spectrum_id: green
+  wood: !Diffuse
+    spectrum_id: brown
+entities:
+  - material_id: glass
+    mesh_id: circle
+    scale: 10.0
+  - material_id: wood
+    mesh_id: trunk
+  - material_id: grass
+    mesh_id: leaves
+lights:
+  - position: [10, 30, 200]
+    intensity: 1.0
+    colour: 0xffffaaff
+cameras:
+  main_camera:
+    engine: !Test [-100, -100, 100]
+    # engine: !Xray
+    position: [0, -200, 50]
+    look_at: [0, 0, 0.5]
+    field_of_view: 1.5
+    resolution: [1024, 1024]
+    num_tiles: [4, 4]
+    super_samples_per_axis: 2
+  outline_camera:
+    engine: !Ambient
+    effects: [!Outline , !OutlineOverlay , !OutlineOverlay , !OutlineOverlay ]
+    position: [0, -200, 50]
+    look_at: [0, 0, 0.5]
+    field_of_view: 1.5
+    resolution: [1024, 1024]
+    num_tiles: [4, 4]
+    super_samples_per_axis: 2

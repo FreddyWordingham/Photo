@@ -14,7 +14,7 @@ use crate::{
 ///
 /// # Panics
 ///
-/// Panics if the [`Spectrum`] cannot be built.
+/// Panics if a [`Spectrum`] cannot be built.
 #[must_use]
 #[inline]
 #[allow(

@@ -1,11 +1,12 @@
 //! Local occlusion shadowing [`Ray`]-traced render engine function.
 
-use std::f64::consts::{FRAC_PI_2, PI};
+use core::f64::consts::{FRAC_PI_2, PI};
 
 use nalgebra::{Point3, Unit, Vector3};
 use palette::LinSrgba;
 
-const GOLDEN_RATIO: f64 = 1.618033988749;
+/// The golden ratio constant (2.0 / (1.0 + sqrt(5.0))).
+const GOLDEN_RATIO: f64 = 1.618_033_988_749;
 
 use crate::{
     geometry::Ray,
@@ -14,11 +15,17 @@ use crate::{
 };
 
 /// Local occlusion shadowing rendering [`Engine`] function.
+///
+/// # Panics
+///
+/// Panics if a [`Spectrum`] cannot be built.
 #[must_use]
 #[inline]
 #[allow(
     clippy::cast_possible_truncation,
+    clippy::expect_used,
     clippy::min_ident_chars,
+    clippy::needless_pass_by_value,
     clippy::too_many_lines
 )]
 pub fn occlusion(
@@ -44,7 +51,7 @@ pub fn occlusion(
     if let Some(contact) = scene.ray_intersect_contact(&ray) {
         let contact_position = ray.origin() + ray.direction().as_ref() * contact.distance;
 
-        let ambient = 1.0;
+        let ambient = 1.0_f64;
 
         // Lightness
         let sun_direction = Unit::new_normalize(sun_position - contact_position);
@@ -57,7 +64,7 @@ pub fn occlusion(
         let spectral = calculate_occlusion(settings, scene, &mut shadow_ray);
 
         let light_level =
-            ((ambient * 0.1) + (diffuse * 0.2) + (spectral * 0.7)).clamp(0.0, 1.0) as f32;
+            (spectral.mul_add(0.7, ambient.mul_add(0.1, diffuse * 0.2))).clamp(0.0, 1.0) as f32;
         let shadow_level = calculate_local_occlusion(
             settings,
             scene,
@@ -70,9 +77,10 @@ pub fn occlusion(
             | Material::Reflective { spectrum, .. }
             | Material::Refractive { spectrum, .. } => {
                 let base_colour = spectrum.sample(light_level as f32);
-                let spectrum =
-                    Spectrum::new(vec![LinSrgba::new(0.0, 0.0, 0.0, 1.0), base_colour]).unwrap();
-                return spectrum.sample(shadow_level as f32);
+                let illuminated_spectrum =
+                    Spectrum::new(vec![LinSrgba::new(0.0, 0.0, 0.0, 1.0), base_colour])
+                        .expect("Failed to build colour gradient!");
+                return illuminated_spectrum.sample(shadow_level as f32);
             }
         }
     }
@@ -80,10 +88,21 @@ pub fn occlusion(
     colour
 }
 
+/// Calculate the occlusion of a [`Ray`] through a [`Scene`].
+#[must_use]
+#[inline]
 fn calculate_occlusion(settings: &Settings, scene: &Scene, shadow_ray: &mut Ray) -> f64 {
     let mut light = 1.0;
     while let Some(shadow_contact) = scene.ray_intersect_contact(shadow_ray) {
-        light *= 1.0 - shadow_contact.material.absorption();
+        match shadow_contact.material {
+            Material::Diffuse { .. } => {
+                light = 0.0;
+            }
+            Material::Reflective { absorption, .. } | Material::Refractive { absorption, .. } => {
+                light *= 1.0 - absorption;
+            }
+        }
+
         shadow_ray.travel(shadow_contact.distance + settings.smoothing_length);
 
         if light < settings.min_weight {
@@ -95,6 +114,9 @@ fn calculate_occlusion(settings: &Settings, scene: &Scene, shadow_ray: &mut Ray)
     light
 }
 
+/// Calculate the local occlusion of a `[Point3<f64>`] within a [`Scene`].
+#[must_use]
+#[inline]
 fn calculate_local_occlusion(
     settings: &Settings,
     scene: &Scene,
@@ -115,25 +137,32 @@ fn calculate_local_occlusion(
 }
 
 /// Sample points on a sphere's surface using the golden ratio.
-#[inline]
 #[must_use]
+#[inline]
+#[allow(clippy::modulo_arithmetic)]
 pub fn rand_sphere_point(n: i32, max: i32) -> (f64, f64) {
-    debug_assert!(n >= 0);
-    debug_assert!(n < max);
+    debug_assert!(
+        n < max,
+        "The sample index must be less than the number of samples!"
+    );
+    debug_assert!(max > 0, "The number of samples must be positive!");
 
-    let d = f64::from(1 - max).mul_add(0.5, f64::from(n));
-    let phi = ((2.0 * d) / f64::from(max)).asin() + FRAC_PI_2;
-    let theta = ((2.0 * PI) / GOLDEN_RATIO) * (d % GOLDEN_RATIO);
+    let delta = f64::from(1 - max).mul_add(0.5, f64::from(n));
+    let phi = ((2.0 * delta) / f64::from(max)).asin() + FRAC_PI_2;
+    let theta = ((2.0 * PI) / GOLDEN_RATIO) * (delta % GOLDEN_RATIO);
 
     (phi, theta)
 }
 
 /// Sample points on a hemisphere's surface using the golden ratio.
-#[inline]
 #[must_use]
+#[inline]
 pub fn rand_hemisphere_point(n: i32, max: i32) -> (f64, f64) {
-    debug_assert!(n >= 0);
-    debug_assert!(n < max);
+    debug_assert!(
+        n < max,
+        "The sample index must be less than the number of samples!"
+    );
+    debug_assert!(max > 0, "The number of samples must be positive!");
 
     rand_sphere_point(n, max * 2)
 }

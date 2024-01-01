@@ -21,7 +21,7 @@ impl EffectBuilder {
     ///
     /// Returns a [`ValidationError`] if the [`Effect`] configuration is invalid.
     #[inline]
-    pub fn validate(&self) -> Result<(), ValidationError> {
+    pub const fn validate(&self) -> Result<(), ValidationError> {
         match self {
             Self::Outline | Self::OutlineOverlay => Ok(()),
         }

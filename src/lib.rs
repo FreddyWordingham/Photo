@@ -89,7 +89,7 @@
     clippy::self_named_module_files,
     clippy::semicolon_inside_block,
     clippy::semicolon_outside_block,
-    clippy::separated_literal_suffix,
+    // clippy::separated_literal_suffix,
     // clippy::shadow_reuse,
     clippy::shadow_same,
     clippy::shadow_unrelated,

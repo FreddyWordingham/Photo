@@ -28,6 +28,7 @@ impl Camera {
     /// Construct a new instance.
     #[must_use]
     #[inline]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         engine: Engine,
         effects: Vec<Effect>,

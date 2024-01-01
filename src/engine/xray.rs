@@ -9,10 +9,15 @@ use crate::{
 };
 
 /// Colour by the number of times a [`Ray`] intersects with the [`Scene`].
+///
+/// # Panics
+///
+/// Panics if a [`Spectrum`] cannot be built.
 #[must_use]
 #[inline]
 #[allow(
     clippy::cast_possible_truncation,
+    clippy::expect_used,
     clippy::min_ident_chars,
     clippy::needless_pass_by_value
 )]

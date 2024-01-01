@@ -113,7 +113,7 @@ impl CameraBuilder {
         Camera::new(
             self.engine.build(),
             self.effects.as_ref().map_or(Vec::new(), |effects| {
-                effects.iter().map(|effect| effect.build()).collect()
+                effects.iter().map(EffectBuilder::build).collect()
             }),
             self.position.into(),
             self.look_at.into(),
