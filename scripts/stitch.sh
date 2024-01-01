@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Check for at least one argument
+# Check for a single argument
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 /path/to/images"
     exit 1

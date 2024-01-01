@@ -27,11 +27,11 @@ materials:
     absorption: 0.2
     refractive_index: 1.5
 entities:
-  - material_id: grass
-    mesh_id: square
-    scale: 20
-    rotation: [0, 0, 45]
-    translation: [0, 0, -5]
+  # - material_id: grass
+  #   mesh_id: square
+  #   scale: 20
+  #   rotation: [0, 0, 45]
+  #   translation: [0, 0, -5]
   - material_id: metal
     mesh_id: body
     scale: 4.0
@@ -44,8 +44,7 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Diffuse [[10, 20, 40], 10]
-    effects: [!OutlineOverlay ]
+    engine: !Test [-100, -100, 100]
     position: [15, -15, 15]
     look_at: [0, 0, 0]
     field_of_view: 90
