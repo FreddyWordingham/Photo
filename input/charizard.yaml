@@ -11,6 +11,7 @@ settings:
 spectra:
   white: [0x000000ff, 0x444444ff, 0xffffffff]
   green: [0x000000ff, 0x004400ff, 0x00ff00ff]
+  leaves: [0x4a7c59ff, 0x004400ff]
   red: [0x330000ff, 0x770000ff, 0xaa1100ff, 0xdd1100ff]
   orange: [0xbb0000ff, 0xdd1100ff, 0xff3300ff, 0xff6600ff]
   fire: [0x000000ff, 0x440000ff, 0x880000ff, 0xcc0000ff, 0xff0000ff]
@@ -47,9 +48,9 @@ materials:
     absorption: 0.5
     refractive_index: 1.4
 entities:
-  # - material_id: grass
-  #   mesh_id: circle
-  #   scale: 10.0
+  - material_id: grass
+    mesh_id: circle
+    scale: 10.0
   - material_id: scales
     mesh_id: back
   - material_id: belly

@@ -1,7 +1,7 @@
 # 🌟 `Photo`: Precision Ray-Tracing
 
 <p align="center">
-  <img src="./assets/images/banner.png" alt="Photo logo" width="350" height="200">
+  <img src="./assets/images/tree-time.png" alt="Photo logo" width="200" height="200">
 </p>
 
 ## 🔭 Overview
@@ -16,8 +16,6 @@
 - 🎨 **Advanced Rendering Techniques**: Foregoing traditional textures, `Photo` uses colourmaps and detailed shadow calculations for lifelike images.
 - 🌐 **Flexible Scene Description**: Offers JSON-configured scenes and supports .obj files for model inputs, providing extensive creative liberty.
 
-Dive into `Photo` for a unique, CPU-focused ray-tracing experience that redefines photorealistic rendering.
-
 ## 🏎️ Supports
 
 - Ray-tracing
@@ -29,7 +27,12 @@ Dive into `Photo` for a unique, CPU-focused ray-tracing experience that redefine
   - Opaque
   - Reflective
   - Refractive
-  - Emissive
+- Many rendering engines
+- Post-processing effects
+
+<p align="center">
+  <img src="./assets/images/tree-colour.png" alt="Photo tree" width="500" height="500">
+</p>
 
 ## 🏁 Quickstart
 

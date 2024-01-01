@@ -46,12 +46,12 @@ impl Tile {
     #[inline]
     pub fn save(&self, directory: &Path) -> Result<(), Box<dyn Error>> {
         self.save_colour(&directory.join(format!(
-            "tile_{}_{}-colour.png",
+            "tile_{:06}_{:06}-colour.png",
             self.tile_index[0], self.tile_index[1]
         )))?;
 
         self.save_time(&directory.join(format!(
-            "tile_{}_{}-time.png",
+            "tile_{:06}_{:06}-time.png",
             self.tile_index[0], self.tile_index[1]
         )))
     }
@@ -91,9 +91,9 @@ impl Tile {
             .samples
             .iter()
             .flat_map(|sample| -> Result<[u8; 4], TryFromIntError> {
-                let red = u8::try_from((sample.time / 16).clamp(0, u8::MAX as u128))?;
-                let green = u8::try_from((sample.time / 32).clamp(0, u8::MAX as u128))?;
-                let blue = u8::try_from((sample.time / 64).clamp(0, u8::MAX as u128))?;
+                let red = u8::try_from((sample.time / (64 * 64)).clamp(0, u8::MAX as u128))?;
+                let green = u8::try_from((sample.time / (128 * 64)).clamp(0, u8::MAX as u128))?;
+                let blue = u8::try_from((sample.time / (256 * 64)).clamp(0, u8::MAX as u128))?;
                 Ok([red, green, blue, u8::MAX])
             })
             .flatten()

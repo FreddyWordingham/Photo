@@ -121,10 +121,10 @@ impl BvhBuilder {
                 self.indices.swap(i, j);
 
                 if j == 0 {
-                    println!(
-                        "MESH BVH WARNING j == 0, when count is {}",
-                        self.nodes[index].count
-                    );
+                    // println!(
+                    //     "MESH BVH WARNING j == 0, when count is {}",
+                    //     self.nodes[index].count
+                    // );
                     return current_depth;
                 }
 
