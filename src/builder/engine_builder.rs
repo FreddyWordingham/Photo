@@ -16,7 +16,7 @@ pub enum EngineBuilder {
     /// Surface normal.
     Normal,
     /// Ambient lighting.
-    Ambient([f64; 3]),
+    Ambient,
     /// Full [`Ray`]-traced lighting.
     Full([f64; 3]),
     /// Occlusion engine.
@@ -38,7 +38,7 @@ impl EngineBuilder {
     #[inline]
     pub fn validate(&self) -> Result<(), ValidationError> {
         match self {
-            Self::Stencil | Self::Normal => Ok(()),
+            Self::Stencil | Self::Normal | Self::Ambient => Ok(()),
             Self::Distance(width) => {
                 if !width.is_finite() {
                     return Err(ValidationError::new(&format!(
@@ -52,10 +52,7 @@ impl EngineBuilder {
                 }
                 Ok(())
             }
-            Self::Ambient(sun_position)
-            | Self::Full(sun_position)
-            | Self::Occlusion(sun_position)
-            | Self::Test(sun_position) => {
+            Self::Full(sun_position) | Self::Occlusion(sun_position) | Self::Test(sun_position) => {
                 if !sun_position.iter().all(|&x| x.is_finite()) {
                     return Err(ValidationError::new(&format!(
                         "Engine-Ambient sun position must be finite, but the value is {sun_position:?}!"
@@ -95,14 +92,9 @@ impl EngineBuilder {
                 engine::distance(settings, scene, ray, distance)
             }),
             Self::Normal => Box::new(engine::normal),
-            Self::Ambient(sun_position) => Box::new(move |settings, scene, ray| {
-                engine::ambient(
-                    settings,
-                    scene,
-                    ray,
-                    &Point3::new(sun_position[0], sun_position[1], sun_position[2]),
-                )
-            }),
+            Self::Ambient => {
+                Box::new(move |settings, scene, ray| engine::ambient(settings, scene, ray))
+            }
             Self::Diffuse((sun_position, max_shadow_distance)) => {
                 Box::new(move |settings, scene, ray| {
                     engine::diffuse(

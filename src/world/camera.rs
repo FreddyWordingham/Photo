@@ -109,7 +109,7 @@ impl Camera {
             "Pixel index must be within vertical resolution!"
         );
         debug_assert!(
-            pixel_index[1] < (self.num_tiles[0] * self.tile_resolution[1]),
+            pixel_index[1] < (self.num_tiles[1] * self.tile_resolution[1]),
             "Pixel index must be within horizontal resolution!"
         );
         debug_assert!(

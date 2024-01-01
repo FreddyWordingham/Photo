@@ -132,6 +132,7 @@
 
 // Modules
 pub mod builder;
+pub mod effects;
 pub mod engine;
 pub mod error;
 pub mod geometry;

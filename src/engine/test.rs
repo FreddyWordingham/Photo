@@ -57,7 +57,7 @@ pub fn test(
         let spectral = calculate_occlusion(settings, scene, &mut shadow_ray);
 
         let light_level =
-            ((ambient * 0.1) + (diffuse * 0.2) + (spectral * 0.7)).clamp(0.0, 1.0) as f32;
+            ((ambient * 1.0) + (diffuse * 0.0) + (spectral * 0.0)).clamp(0.0, 1.0) as f32;
         let shadow_level = calculate_local_occlusion(
             settings,
             scene,
@@ -66,13 +66,14 @@ pub fn test(
         );
 
         match contact.material {
-            Material::Diffuse { spectrum }
-            | Material::Reflective { spectrum, .. }
-            | Material::Refractive { spectrum, .. } => {
+            Material::Diffuse { spectrum } | Material::Reflective { spectrum, .. } => {
                 let base_colour = spectrum.sample(light_level as f32);
                 let spectrum =
                     Spectrum::new(vec![LinSrgba::new(0.0, 0.0, 0.0, 1.0), base_colour]).unwrap();
                 return spectrum.sample(shadow_level as f32);
+            }
+            Material::Refractive { spectrum, .. } => {
+                return spectrum.sample(light_level as f32);
             }
         }
     }
@@ -83,7 +84,18 @@ pub fn test(
 fn calculate_occlusion(settings: &Settings, scene: &Scene, shadow_ray: &mut Ray) -> f64 {
     let mut light = 1.0;
     while let Some(shadow_contact) = scene.ray_intersect_contact(shadow_ray) {
-        light *= 1.0 - shadow_contact.material.absorption();
+        match shadow_contact.material {
+            Material::Diffuse { .. } => {
+                light = 0.0;
+            }
+            Material::Reflective { absorption, .. } => {
+                light *= 1.0 - absorption;
+            }
+            Material::Refractive { absorption, .. } => {
+                light *= 1.0 - absorption;
+            }
+        }
+
         shadow_ray.travel(shadow_contact.distance + settings.smoothing_length);
 
         if light < settings.min_weight {

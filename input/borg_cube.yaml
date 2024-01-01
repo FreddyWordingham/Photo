@@ -12,7 +12,7 @@ spectra:
   white: [0xA9A9A9ff, 0xD3D3D3ff, 0xFFFFFFFF]
   brown: [0x654321ff, 0x8B4513ff, 0xCD853Fff]
   green: [0x006400ff, 0x008000ff, 0x00FF00ff]
-  blue: [0x0000CDff, 0x0000FFff, 0x6495EDff]
+  blue: [0x0000CDff, 0x0000FFff]
 meshes:
   square: ./assets/meshes/shapes/simple/square.obj
   body: ./assets/meshes/shapes/complex/borg_cube_body.obj
@@ -44,11 +44,11 @@ lights:
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Test [10, 10, 10]
+    engine: !Ambient
     position: [15, -15, 15]
     look_at: [0, 0, 0]
     field_of_view: 90
-    resolution: [128, 128]
+    resolution: [1280, 1280]
     num_tiles: [8, 8]
     super_samples_per_axis: 1
   # near_camera:
