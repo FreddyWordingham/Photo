@@ -48,9 +48,9 @@ materials:
     absorption: 0.5
     refractive_index: 1.4
 entities:
-  - material_id: grass
-    mesh_id: circle
-    scale: 10.0
+  # - material_id: grass
+  #   mesh_id: circle
+  #   scale: 10.0
   - material_id: scales
     mesh_id: back
   - material_id: belly
@@ -85,7 +85,14 @@ cameras:
     super_samples_per_axis: 2
   outline_camera:
     engine: !Ambient
-    effects: [!Outline ]
+    effects:
+      [
+        !Outline ,
+        !OutlineOverlay ,
+        !OutlineOverlay ,
+        !OutlineOverlay ,
+        !OutlineOverlay ,
+      ]
     position: [0, -200, 50]
     look_at: [0, 0, 0.5]
     field_of_view: 1.5

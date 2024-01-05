@@ -124,7 +124,7 @@ fn calculate_local_occlusion(
     shadow_cast_position: Point3<f64>,
     surface_normal: Unit<Vector3<f64>>,
 ) -> f64 {
-    let samples = 1001;
+    let samples = 101;
 
     let mut occlusion = 0.0;
     for n in 0..samples {

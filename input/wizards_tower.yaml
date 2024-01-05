@@ -73,32 +73,32 @@ entities:
     rotation: [0, 0, 230]
     translation: [0.6, -0.7, 0]
     scale: 0.03
-  - material_id: glass
-    translation: [-0.5, -0.4, 0.5]
-    rotation: [0, 25, 45]
-    mesh_id: icosphere
-    scale: 2.0
+  # - material_id: glass
+  #   translation: [-0.5, -0.4, 0.5]
+  #   rotation: [0, 25, 45]
+  #   mesh_id: icosphere
+  #   scale: 2.0
 lights:
   - position: [10, 30, 200]
     intensity: 1.0
     colour: 0xffffaaff
 cameras:
   main_camera:
-    engine: !Full [-10, -4, 5]
+    engine: !Ambient
     position: [-35, -50, 25]
     look_at: [0, 0, 0]
     field_of_view: 25
-    resolution: [600, 400]
+    resolution: [6000, 4000]
     num_tiles: [10, 10]
     super_samples_per_axis: 1
-  far_camera:
-    engine: !Full [-50, -10, 25]
-    position: [-100, -100, 100]
-    look_at: [0, 0, 0]
-    field_of_view: 5
-    resolution: [600, 400]
-    num_tiles: [10, 10]
-    super_samples_per_axis: 1
+  # far_camera:
+  #   engine: !Test [-50, -10, 25]
+  #   position: [-100, -100, 100]
+  #   look_at: [0, 0, 0]
+  #   field_of_view: 5
+  #   resolution: [6000, 4000]
+  #   num_tiles: [10, 10]
+  #   super_samples_per_axis: 1
   # behind_camera:
   #   engine: !Reflective [[-50, -10, 25], 100.0]
   #   position: [5, 10, 4]

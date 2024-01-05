@@ -20,6 +20,10 @@ pub fn outline(mut tile: Tile, overlay: bool) -> Tile {
         for col in 0..num_cols {
             let current_colour = tile.samples[[row, col]].colour;
 
+            if current_colour.alpha == 1.0 {
+                continue;
+            }
+
             let adjacent_colours = [
                 row.checked_sub(1).map(|r| tile.samples[[r, col]].colour),
                 (row + 1 < num_rows).then(|| tile.samples[[row + 1, col]].colour),
@@ -44,9 +48,7 @@ pub fn outline(mut tile: Tile, overlay: bool) -> Tile {
                 }
             }
         }
-    }
 
-    if overlay {
         tile
     } else {
         buffer_tile
