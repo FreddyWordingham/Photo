@@ -17,7 +17,7 @@ where
         let path_ref = path.as_ref();
 
         let file = File::create(path_ref).unwrap();
-        let ref mut writer = BufWriter::new(file);
+        let writer = BufWriter::new(file);
 
         let width = self.width();
         let height = self.height();
