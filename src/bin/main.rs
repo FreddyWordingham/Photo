@@ -1,6 +1,5 @@
 use ndarray::{Array2, Array3};
-
-use ndarray_image::Image;
+use ndarray_images::Image;
 
 #[allow(dead_code)]
 fn example_save_grayscale_image() {
