@@ -1,6 +1,4 @@
-use std::fs::File;
-use std::io::BufWriter;
-use std::path::Path;
+use std::{fs::File, io::BufWriter, path::Path};
 
 use ndarray::Array2;
 use num_traits::{Float, FromPrimitive};
