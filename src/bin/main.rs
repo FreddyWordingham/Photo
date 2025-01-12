@@ -12,12 +12,12 @@ fn example_save_grayscale_image() {
         image[[i, i]] = 1.0;
     }
 
-    image.save("image.png");
+    image.save("image.png").expect("Failed to save image");
 }
 
 #[allow(dead_code)]
 fn example_load_grayscale_image() {
-    let image: Array2<f32> = Array2::load("image.png");
+    let image: Array2<f32> = Array2::load("image.png").expect("Failed to load image");
     println!("Width: {}", image.width());
     println!("Height: {}", image.height());
     println!("{:?}", image);
@@ -37,12 +37,12 @@ fn example_save_color_image() {
         image[[i, i, 3]] = 1.0;
     }
 
-    image.save("image.png");
+    image.save("image.png").expect("Failed to save image");
 }
 
 #[allow(dead_code)]
 fn example_load_color_image() {
-    let image: Array3<f32> = Array3::load("image.png");
+    let image: Array3<f32> = Array3::load("image.png").expect("Failed to load image");
     println!("Width: {}", image.width());
     println!("Height: {}", image.height());
     println!("{:?}", image);
