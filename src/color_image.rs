@@ -11,7 +11,9 @@ where
     T: Float + FromPrimitive,
 {
     fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), ImageError> {
-        if !(self.shape()[2] == 3 || self.shape()[2] == 4) {
+        // Accept 2 (grayscale with alpha), 3 (RGB) or 4 (RGBA) channels.
+        let channels = self.shape()[2];
+        if !(channels == 2 || channels == 3 || channels == 4) {
             return Err(ImageError::InvalidImageShape);
         }
 
@@ -22,13 +24,10 @@ where
         let file = File::create(path)?;
         let writer = BufWriter::new(file);
 
-        let (height, width, channels) = (
-            self.shape()[0] as u32,
-            self.shape()[1] as u32,
-            self.shape()[2],
-        );
+        let (height, width) = (self.shape()[0] as u32, self.shape()[1] as u32);
 
         let color_type = match channels {
+            2 => ColorType::GrayscaleAlpha,
             3 => ColorType::Rgb,
             4 => ColorType::Rgba,
             _ => unreachable!(),
@@ -51,9 +50,9 @@ where
                     })
                     .collect::<Result<Vec<u8>, ImageError>>()
             })
-            .collect::<Result<Vec<Vec<u8>>, ImageError>>()? // Collect row-by-row
+            .collect::<Result<Vec<Vec<u8>>, ImageError>>()?
             .into_iter()
-            .flatten() // Flatten into a single Vec<u8>
+            .flatten()
             .collect();
 
         writer.write_image_data(&data)?;
@@ -71,6 +70,7 @@ where
         let channels = match info.color_type {
             ColorType::Rgb => 3,
             ColorType::Rgba => 4,
+            ColorType::GrayscaleAlpha => 2,
             _ => return Err(ImageError::UnsupportedColorType),
         };
 
