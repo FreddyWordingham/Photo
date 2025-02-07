@@ -1,6 +1,6 @@
 [package]
 name = "ndarray_images"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 description = "(De)serialize NDarrays to/from PNG"
 license = "MIT"
