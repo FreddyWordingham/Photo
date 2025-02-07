@@ -39,8 +39,9 @@ where
         encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header()?;
 
-        let data: Vec<u8> = self
-            .slice(s![..;-1, ..])
+        // Flip the image vertically.
+        let flipped = self.slice(s![..;-1, ..]);
+        let data: Vec<u8> = flipped
             .iter()
             .map(|&x| to_u8(x))
             .collect::<Result<_, _>>()?;
@@ -62,8 +63,10 @@ where
 
         let width = info.width as usize;
         let height = info.height as usize;
+        // For 8-bit grayscale, total bytes = width * height.
+        let total_bytes = width * height;
         let scale = T::from_u8(255).ok_or(ImageError::ConversionError)?;
-        let data: Vec<T> = buf[..info.buffer_size()]
+        let data: Vec<T> = buf[..total_bytes]
             .iter()
             .map(|&x| {
                 T::from_u8(x)
@@ -72,10 +75,11 @@ where
             })
             .collect::<Result<_, _>>()?;
 
-        Array2::from_shape_vec((height, width), data)
-            .map_err(|e| ImageError::ShapeError(e.to_string()))
+        let image = Array2::from_shape_vec((height, width), data)
+            .map_err(|e| ImageError::ShapeError(e.to_string()))?;
+        // Flip the image vertically to restore the original orientation.
+        Ok(image.slice(s![..;-1, ..]).to_owned())
     }
-
     fn width(&self) -> u32 {
         self.ncols() as u32
     }
@@ -114,8 +118,10 @@ where
         encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header()?;
 
-        let data: Vec<u8> = self
-            .slice(s![..;-1, .., ..])
+        // Flip the image vertically.
+        let flipped = self.slice(s![..;-1, .., ..]);
+        // For 8-bit images, each channel is 1 byte.
+        let data: Vec<u8> = flipped
             .iter()
             .map(|&x| to_u8(x))
             .collect::<Result<_, _>>()?;
@@ -140,8 +146,10 @@ where
 
         let width = info.width as usize;
         let height = info.height as usize;
+        // For 8-bit images, total bytes = width * height * channels.
+        let total_bytes = width * height * channels;
         let scale = T::from_u8(255).ok_or(ImageError::ConversionError)?;
-        let data: Vec<T> = buf[..info.buffer_size()]
+        let data: Vec<T> = buf[..total_bytes]
             .iter()
             .map(|&x| {
                 T::from_u8(x)
@@ -150,9 +158,10 @@ where
             })
             .collect::<Result<_, _>>()?;
 
-        let arr = Array3::from_shape_vec((height, width, channels), data)
+        let array = Array3::from_shape_vec((height, width, channels), data)
             .map_err(|e| ImageError::ShapeError(e.to_string()))?;
-        Ok(arr.slice(s![..;-1, .., ..]).to_owned())
+        // Flip the image vertically to correct the orientation.
+        Ok(array.slice(s![..;-1, .., ..]).to_owned())
     }
 
     fn width(&self) -> u32 {
