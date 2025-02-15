@@ -223,7 +223,7 @@ impl std::fmt::Display for ImageRGBA<u8> {
                 let g = pixel[1];
                 let b = pixel[2];
                 let a = pixel[3];
-                write!(f, "\x1b[48;2;{r};{g};{b}m{a:3}\x1b[0m")?;
+                write!(f, "\x1b[48;2;{r};{g};{b};{a}m  \x1b[0m")?;
             }
             writeln!(f)?;
         }
