@@ -71,9 +71,9 @@ where
         + Div<T, Output = C>
         + Merge<T>,
 {
-    pub fn new(colour_hexes: &[String]) -> Self {
+    pub fn new(colour_hexes: &[&str]) -> Self {
         assert!(!colour_hexes.is_empty(), "No colours provided");
-        let colours: Vec<C> = colour_hexes.iter().map(|hex| C::from_hex(hex)).collect();
+        let colours: Vec<C> = colour_hexes.iter().map(|&hex| C::from_hex(hex)).collect();
         let num_colours = colours.len();
         let gradient = Linear::builder()
             .elements(colours)
