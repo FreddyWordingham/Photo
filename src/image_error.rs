@@ -18,4 +18,13 @@ pub enum ImageError {
     ConversionError,
     #[error("Shape mismatch: {0}")]
     ShapeError(String),
+    #[error("{0}")]
+    MessageError(String),
+}
+
+impl ImageError {
+    /// Creates a new ImageError from a custom message.
+    pub fn from_message(message: String) -> Self {
+        ImageError::MessageError(message)
+    }
 }
