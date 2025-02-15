@@ -21,8 +21,7 @@ impl ImageGA<u8> {
     pub fn empty(width: usize, height: usize) -> Self {
         debug_assert!(width > 0);
         debug_assert!(height > 0);
-        let mut data = Array3::zeros((height, width, 2));
-        data.slice_mut(s![.., .., 1]).fill(255);
+        let data = Array3::zeros((height, width, 2));
         Self { data }
     }
 

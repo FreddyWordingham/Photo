@@ -21,8 +21,7 @@ impl ImageRGBA<u8> {
     /// The RGB channels are zeroed and the alpha channel is set to 255.
     pub fn empty(width: usize, height: usize) -> Self {
         debug_assert!(width > 0 && height > 0);
-        let mut data = Array3::zeros((height, width, 4));
-        data.slice_mut(s![.., .., 3]).fill(255);
+        let data = Array3::zeros((height, width, 4));
         Self { data }
     }
 

@@ -21,8 +21,7 @@ impl ImageRGBA<f32> {
     /// The RGB channels are zeroed and the alpha channel is set to 1.0.
     pub fn empty(width: usize, height: usize) -> Self {
         debug_assert!(width > 0 && height > 0);
-        let mut data = Array3::zeros((height, width, 4));
-        data.slice_mut(s![.., .., 3]).fill(1.0);
+        let data = Array3::zeros((height, width, 4));
         Self { data }
     }
 
@@ -231,7 +230,7 @@ impl std::fmt::Display for ImageRGBA<f32> {
                 let g = (pixel[1].clamp(0.0, 1.0) * 255.0) as u8;
                 let b = (pixel[2].clamp(0.0, 1.0) * 255.0) as u8;
                 let a = (pixel[3].clamp(0.0, 1.0) * 255.0) as u8;
-                write!(f, "\x1b[48;2;{r};{g};{b}m{a}\x1b[0m")?;
+                write!(f, "\x1b[48;2;{r};{g};{b};{a}m  \x1b[0m")?;
             }
             writeln!(f)?;
         }

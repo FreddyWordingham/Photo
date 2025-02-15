@@ -32,8 +32,7 @@ impl<T: NormFloat> ImageGA<T> {
     /// Creates an empty image (all zeros) with alpha set to one.
     pub fn empty(width: usize, height: usize) -> Self {
         debug_assert!(width > 0 && height > 0);
-        let mut data = Array3::zeros((height, width, 2));
-        data.slice_mut(s![.., .., 1]).fill(T::one());
+        let data = Array3::zeros((height, width, 2));
         Self { data }
     }
 
