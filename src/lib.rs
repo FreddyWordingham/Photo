@@ -1,9 +1,11 @@
+mod image;
 mod image_error;
 mod image_g;
 mod image_ga;
 mod image_rgb;
 mod image_rgba;
 
+pub use image::Image;
 pub use image_error::ImageError;
 pub use image_g::ImageG;
 pub use image_ga::ImageGA;

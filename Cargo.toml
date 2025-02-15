@@ -8,5 +8,6 @@ license = "MIT"
 [dependencies]
 ndarray = "0.16.1"
 num-traits = "0.2.19"
+palette = "0.7.6"
 png = "0.17.16"
 thiserror = "2.0.11"
