@@ -1,4 +1,4 @@
-use ndarray::{s, Array2, Axis};
+use ndarray::{s, Array2};
 use palette::LinSrgba;
 use png::{ColorType, Decoder, Encoder};
 use std::{
@@ -31,16 +31,6 @@ impl Image<LinSrgba> {
         debug_assert!(height > 0);
         let data = Array2::from_elem((height, width), value);
         Self { data }
-    }
-
-    /// Returns the width of the image.
-    pub fn width(&self) -> usize {
-        self.data.ncols()
-    }
-
-    /// Returns the height of the image.
-    pub fn height(&self) -> usize {
-        self.data.nrows()
     }
 
     /// Get the value of a component at the specified position.
@@ -77,40 +67,6 @@ impl Image<LinSrgba> {
     /// Set the value of a pixel at the specified position.
     pub fn set_pixel(&mut self, coords: [usize; 2], pixel: LinSrgba) {
         self.data[[coords[1], coords[0]]] = pixel;
-    }
-
-    /// Transposes the image.
-    pub fn transpose(&mut self) {
-        self.data = self.data.t().to_owned();
-    }
-
-    /// Flips the image vertically.
-    pub fn flip_vertical(&mut self) {
-        self.data.invert_axis(Axis(0));
-    }
-
-    /// Flips the image horizontally.
-    pub fn flip_horizontal(&mut self) {
-        self.data.invert_axis(Axis(1));
-    }
-
-    /// Rotates the image 90 degrees clockwise (right).
-    ///
-    /// For square images, the rotation is done in-place for performance.
-    /// For non-square images, a new array is allocated.
-    pub fn rotate_clockwise(&mut self) {
-        self.data = self.data.t().slice(s![.., ..;-1]).to_owned();
-    }
-
-    /// Rotates the image 90 degrees anticlockwise (left).
-    pub fn rotate_anticlockwise(&mut self) {
-        self.data = self.data.t().slice(s![..;-1, ..]).to_owned();
-    }
-
-    /// Rotates the image 180 degrees.
-    pub fn rotate_180(&mut self) {
-        self.data.invert_axis(Axis(0));
-        self.data.invert_axis(Axis(1));
     }
 
     /// Saves the LinSrgba image to the specified path as a PNG RGBA image.
