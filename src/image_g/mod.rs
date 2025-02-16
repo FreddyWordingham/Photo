@@ -9,7 +9,7 @@ use std::{
 use crate::{colour_map::ColorFromHex, ColourMap, Image};
 
 /// An opaque grayscale image.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ImageG<T> {
     /// Image data stored in row-major order.
     pub data: Array2<T>,

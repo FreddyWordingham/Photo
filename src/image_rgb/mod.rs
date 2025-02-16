@@ -2,7 +2,7 @@ use ndarray::{arr1, s, stack, Array2, Array3, Axis};
 use num_traits::{One, Zero};
 
 /// An opaque colour image.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ImageRGB<T> {
     /// Image data stored in row-major order.
     pub data: Array3<T>,
