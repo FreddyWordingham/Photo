@@ -19,11 +19,15 @@ where
 {
     fn from_hex(hex: &str) -> Self {
         let hex = hex.trim_start_matches('#');
-        let r = u8::from_str_radix(&hex[0..2], 16).expect(&format!("Invalid hex code: {}", hex));
-        let g = u8::from_str_radix(&hex[2..4], 16).expect(&format!("Invalid hex code: {}", hex));
-        let b = u8::from_str_radix(&hex[4..6], 16).expect(&format!("Invalid hex code: {}", hex));
+        let r = u8::from_str_radix(&hex[0..2], 16)
+            .unwrap_or_else(|_| panic!("Invalid hex code: {}", hex));
+        let g = u8::from_str_radix(&hex[2..4], 16)
+            .unwrap_or_else(|_| panic!("Invalid hex code: {}", hex));
+        let b = u8::from_str_radix(&hex[4..6], 16)
+            .unwrap_or_else(|_| panic!("Invalid hex code: {}", hex));
         let a = if hex.len() == 8 {
-            u8::from_str_radix(&hex[6..8], 16).expect(&format!("Invalid hex code: {}", hex))
+            u8::from_str_radix(&hex[6..8], 16)
+                .unwrap_or_else(|_| panic!("Invalid hex code: {}", hex))
         } else {
             255
         };
@@ -43,9 +47,12 @@ where
 {
     fn from_hex(hex: &str) -> Self {
         let hex = hex.trim_start_matches('#');
-        let r = u8::from_str_radix(&hex[0..2], 16).expect(&format!("Invalid hex code: {}", hex));
-        let g = u8::from_str_radix(&hex[2..4], 16).expect(&format!("Invalid hex code: {}", hex));
-        let b = u8::from_str_radix(&hex[4..6], 16).expect(&format!("Invalid hex code: {}", hex));
+        let r = u8::from_str_radix(&hex[0..2], 16)
+            .unwrap_or_else(|_| panic!("Invalid hex code: {}", hex));
+        let g = u8::from_str_radix(&hex[2..4], 16)
+            .unwrap_or_else(|_| panic!("Invalid hex code: {}", hex));
+        let b = u8::from_str_radix(&hex[4..6], 16)
+            .unwrap_or_else(|_| panic!("Invalid hex code: {}", hex));
         let from_255 = T::from_u8(255).expect("Conversion failed");
         let r = T::from_u8(r).expect("Conversion failed") / from_255;
         let g = T::from_u8(g).expect("Conversion failed") / from_255;
