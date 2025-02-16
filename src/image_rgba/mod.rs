@@ -1,5 +1,5 @@
 use ndarray::{arr1, s, stack, Array2, Array3, Axis};
-use num_traits::{One, Zero};
+use num_traits::Zero;
 
 /// A colour image with transparency.
 #[derive(Debug, Clone, PartialEq)]
@@ -8,7 +8,7 @@ pub struct ImageRGBA<T> {
     pub data: Array3<T>,
 }
 
-impl<T: Copy + PartialOrd + Zero + One> ImageRGBA<T> {
+impl<T: Copy + PartialOrd + Zero> ImageRGBA<T> {
     /// Creates a new ImageRGBA from the provided data.
     pub fn new(data: Array3<T>) -> Self {
         debug_assert!(data.dim().0 > 0);

@@ -1,5 +1,5 @@
 use ndarray::{arr1, s, stack, Array2, Array3, Axis};
-use num_traits::{One, Zero};
+use num_traits::Zero;
 
 /// A grayscale image with transparency.
 #[derive(Debug, Clone, PartialEq)]
@@ -8,12 +8,11 @@ pub struct ImageGA<T> {
     pub data: Array3<T>,
 }
 
-impl<T: Copy + PartialOrd + Zero + One> ImageGA<T> {
+impl<T: Copy + PartialOrd + Zero> ImageGA<T> {
     /// Creates a new ImageGA from the provided data.
     pub fn new(data: Array3<T>) -> Self {
         debug_assert!(data.dim().0 > 0 && data.dim().1 > 0);
         debug_assert!(data.dim().2 == 2);
-        debug_assert!(data.iter().all(|&v| v >= T::zero() && v <= T::one()));
         Self { data }
     }
 
@@ -27,7 +26,6 @@ impl<T: Copy + PartialOrd + Zero + One> ImageGA<T> {
     /// Creates an image filled with a constant value.
     pub fn filled(width: usize, height: usize, value: [T; 2]) -> Self {
         debug_assert!(width > 0 && height > 0);
-        debug_assert!(value.iter().all(|&v| v >= T::zero() && v <= T::one()));
         let mut data = Array3::zeros((height, width, 2));
         data.slice_mut(s![.., .., 0]).fill(value[0]);
         data.slice_mut(s![.., .., 1]).fill(value[1]);

@@ -1,6 +1,6 @@
 use enterpolation::Merge;
 use ndarray::{s, Array2, Axis};
-use num_traits::{Float, FromPrimitive, One, Zero};
+use num_traits::{Float, FromPrimitive, Zero};
 use std::{
     fmt::Debug,
     ops::{Add, Div, Mul, Sub},
@@ -15,12 +15,11 @@ pub struct ImageG<T> {
     pub data: Array2<T>,
 }
 
-impl<T: Copy + PartialOrd + Zero + One> ImageG<T> {
+impl<T: Copy + PartialOrd + Zero> ImageG<T> {
     /// Creates a new ImageG from the provided data.
     pub fn new(data: Array2<T>) -> Self {
         debug_assert!(data.ncols() > 0);
         debug_assert!(data.nrows() > 0);
-        debug_assert!(data.iter().all(|&v| v >= T::zero() && v <= T::one()));
         Self { data }
     }
 
@@ -36,7 +35,6 @@ impl<T: Copy + PartialOrd + Zero + One> ImageG<T> {
     pub fn filled(width: usize, height: usize, value: [T; 1]) -> Self {
         debug_assert!(width > 0);
         debug_assert!(height > 0);
-        debug_assert!(value[0] >= T::zero() && value[0] <= T::one());
         let data = Array2::from_elem((height, width), value[0]);
         Self { data }
     }
@@ -124,6 +122,26 @@ impl<T: Copy + PartialOrd + Zero + One> ImageG<T> {
         }
         Image { data }
     }
+
+    /// Extract a portion of the image.
+    pub fn extract(&self, x: usize, y: usize, width: usize, height: usize) -> ImageG<T> {
+        Self::new(self.data.slice(s![y..y + height, x..x + width]).to_owned())
+    }
+
+    // /// Split the image into equal-sized tiles.
+    // pub fn tiles(self, tile_width: usize, tile_height: usize) -> Vec<ImageG<T>> {
+    //     let mut tiles = Vec::new();
+    //     for y in (0..self.height()).step_by(tile_height) {
+    //         for x in (0..self.width()).step_by(tile_width) {
+    //             let tile = self
+    //                 .data
+    //                 .slice(s![y..y + tile_height, x..x + tile_width])
+    //                 .to_owned();
+    //             tiles.push(ImageG { data: tile });
+    //         }
+    //     }
+    //     tiles
+    // }
 }
 
 mod float;
