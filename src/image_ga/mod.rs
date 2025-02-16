@@ -62,7 +62,6 @@ impl<T: Copy + PartialOrd + Zero + One> ImageGA<T> {
     /// Sets the value of a component at the specified position.
     pub fn set_component(&mut self, coords: [usize; 2], component: usize, value: T) {
         debug_assert!(component < 2);
-        debug_assert!(value >= T::zero() && value <= T::one());
         self.data[[coords[1], coords[0], component]] = value;
     }
 
@@ -78,7 +77,6 @@ impl<T: Copy + PartialOrd + Zero + One> ImageGA<T> {
 
     /// Sets the pixel at the specified position.
     pub fn set_pixel(&mut self, coords: [usize; 2], pixel: [T; 2]) {
-        debug_assert!(pixel.iter().all(|&v| v >= T::zero() && v <= T::one()));
         let mut view = self.data.slice_mut(s![coords[1], coords[0], ..]);
         view.assign(&arr1(&pixel));
     }

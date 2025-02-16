@@ -2,7 +2,7 @@ use ndarray_images::{ColourMap, ImageG};
 use palette::LinSrgba;
 
 const INPUT_DIR: &str = "input";
-const IMAGE_NAME: &str = "grayscale.png";
+const IMAGE_NAME: &str = "grayscale-u8.png";
 
 fn main() {
     let hex_colours = vec!["#FF000000", "#00FF00", "#0000FF"];

@@ -59,7 +59,6 @@ impl<T: Copy + PartialOrd + Zero + One> ImageG<T> {
     /// Sets the value of a component at the specified position.
     pub fn set_component(&mut self, coords: [usize; 2], component: usize, value: T) {
         debug_assert!(component < 1);
-        debug_assert!(value >= T::zero() && value <= T::one());
         self.data[[coords[1], coords[0]]] = value;
     }
 
@@ -70,7 +69,6 @@ impl<T: Copy + PartialOrd + Zero + One> ImageG<T> {
 
     /// Sets the value of a pixel at the specified position.
     pub fn set_pixel(&mut self, coords: [usize; 2], pixel: [T; 1]) {
-        debug_assert!(pixel[0] >= T::zero() && pixel[0] <= T::one());
         self.data[[coords[1], coords[0]]] = pixel[0];
     }
 

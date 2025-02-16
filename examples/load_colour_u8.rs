@@ -1,7 +1,7 @@
 use ndarray_images::ImageRGB;
 
 const INPUT_DIR: &str = "input";
-const IMAGE_NAME: &str = "colour.png";
+const IMAGE_NAME: &str = "colour-u8.png";
 
 fn main() {
     let filepath = format!("{}/{}", INPUT_DIR, IMAGE_NAME);
