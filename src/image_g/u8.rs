@@ -1,6 +1,7 @@
 use ndarray::{s, Array2};
 use png::{ColorType, Decoder, Encoder};
 use std::{
+    fmt::{Display, Formatter},
     fs::{create_dir_all, File},
     io::BufWriter,
     path::Path,
@@ -99,9 +100,9 @@ impl ImageG<u8> {
     }
 }
 
-impl std::fmt::Display for ImageG<u8> {
+impl Display for ImageG<u8> {
     /// Displays the image in the terminal.
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in self.data.outer_iter().rev() {
             for &value in row {
                 write!(f, "\x1b[48;2;{0};{0};{0}m  \x1b[0m", value)?;

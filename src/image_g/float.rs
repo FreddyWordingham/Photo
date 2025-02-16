@@ -1,24 +1,13 @@
 use ndarray::{s, Array2};
-use num_traits::{Float, NumCast};
 use png::{ColorType, Decoder, Encoder};
 use std::{
+    fmt::{Display, Formatter},
     fs::{create_dir_all, File},
     io::BufWriter,
     path::Path,
 };
 
-use crate::{ImageError, ImageG};
-
-/// Trait to convert normalized values ([0,1]) to u8.
-pub trait NormFloat: Float + NumCast {
-    fn to_u8(self) -> u8 {
-        let clamped = self.max(Self::zero()).min(Self::one());
-        NumCast::from(clamped * NumCast::from(255).unwrap()).unwrap()
-    }
-}
-
-impl NormFloat for f32 {}
-impl NormFloat for f64 {}
+use crate::{ImageError, ImageG, NormFloat};
 
 impl<T: NormFloat> ImageG<T> {
     /// Saves the image as a PNG in grayscale format.
@@ -100,8 +89,8 @@ impl<T: NormFloat> ImageG<T> {
     }
 }
 
-impl<T: NormFloat> std::fmt::Display for ImageG<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<T: NormFloat> Display for ImageG<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in self.data.outer_iter().rev() {
             for &value in row {
                 let pixel = value.to_u8();

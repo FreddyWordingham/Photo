@@ -1,6 +1,7 @@
-use ndarray::{arr1, s, stack, Array2, Array3, Axis};
+use ndarray::{s, Array3};
 use png::{ColorType, Decoder, Encoder};
 use std::{
+    fmt::{Display, Formatter},
     fs::{create_dir_all, File},
     io::BufWriter,
     path::Path,
@@ -9,124 +10,6 @@ use std::{
 use crate::{ImageError, ImageGA};
 
 impl ImageGA<u8> {
-    /// Creates a new ImageGA from the provided data.
-    pub fn new(data: Array3<u8>) -> Self {
-        debug_assert!(data.dim().0 > 0);
-        debug_assert!(data.dim().1 > 0);
-        debug_assert!(data.dim().2 == 2);
-        Self { data }
-    }
-
-    /// Creates an empty (all zeros) image with the given dimensions.
-    pub fn empty(width: usize, height: usize) -> Self {
-        debug_assert!(width > 0);
-        debug_assert!(height > 0);
-        let data = Array3::zeros((height, width, 2));
-        Self { data }
-    }
-
-    /// Creates an image filled with a constant value.
-    pub fn filled(width: usize, height: usize, value: [u8; 2]) -> Self {
-        debug_assert!(width > 0);
-        debug_assert!(height > 0);
-        let mut data = Array3::zeros((height, width, 2));
-        data.slice_mut(s![.., .., 0]).fill(value[0]);
-        data.slice_mut(s![.., .., 1]).fill(value[1]);
-        Self { data }
-    }
-
-    /// Creates an ImageGA from two grayscale layers.
-    pub fn from_layers(layers: [Array2<u8>; 2]) -> Self {
-        // Ensure layers have matching dimensions.
-        debug_assert!(layers.iter().all(|layer| layer.ncols() > 0));
-        debug_assert!(layers.iter().all(|layer| layer.nrows() > 0));
-        debug_assert!(layers.iter().all(|layer| layer.dim() == layers[0].dim()));
-        let data =
-            stack(Axis(2), &[layers[0].view(), layers[1].view()]).expect("Failed to stack layers");
-        Self { data }
-    }
-
-    /// Returns the width of the image.
-    pub fn width(&self) -> usize {
-        self.data.dim().1
-    }
-
-    /// Returns the height of the image.
-    pub fn height(&self) -> usize {
-        self.data.dim().0
-    }
-
-    /// Get the value of a component at the specified position.
-    pub fn get_component(&self, coords: [usize; 2], component: usize) -> u8 {
-        debug_assert!(component < 2);
-        self.data[[coords[1], coords[0], component]]
-    }
-
-    /// Set the value of a component at the specified position.
-    pub fn set_component(&mut self, coords: [usize; 2], component: usize, value: u8) {
-        debug_assert!(component < 1);
-        self.data[[coords[1], coords[0], component]] = value;
-    }
-
-    /// Get the value of a pixel at the specified position.
-    pub fn get_pixel(&self, coords: [usize; 2]) -> [u8; 2] {
-        let pixel_slice = self.data.slice(s![coords[1], coords[0], ..]);
-        pixel_slice
-            .as_slice()
-            .expect("Pixel slice is not contiguous")
-            .try_into()
-            .expect("Slice length mismatch")
-    }
-
-    /// Set the value of a pixel at the specified position.
-    pub fn set_pixel(&mut self, coords: [usize; 2], pixel: [u8; 2]) {
-        let mut view = self.data.slice_mut(s![coords[1], coords[0], ..]);
-        view.assign(&arr1(&pixel));
-    }
-
-    /// Get a component layer of the image.
-    pub fn get_layer(&self, component: usize) -> Array2<u8> {
-        debug_assert!(component < 2);
-        self.data.slice(s![.., .., component]).to_owned()
-    }
-
-    /// Transposes the image.
-    pub fn transpose(&mut self) {
-        self.data = self.data.clone().permuted_axes([1, 0, 2]).to_owned();
-    }
-
-    /// Flips the image vertically.
-    pub fn flip_vertical(&mut self) {
-        self.data.invert_axis(Axis(0));
-    }
-
-    /// Flips the image horizontally.
-    pub fn flip_horizontal(&mut self) {
-        self.data.invert_axis(Axis(1));
-    }
-
-    /// Rotates the image 90 degrees clockwise.
-    /// This is achieved by transposing the image and then flipping vertically.
-    pub fn rotate_clockwise(&mut self) {
-        let mut new_data = self.data.clone().permuted_axes([1, 0, 2]).to_owned();
-        new_data.invert_axis(Axis(1));
-        self.data = new_data;
-    }
-
-    /// Rotates the image 90 degrees anticlockwise.
-    /// This is achieved by transposing the image and then flipping horizontally.
-    pub fn rotate_anticlockwise(&mut self) {
-        let mut new_data = self.data.clone().permuted_axes([1, 0, 2]).to_owned();
-        new_data.invert_axis(Axis(0));
-        self.data = new_data;
-    }
-
-    /// Rotates the image 180 degrees by flipping both axes.
-    pub fn rotate_180(&mut self) {
-        self.data.invert_axis(Axis(0));
-        self.data.invert_axis(Axis(1));
-    }
-
     /// Saves the grayscale + alpha image to the specified path in PNG format.
     ///
     /// # Errors
@@ -221,9 +104,9 @@ impl ImageGA<u8> {
     }
 }
 
-impl std::fmt::Display for ImageGA<u8> {
+impl Display for ImageGA<u8> {
     /// Displays the image in the terminal.
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in self.data.outer_iter().rev() {
             for pixel in row.outer_iter() {
                 let value = pixel[0];
