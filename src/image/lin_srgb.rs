@@ -10,29 +10,6 @@ use std::{
 use crate::{Image, ImageError};
 
 impl Image<LinSrgb> {
-    /// Creates a new ImageG from the provided data.
-    pub fn new(data: Array2<LinSrgb>) -> Self {
-        debug_assert!(data.ncols() > 0);
-        debug_assert!(data.nrows() > 0);
-        Self { data }
-    }
-
-    /// Creates an empty (all zeros) image with the given dimensions.
-    pub fn empty(width: usize, height: usize) -> Self {
-        debug_assert!(width > 0);
-        debug_assert!(height > 0);
-        let data = Array2::default((height, width));
-        Self { data }
-    }
-
-    /// Creates an image filled with a constant value.
-    pub fn filled(width: usize, height: usize, value: LinSrgb) -> Self {
-        debug_assert!(width > 0);
-        debug_assert!(height > 0);
-        let data = Array2::from_elem((height, width), value);
-        Self { data }
-    }
-
     /// Get the value of a component at the specified position.
     pub fn get_component(&self, coords: [usize; 2], component: usize) -> f32 {
         debug_assert!(component < 3);
@@ -55,16 +32,6 @@ impl Image<LinSrgb> {
             2 => colour.blue = value,
             _ => unreachable!(),
         }
-    }
-
-    /// Get the value of a pixel at the specified position.
-    pub fn get_pixel(&self, coords: [usize; 2]) -> LinSrgb {
-        self.data[[coords[1], coords[0]]]
-    }
-
-    /// Set the value of a pixel at the specified position.
-    pub fn set_pixel(&mut self, coords: [usize; 2], pixel: LinSrgb) {
-        self.data[[coords[1], coords[0]]] = pixel;
     }
 
     /// Saves the LinSrgb image to the specified path as a PNG RGB image.

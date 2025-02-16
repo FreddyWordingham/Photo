@@ -1,5 +1,6 @@
 use ndarray::{arr1, s, stack, Array2, Array3, Axis};
 use num_traits::Zero;
+use std::{collections::HashMap, hash::Hash};
 
 /// A colour image with transparency.
 #[derive(Debug, Clone, PartialEq)]
@@ -131,6 +132,73 @@ impl<T: Copy + PartialOrd + Zero> ImageRGBA<T> {
     pub fn rotate_180(&mut self) {
         self.data.invert_axis(Axis(0));
         self.data.invert_axis(Axis(1));
+    }
+
+    /// Extract a portion of the image.
+    pub fn extract(&self, start: [usize; 2], size: [usize; 2]) -> ImageRGBA<T> {
+        debug_assert!(start[0] + size[0] <= self.width());
+        debug_assert!(start[1] + size[1] <= self.height());
+        debug_assert!(size.iter().all(|&s| s > 0));
+        Self::new(
+            self.data
+                .slice(s![
+                    start[1]..start[1] + size[1],
+                    start[0]..start[0] + size[0],
+                    ..
+                ])
+                .to_owned(),
+        )
+    }
+
+    /// Extract a tile from the image.
+    pub fn extract_tile(&self, tile_size: [usize; 2], tile_index: [usize; 2]) -> ImageRGBA<T> {
+        debug_assert!(tile_size.iter().all(|&s| s > 0));
+        debug_assert!(tile_index[0] < self.width() / tile_size[0]);
+        debug_assert!(tile_index[1] < self.height() / tile_size[1]);
+        self.extract(
+            [tile_index[0] * tile_size[0], tile_index[1] * tile_size[1]],
+            tile_size,
+        )
+    }
+
+    /// Split the image into equal-sized tiles.
+    pub fn tiles(&self, tile_size: [usize; 2]) -> Array2<ImageRGBA<T>> {
+        let width = self.width();
+        let height = self.height();
+
+        debug_assert!(width % tile_size[0] == 0);
+        debug_assert!(height % tile_size[1] == 0);
+
+        let tile_rows = height / tile_size[1];
+        let tile_cols = width / tile_size[0];
+
+        Array2::from_shape_fn((tile_rows, tile_cols), |(row, col)| {
+            let y = row * tile_size[1];
+            let x = col * tile_size[0];
+            let tile = self
+                .data
+                .slice(s![y..y + tile_size[1], x..x + tile_size[0], ..])
+                .to_owned();
+            ImageRGBA { data: tile }
+        })
+    }
+}
+
+impl<T: Copy + PartialOrd + Zero + Eq + Hash> ImageRGBA<T> {
+    /// Create a list of all unique tiles in the image and their frequency.
+    pub fn unique_tiles(&self, tile_size: [usize; 2]) -> Vec<(ImageRGBA<T>, usize)> {
+        let tiles = self.tiles(tile_size);
+        let mut freq_map: HashMap<Vec<T>, (ImageRGBA<T>, usize)> = HashMap::new();
+
+        for tile in tiles.iter() {
+            let key: Vec<T> = tile.data.iter().copied().collect();
+            freq_map
+                .entry(key)
+                .and_modify(|(_, count)| *count += 1)
+                .or_insert((tile.clone(), 1));
+        }
+
+        freq_map.into_iter().map(|(_, v)| v).collect()
     }
 }
 
