@@ -1,4 +1,4 @@
-use ndarray_images::ImageGA;
+use photo::ImageGA;
 
 const OUTPUT_DIR: &str = "output";
 const IMAGE_NAME: &str = "grayscale_alpha-f64.png";

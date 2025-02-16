@@ -1,4 +1,4 @@
-use ndarray_images::ImageRGB;
+use photo::ImageRGB;
 
 const INPUT_DIR: &str = "input";
 const IMAGE_NAME: &str = "colour-u8.png";

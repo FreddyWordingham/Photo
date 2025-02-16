@@ -1,4 +1,4 @@
-use ndarray_images::ImageRGB;
+use photo::ImageRGB;
 
 const OUTPUT_DIR: &str = "output";
 const IMAGE_NAME: &str = "colour-f32.png";

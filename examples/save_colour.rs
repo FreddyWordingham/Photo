@@ -1,5 +1,5 @@
-use ndarray_images::Image;
 use palette::LinSrgb;
+use photo::Image;
 
 const OUTPUT_DIR: &str = "output";
 const IMAGE_NAME: &str = "colour-linsrgb.png";

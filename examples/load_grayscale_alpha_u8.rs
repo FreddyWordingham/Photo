@@ -1,4 +1,4 @@
-use ndarray_images::ImageGA;
+use photo::ImageGA;
 
 const INPUT_DIR: &str = "input";
 const IMAGE_NAME: &str = "grayscale_alpha-u8.png";

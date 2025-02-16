@@ -1,4 +1,4 @@
-use ndarray_images::ImageG;
+use photo::ImageG;
 
 const OUTPUT_DIR: &str = "output";
 const IMAGE_NAME: &str = "grayscale-u8.png";
