@@ -1,6 +1,7 @@
 use ndarray::{s, Array2, Axis};
 
 /// An image with a complete pixel in each element.
+#[derive(Debug, Clone)]
 pub struct Image<T> {
     /// Image data stored in row-major order.
     pub data: Array2<T>,
