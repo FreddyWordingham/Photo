@@ -87,7 +87,7 @@ impl ImageRGBA<u8> {
 
 impl Display for ImageRGBA<u8> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for row in self.data.outer_iter().rev() {
+        for row in self.data.outer_iter() {
             for pixel in row.outer_iter() {
                 let r = pixel[0];
                 let g = pixel[1];

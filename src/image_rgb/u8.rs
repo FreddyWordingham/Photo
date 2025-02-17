@@ -87,7 +87,7 @@ impl ImageRGB<u8> {
 
 impl Display for ImageRGB<u8> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for row in self.data.outer_iter().rev() {
+        for row in self.data.outer_iter() {
             for pixel in row.outer_iter() {
                 let red = pixel[0];
                 let green = pixel[1];

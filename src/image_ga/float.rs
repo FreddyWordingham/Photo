@@ -89,7 +89,7 @@ impl<T: NormFloat> ImageGA<T> {
 
 impl<T: NormFloat> Display for ImageGA<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for row in self.data.outer_iter().rev() {
+        for row in self.data.outer_iter() {
             for pixel in row.outer_iter() {
                 let value = (pixel[0].clamp(T::zero(), T::one()) * T::from(255).unwrap()).round();
                 let alpha = (pixel[1].clamp(T::zero(), T::one()) * T::from(255).unwrap()).round();

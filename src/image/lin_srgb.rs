@@ -123,7 +123,7 @@ impl Image<LinSrgb> {
 
 impl Display for Image<LinSrgb> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for row in self.data.outer_iter().rev() {
+        for row in self.data.outer_iter() {
             for pixel in row.iter() {
                 let red = (pixel.red.clamp(0.0, 1.0) * 255.0) as u8;
                 let green = (pixel.green.clamp(0.0, 1.0) * 255.0) as u8;

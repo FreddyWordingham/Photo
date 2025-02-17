@@ -89,7 +89,7 @@ impl<T: NormFloat> ImageRGBA<T> {
 
 impl<T: NormFloat> Display for ImageRGBA<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for row in self.data.outer_iter().rev() {
+        for row in self.data.outer_iter() {
             for pixel in row.outer_iter() {
                 let multiplier = T::from(255).unwrap();
                 let red = pixel[0].max(T::zero()).min(T::one()) * multiplier;
