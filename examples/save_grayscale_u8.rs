@@ -12,14 +12,16 @@ fn main() {
         image.set_pixel([n, n], [255]);
     }
 
-    let dv = 255 / 20;
-    let mut v = 0;
-    for n in 20..40 {
-        v += dv;
-        for m in 0..20 {
-            image.set_pixel([n, m], [v]);
-        }
-    }
+    println!("{}", image.data);
+
+    // let dv = 255 / 20;
+    // let mut v = 0;
+    // for n in 20..40 {
+    //     v += dv;
+    //     for m in 0..20 {
+    //         image.set_pixel([n, m], [v]);
+    //     }
+    // }
 
     println!("{}", image);
     image.save(filepath).expect("Failed to save image");

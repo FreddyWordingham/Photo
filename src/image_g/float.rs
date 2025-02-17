@@ -1,4 +1,4 @@
-use ndarray::{s, Array2};
+use ndarray::Array2;
 use png::{ColorType, Decoder, Encoder};
 use std::{
     fmt::{Display, Formatter},
@@ -10,7 +10,7 @@ use std::{
 use crate::{ImageError, ImageG, NormFloat};
 
 impl<T: NormFloat> ImageG<T> {
-    /// Saves the image as a PNG in grayscale format.
+    /// Save the image in grayscale PNG format.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), ImageError> {
         let width = self.width() as u32;
         let height = self.height() as u32;
@@ -42,17 +42,14 @@ impl<T: NormFloat> ImageG<T> {
             ImageError::from_message(format!("Failed to write PNG header: {}", err))
         })?;
 
-        // Flip vertically and convert to u8.
-        let flipped = self.data.slice(s![..;-1, ..]);
-        let data: Vec<u8> = flipped.iter().map(|&v| v.to_u8()).collect();
-
+        let data: Vec<u8> = self.data.iter().map(|&v| v.to_u8()).collect();
         writer.write_image_data(&data).map_err(|err| {
             ImageError::from_message(format!("Failed to write PNG data: {}", err))
         })?;
         Ok(())
     }
 
-    /// Loads a PNG grayscale image and converts it to normalized values.
+    /// Load a grayscale PNG image and converts it to normalized values.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ImageError> {
         let file = File::open(&path).map_err(|err| {
             ImageError::from_message(format!(
@@ -66,10 +63,10 @@ impl<T: NormFloat> ImageG<T> {
             .read_info()
             .map_err(|err| ImageError::from_message(format!("Failed to read PNG info: {}", err)))?;
         let mut buffer = vec![0; reader.output_buffer_size()];
+
         let info = reader.next_frame(&mut buffer).map_err(|err| {
             ImageError::from_message(format!("Failed to decode PNG frame: {}", err))
         })?;
-
         if info.color_type != ColorType::Grayscale || info.bit_depth != png::BitDepth::Eight {
             return Err(ImageError::UnsupportedColorType);
         }
@@ -78,23 +75,23 @@ impl<T: NormFloat> ImageG<T> {
         let height = info.height as usize;
         let channels = 1;
         let total_bytes = width * height * channels;
-        let data: Vec<u8> = buffer[..total_bytes].to_vec();
+        let data = buffer[..total_bytes].to_vec();
 
         let image = Array2::from_shape_vec((height, width), data).map_err(|err| {
             ImageError::from_message(format!("Failed to create image array: {}", err))
         })?;
-        let flipped = image.slice(s![..;-1, ..]).to_owned();
-        let data_t = flipped.mapv(|v| T::from(v).unwrap() / T::from(255).unwrap());
-        Ok(Self { data: data_t })
+        let divisor = T::from(255).unwrap();
+        let data = image.mapv(|v| T::from(v).unwrap() / divisor);
+        Ok(Self { data })
     }
 }
 
 impl<T: NormFloat> Display for ImageG<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for row in self.data.outer_iter().rev() {
-            for &value in row {
-                let pixel = value.to_u8();
-                write!(f, "\x1b[48;2;{0};{0};{0}m  \x1b[0m", pixel)?;
+        for row in self.data.outer_iter() {
+            for &pixel in row {
+                let value = pixel.to_u8();
+                write!(f, "\x1b[48;2;{0};{0};{0}m  \x1b[0m", value)?;
             }
             writeln!(f)?;
         }
