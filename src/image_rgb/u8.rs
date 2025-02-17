@@ -1,4 +1,4 @@
-use ndarray::{s, Array3};
+use ndarray::Array3;
 use png::{ColorType, Decoder, Encoder};
 use std::{
     fmt::{Display, Formatter},
@@ -10,7 +10,7 @@ use std::{
 use crate::{ImageError, ImageRGB};
 
 impl ImageRGB<u8> {
-    /// Saves the RGB image to the specified path in PNG format.
+    /// Save the image in RGB PNG format.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), ImageError> {
         let width = self.width() as u32;
         let height = self.height() as u32;
@@ -42,17 +42,15 @@ impl ImageRGB<u8> {
             ImageError::from_message(format!("Failed to write PNG header: {}", err))
         })?;
 
-        // Flip vertically for correct orientation.
-        let flipped = self.data.slice(s![..;-1, .., ..]);
-        let data: Vec<u8> = flipped.iter().cloned().collect();
-
-        writer.write_image_data(&data).map_err(|err| {
-            ImageError::from_message(format!("Failed to write PNG data: {}", err))
-        })?;
+        writer
+            .write_image_data(self.data.as_slice().unwrap())
+            .map_err(|err| {
+                ImageError::from_message(format!("Failed to write PNG data: {}", err))
+            })?;
         Ok(())
     }
 
-    /// Loads an RGB PNG image from the specified path.
+    /// Load a RGB PNG image.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ImageError> {
         let file = File::open(&path).map_err(|err| {
             ImageError::from_message(format!(
@@ -66,10 +64,10 @@ impl ImageRGB<u8> {
             .read_info()
             .map_err(|err| ImageError::from_message(format!("Failed to read PNG info: {}", err)))?;
         let mut buffer = vec![0; reader.output_buffer_size()];
+
         let info = reader.next_frame(&mut buffer).map_err(|err| {
             ImageError::from_message(format!("Failed to decode PNG frame: {}", err))
         })?;
-
         if info.color_type != ColorType::Rgb || info.bit_depth != png::BitDepth::Eight {
             return Err(ImageError::UnsupportedColorType);
         }
@@ -80,26 +78,21 @@ impl ImageRGB<u8> {
         let total_bytes = width * height * channels;
         let data_vec: Vec<u8> = buffer[..total_bytes].to_vec();
 
-        let image_array =
-            Array3::from_shape_vec((height, width, channels), data_vec).map_err(|err| {
-                ImageError::from_message(format!("Failed to create image array: {}", err))
-            })?;
-
-        // Flip vertically to match the expected orientation.
-        let data = image_array.slice(s![..;-1, .., ..]).to_owned();
+        let data = Array3::from_shape_vec((height, width, channels), data_vec).map_err(|err| {
+            ImageError::from_message(format!("Failed to create image array: {}", err))
+        })?;
         Ok(Self { data })
     }
 }
 
 impl Display for ImageRGB<u8> {
-    /// Displays the image in the terminal.
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in self.data.outer_iter().rev() {
             for pixel in row.outer_iter() {
-                let r = pixel[0];
-                let g = pixel[1];
-                let b = pixel[2];
-                write!(f, "\x1b[48;2;{r};{g};{b}m  \x1b[0m")?;
+                let red = pixel[0];
+                let green = pixel[1];
+                let blue = pixel[2];
+                write!(f, "\x1b[48;2;{red};{green};{blue}m  \x1b[0m")?;
             }
             writeln!(f)?;
         }

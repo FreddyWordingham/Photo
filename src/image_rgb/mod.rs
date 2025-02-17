@@ -193,7 +193,7 @@ impl<T: Copy + PartialOrd + Zero + Eq + Hash> ImageRGB<T> {
                 .or_insert((tile.clone(), 1));
         }
 
-        freq_map.into_iter().map(|(_, v)| v).collect()
+        freq_map.into_values().collect()
     }
 }
 

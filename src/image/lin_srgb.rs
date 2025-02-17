@@ -2,6 +2,7 @@ use ndarray::{s, Array2};
 use palette::LinSrgb;
 use png::{ColorType, Decoder, Encoder};
 use std::{
+    fmt::{Display, Formatter},
     fs::{create_dir_all, File},
     io::BufWriter,
     path::Path,
@@ -34,11 +35,12 @@ impl Image<LinSrgb> {
         }
     }
 
-    /// Saves the LinSrgb image to the specified path as a PNG RGB image.
+    /// Save the image in RGB PNG format.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), ImageError> {
         let height = self.data.nrows();
         let width = self.data.ncols();
-        debug_assert!(width > 0 && height > 0);
+        debug_assert!(width > 0);
+        debug_assert!(height > 0);
 
         if let Some(parent) = path.as_ref().parent() {
             create_dir_all(parent).map_err(|err| {
@@ -65,25 +67,22 @@ impl Image<LinSrgb> {
             ImageError::from_message(format!("Failed to write PNG header: {}", err))
         })?;
 
-        // Flip vertically and convert each LinSrgb to u8.
-        let mut bytes = Vec::with_capacity(width * height * 3);
-        // Iterate rows in reverse order.
+        let mut data = Vec::with_capacity(width * height * 3);
         for row in self.data.slice(s![..;-1, ..]).outer_iter() {
             for color in row.iter() {
                 let r = (color.red.clamp(0.0, 1.0) * 255.0).round() as u8;
                 let g = (color.green.clamp(0.0, 1.0) * 255.0).round() as u8;
                 let b = (color.blue.clamp(0.0, 1.0) * 255.0).round() as u8;
-                bytes.extend_from_slice(&[r, g, b]);
+                data.extend_from_slice(&[r, g, b]);
             }
         }
-
-        png_writer.write_image_data(&bytes).map_err(|err| {
+        png_writer.write_image_data(&data).map_err(|err| {
             ImageError::from_message(format!("Failed to write PNG data: {}", err))
         })?;
         Ok(())
     }
 
-    /// Loads a PNG RGB image from the specified path and converts it to an ImageLinSrgb.
+    /// Load a RGB PNG image and converts it to normalized values.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ImageError> {
         let file = File::open(&path).map_err(|err| {
             ImageError::from_message(format!(
@@ -97,44 +96,39 @@ impl Image<LinSrgb> {
             .read_info()
             .map_err(|err| ImageError::from_message(format!("Failed to read PNG info: {}", err)))?;
         let mut buffer = vec![0; reader.output_buffer_size()];
+
         let info = reader.next_frame(&mut buffer).map_err(|err| {
             ImageError::from_message(format!("Failed to decode PNG frame: {}", err))
         })?;
-
         if info.color_type != ColorType::Rgb || info.bit_depth != png::BitDepth::Eight {
             return Err(ImageError::UnsupportedColorType);
         }
 
         let width = info.width as usize;
         let height = info.height as usize;
-        let total_bytes = width * height * 3;
+        let channels = 3;
+        let total_bytes = width * height * channels;
         let data_vec = buffer[..total_bytes].to_vec();
 
-        // Iterate in chunks of 3 bytes (RGB) and convert to LinSrgb.
         let data = Array2::from_shape_fn((height, width), |(y, x)| {
-            let i = (y * width + x) * 3;
+            let i = (y * width + x) * channels;
             let r = data_vec[i] as f32 / 255.0;
             let g = data_vec[i + 1] as f32 / 255.0;
             let b = data_vec[i + 2] as f32 / 255.0;
             LinSrgb::new(r, g, b)
         });
-
-        // Flip vertically.
-        let data = data.slice(s![..;-1, ..]).to_owned();
-
         Ok(Self { data })
     }
 }
 
-impl std::fmt::Display for Image<LinSrgb> {
-    /// Displays the image in the terminal.
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for Image<LinSrgb> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in self.data.outer_iter().rev() {
             for pixel in row.iter() {
-                let r = (pixel.red.clamp(0.0, 1.0) * 255.0) as u8;
-                let g = (pixel.green.clamp(0.0, 1.0) * 255.0) as u8;
-                let b = (pixel.blue.clamp(0.0, 1.0) * 255.0) as u8;
-                write!(f, "\x1b[48;2;{r};{g};{b}m  \x1b[0m")?;
+                let red = (pixel.red.clamp(0.0, 1.0) * 255.0) as u8;
+                let green = (pixel.green.clamp(0.0, 1.0) * 255.0) as u8;
+                let blue = (pixel.blue.clamp(0.0, 1.0) * 255.0) as u8;
+                write!(f, "\x1b[48;2;{red};{green};{blue}m  \x1b[0m")?;
             }
             writeln!(f)?;
         }

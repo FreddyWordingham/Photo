@@ -1,4 +1,6 @@
 use ndarray::{s, Array2, Axis};
+use num_traits::Zero;
+use std::{collections::HashMap, hash::Hash};
 
 /// An image with a complete pixel in each element.
 #[derive(Debug, Clone, PartialEq)]
@@ -131,6 +133,24 @@ impl<T: Clone + Default> Image<T> {
                 .to_owned();
             Image { data: tile }
         })
+    }
+}
+
+impl<T: Default + Copy + PartialOrd + Zero + Eq + Hash> Image<T> {
+    /// Create a list of all unique tiles in the image and their frequency.
+    pub fn unique_tiles(&self, tile_size: [usize; 2]) -> Vec<(Image<T>, usize)> {
+        let tiles = self.tiles(tile_size);
+        let mut freq_map: HashMap<Vec<T>, (Image<T>, usize)> = HashMap::new();
+
+        for tile in tiles.iter() {
+            let key: Vec<T> = tile.data.iter().copied().collect();
+            freq_map
+                .entry(key)
+                .and_modify(|(_, count)| *count += 1)
+                .or_insert((tile.clone(), 1));
+        }
+
+        freq_map.into_values().collect()
     }
 }
 
