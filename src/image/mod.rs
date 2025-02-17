@@ -1,4 +1,4 @@
-use ndarray::{s, Array2, Axis};
+use ndarray::{s, Array2, ArrayView2, ArrayViewMut2, Axis};
 use num_traits::Zero;
 use std::{collections::HashMap, hash::Hash};
 
@@ -69,9 +69,6 @@ impl<T: Clone + Default> Image<T> {
     }
 
     /// Rotates the image 90 degrees clockwise (right).
-    ///
-    /// For square images, the rotation is done in-place for performance.
-    /// For non-square images, a new array is allocated.
     pub fn rotate_clockwise(&mut self) {
         self.data = self.data.t().slice(s![.., ..;-1]).to_owned();
     }
@@ -102,6 +99,28 @@ impl<T: Clone + Default> Image<T> {
         )
     }
 
+    /// Create a view to a portion of the image.
+    pub fn view(&self, start: [usize; 2], size: [usize; 2]) -> ArrayView2<T> {
+        debug_assert!(start[0] + size[0] <= self.width());
+        debug_assert!(start[1] + size[1] <= self.height());
+        debug_assert!(size.iter().all(|&s| s > 0));
+        self.data.slice(s![
+            start[1]..start[1] + size[1],
+            start[0]..start[0] + size[0]
+        ])
+    }
+
+    /// Create a mutable view to a portion of the image.
+    pub fn view_mut(&mut self, start: [usize; 2], size: [usize; 2]) -> ArrayViewMut2<T> {
+        debug_assert!(start[0] + size[0] <= self.width());
+        debug_assert!(start[1] + size[1] <= self.height());
+        debug_assert!(size.iter().all(|&s| s > 0));
+        self.data.slice_mut(s![
+            start[1]..start[1] + size[1],
+            start[0]..start[0] + size[0]
+        ])
+    }
+
     /// Extract a tile from the image.
     pub fn extract_tile(&self, tile_size: [usize; 2], tile_index: [usize; 2]) -> Image<T> {
         debug_assert!(tile_size.iter().all(|&s| s > 0));
@@ -111,6 +130,33 @@ impl<T: Clone + Default> Image<T> {
             [tile_index[0] * tile_size[0], tile_index[1] * tile_size[1]],
             tile_size,
         )
+    }
+
+    /// Create a view to a tile of the image.
+    pub fn view_tile(&self, tile_size: [usize; 2], tile_index: [usize; 2]) -> ArrayView2<T> {
+        debug_assert!(tile_size.iter().all(|&s| s > 0));
+        debug_assert!(tile_index[0] < self.width() / tile_size[0]);
+        debug_assert!(tile_index[1] < self.height() / tile_size[1]);
+        self.data.slice(s![
+            tile_index[1] * tile_size[1]..(tile_index[1] + 1) * tile_size[1],
+            tile_index[0] * tile_size[0]..(tile_index[0] + 1) * tile_size[0]
+        ])
+    }
+
+    /// Create a mutable view to a tile of the image.
+    pub fn view_tile_mut(
+        &mut self,
+        tile_size: [usize; 2],
+        tile_index: [usize; 2],
+    ) -> ArrayViewMut2<T> {
+        debug_assert!(tile_size.iter().all(|&s| s > 0));
+        debug_assert!(tile_index[0] < self.width() / tile_size[0]);
+        debug_assert!(tile_index[1] < self.height() / tile_size[1]);
+
+        self.data.slice_mut(s![
+            tile_index[1] * tile_size[1]..(tile_index[1] + 1) * tile_size[1],
+            tile_index[0] * tile_size[0]..(tile_index[0] + 1) * tile_size[0]
+        ])
     }
 
     /// Split the image into equal-sized tiles.
