@@ -13,8 +13,8 @@ fn main() {
     println!("Width {}", image.width());
 
     let tiles = image.tiles(TILE_SIZE);
-    for (i, tile) in tiles.iter().enumerate() {
-        println!("Tile {}:", i);
+    for ((y, x), tile) in tiles.indexed_iter() {
+        println!("Tile [{}, {}]:", y, x);
         println!("{}", tile);
     }
 }
