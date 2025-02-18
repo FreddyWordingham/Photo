@@ -222,8 +222,8 @@ impl<T: Copy + PartialOrd + Zero + One> ImageRGBA<T> {
         debug_assert!(height % tile_size[0] == 0);
         debug_assert!(width % tile_size[1] == 0);
 
-        let tile_rows = width / tile_size[0];
-        let tile_cols = height / tile_size[1];
+        let tile_rows = height / tile_size[0];
+        let tile_cols = width / tile_size[1];
 
         Array2::from_shape_fn((tile_rows, tile_cols), |(row, col)| {
             let y = row * tile_size[0];
