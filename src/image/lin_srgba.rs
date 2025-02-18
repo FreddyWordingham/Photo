@@ -1,4 +1,5 @@
 use ndarray::Array2;
+use num_traits::{Float, One, ToPrimitive, Zero};
 use palette::LinSrgba;
 use png::{ColorType, Decoder, Encoder};
 use std::{
@@ -10,9 +11,12 @@ use std::{
 
 use crate::{Image, ImageError};
 
-impl Image<LinSrgba> {
+impl<T> Image<LinSrgba<T>>
+where
+    T: Float + Zero + One + ToPrimitive,
+{
     /// Get the value of a component at the specified position.
-    pub fn get_component(&self, coords: [usize; 2], component: usize) -> f32 {
+    pub fn get_component(&self, coords: [usize; 2], component: usize) -> T {
         debug_assert!(component < 4);
         let colour = self.data[coords];
         match component {
@@ -25,7 +29,7 @@ impl Image<LinSrgba> {
     }
 
     /// Set the value of a component at the specified position.
-    pub fn set_component(&mut self, coords: [usize; 2], component: usize, value: f32) {
+    pub fn set_component(&mut self, coords: [usize; 2], component: usize, value: T) {
         debug_assert!(component < 4);
         let mut colour = self.data[coords];
         match component {
@@ -70,12 +74,25 @@ impl Image<LinSrgba> {
         })?;
 
         let mut data = Vec::with_capacity(width * height * 4);
+        let max = T::from(255.0).unwrap();
         for row in self.data.outer_iter() {
             for color in row.iter() {
-                let r = (color.red.clamp(0.0, 1.0) * 255.0).round() as u8;
-                let g = (color.green.clamp(0.0, 1.0) * 255.0).round() as u8;
-                let b = (color.blue.clamp(0.0, 1.0) * 255.0).round() as u8;
-                let a = (color.alpha.clamp(0.0, 1.0) * 255.0).round() as u8;
+                let r = (color.red.clamp(T::zero(), T::one()) * max)
+                    .round()
+                    .to_u8()
+                    .unwrap();
+                let g = (color.green.clamp(T::zero(), T::one()) * max)
+                    .round()
+                    .to_u8()
+                    .unwrap();
+                let b = (color.blue.clamp(T::zero(), T::one()) * max)
+                    .round()
+                    .to_u8()
+                    .unwrap();
+                let a = (color.alpha.clamp(T::zero(), T::one()) * max)
+                    .round()
+                    .to_u8()
+                    .unwrap();
                 data.extend_from_slice(&[r, g, b, a]);
             }
         }
@@ -115,24 +132,37 @@ impl Image<LinSrgba> {
 
         let data = Array2::from_shape_fn((height, width), |(y, x)| {
             let i = (y * width + x) * channels;
-            let r = data_vec[i] as f32 / 255.0;
-            let g = data_vec[i + 1] as f32 / 255.0;
-            let b = data_vec[i + 2] as f32 / 255.0;
-            let a = data_vec[i + 3] as f32 / 255.0;
+            let max = T::from(255.0).unwrap();
+            let r = T::from(data_vec[i]).unwrap() / max;
+            let g = T::from(data_vec[i + 1]).unwrap() / max;
+            let b = T::from(data_vec[i + 2]).unwrap() / max;
+            let a = T::from(data_vec[i + 3]).unwrap() / max;
             LinSrgba::new(r, g, b, a)
         });
         Ok(Self { data })
     }
 }
 
-impl Display for Image<LinSrgba> {
+impl<T> Display for Image<LinSrgba<T>>
+where
+    T: Float + Zero + One + ToPrimitive,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let max = T::from(255.0).unwrap();
         for row in self.data.outer_iter() {
             for pixel in row.iter() {
-                let red = (pixel.red.clamp(0.0, 1.0) * 255.0) as u8;
-                let green = (pixel.green.clamp(0.0, 1.0) * 255.0) as u8;
-                let blue = (pixel.blue.clamp(0.0, 1.0) * 255.0) as u8;
-                let alpha = (pixel.alpha.clamp(0.0, 1.0) * 255.0) as u8;
+                let red = (pixel.red.clamp(T::zero(), T::one()) * max)
+                    .to_u8()
+                    .unwrap();
+                let green = (pixel.green.clamp(T::zero(), T::one()) * max)
+                    .to_u8()
+                    .unwrap();
+                let blue = (pixel.blue.clamp(T::zero(), T::one()) * max)
+                    .to_u8()
+                    .unwrap();
+                let alpha = (pixel.alpha.clamp(T::zero(), T::one()) * max)
+                    .to_u8()
+                    .unwrap();
                 write!(f, "\x1b[48;2;{red};{green};{blue};{alpha}m  \x1b[0m")?;
             }
             writeln!(f)?;
