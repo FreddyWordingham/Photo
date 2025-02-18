@@ -1,5 +1,5 @@
-use ndarray_images::Image;
 use palette::LinSrgba;
+use photo::Image;
 
 const INPUT_DIR: &str = "input";
 const IMAGE_NAME: &str = "colour_alpha-linsrgba.png";

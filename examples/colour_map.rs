@@ -1,5 +1,5 @@
-use ndarray_images::ColourMap;
 use palette::LinSrgba;
+use photo::ColourMap;
 
 fn main() {
     let colours = vec!["#FF0000", "#00FF00", "#0000FF"];

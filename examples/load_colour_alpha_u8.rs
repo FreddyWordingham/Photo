@@ -1,4 +1,4 @@
-use ndarray_images::ImageRGBA;
+use photo::ImageRGBA;
 
 const INPUT_DIR: &str = "input";
 const IMAGE_NAME: &str = "colour_alpha-u8.png";

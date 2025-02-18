@@ -1,5 +1,5 @@
-use ndarray_images::{ColourMap, ImageG};
 use palette::LinSrgba;
+use photo::{ColourMap, ImageG};
 
 const INPUT_DIR: &str = "input";
 const IMAGE_NAME: &str = "grayscale-u8.png";

@@ -14,7 +14,7 @@ impl Image<LinSrgb> {
     /// Get the value of a component at the specified position.
     pub fn get_component(&self, coords: [usize; 2], component: usize) -> f32 {
         debug_assert!(component < 3);
-        let colour = self.data[[coords[1], coords[0]]];
+        let colour = self.data[coords];
         match component {
             0 => colour.red,
             1 => colour.green,
@@ -26,7 +26,7 @@ impl Image<LinSrgb> {
     /// Set the value of a component at the specified position.
     pub fn set_component(&mut self, coords: [usize; 2], component: usize, value: f32) {
         debug_assert!(component < 3);
-        let mut colour = self.data[[coords[1], coords[0]]];
+        let mut colour = self.data[coords];
         match component {
             0 => colour.red = value,
             1 => colour.green = value,
