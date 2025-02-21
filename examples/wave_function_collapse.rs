@@ -1,41 +1,30 @@
-use ndarray::{s, Array2, Array3};
+use indicatif::ProgressBar;
+use ndarray::{Array2, Array3, s};
 use photo::ImageRGBA;
 use rand::seq::IteratorRandom;
 use std::collections::{HashSet, VecDeque};
 
 const INPUT_DIR: &str = "input";
-const TILE_SIZE: [usize; 2] = [14, 14];
+const TILE_SIZE: [usize; 2] = [16, 16];
 
 fn main() {
-    let image_name = "tileset2.png";
+    let image_name = "1DNf6A.png";
     let filepath = format!("{}/{}", INPUT_DIR, image_name);
 
     let image = ImageRGBA::<u8>::load(filepath).expect("Failed to load image");
-    println!("{}", image);
     println!("Height {}", image.height());
     println!("Width {}", image.width());
 
     let image_tiles = image.tiles(TILE_SIZE);
-
     let unique_tiles = image.unique_tiles(TILE_SIZE);
-    for (tile, _frequency) in &unique_tiles {
-        println!("{}", tile);
-    }
-
     let tile_mapping = create_tile_mapping(&image_tiles, &unique_tiles);
     println!("{:?}", tile_mapping);
 
     let rules = create_tile_rules(&tile_mapping);
-    for rule in &rules {
-        println!("{:?}", rule);
-    }
-
     let map = wave_function_collapse(&rules, [51, 51]);
-    println!("{:?}", map);
 
     let output = render_image(&map, &unique_tiles);
     let image = ImageRGBA::new(output);
-    println!("{}", image);
     image.save("output/map.png").expect("Failed to save image");
 }
 
@@ -45,7 +34,7 @@ fn create_tile_mapping(
 ) -> Array2<usize> {
     let mut tile_mapping = Array2::<usize>::zeros(image_tiles.dim());
     for (mut map_index, tile) in tile_mapping.iter_mut().zip(image_tiles.iter()) {
-        for (unique_tile_index, (unique_tile, _frequency)) in unique_tiles.iter().enumerate() {
+        for (unique_tile_index, (unique_tile, _)) in unique_tiles.iter().enumerate() {
             if tile == unique_tile {
                 *map_index = unique_tile_index;
                 break;
@@ -69,7 +58,6 @@ fn create_tile_rules(tile_mapping: &ndarray::Array2<usize>) -> Vec<Rules> {
     let max = *tile_mapping.iter().max().unwrap();
     let mut rules = vec![Rules::default(); max + 1];
 
-    // Determine the rules for each tile
     for (index, &t) in tile_mapping.indexed_iter() {
         if index.0 > 0 {
             rules[t].north.insert(tile_mapping[[index.0 - 1, index.1]]);
@@ -84,14 +72,18 @@ fn create_tile_rules(tile_mapping: &ndarray::Array2<usize>) -> Vec<Rules> {
             rules[t].east.insert(tile_mapping[[index.0, index.1 + 1]]);
         }
     }
-
     rules
 }
 
 pub fn wave_function_collapse(rules: &[Rules], resolution: [usize; 2]) -> Array2<usize> {
     const MAX_ATTEMPTS: usize = 100;
+    let total_cells = resolution[0] * resolution[1];
+    let pb = ProgressBar::new(total_cells as u64);
+
     for attempt in 0..MAX_ATTEMPTS {
-        if let Some(map) = collapse_attempt(rules, resolution) {
+        pb.reset();
+        if let Some(map) = collapse_attempt(rules, resolution, &pb) {
+            pb.finish_with_message("Map generation complete");
             return map;
         }
         eprintln!("Attempt {} failed, retrying...", attempt + 1);
@@ -102,18 +94,20 @@ pub fn wave_function_collapse(rules: &[Rules], resolution: [usize; 2]) -> Array2
     );
 }
 
-fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<usize>> {
+fn collapse_attempt(
+    rules: &[Rules],
+    resolution: [usize; 2],
+    pb: &ProgressBar,
+) -> Option<Array2<usize>> {
     let mut rng = rand::rng();
     let rows = resolution[0];
     let cols = resolution[1];
     let num_tiles = rules.len();
 
-    // Each cell starts with all possible tile indices.
     let mut possibilities: Vec<Vec<HashSet<usize>>> =
         vec![vec![(0..num_tiles).collect(); cols]; rows];
     let mut queue = VecDeque::new();
 
-    // Helper to enqueue valid coordinates.
     fn push_if_valid(
         queue: &mut VecDeque<(usize, usize)>,
         r: usize,
@@ -127,7 +121,6 @@ fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<us
     }
 
     loop {
-        // Find the cell with the lowest entropy (>1 possibility).
         let mut min_entropy = usize::MAX;
         let mut min_pos = None;
         for r in 0..rows {
@@ -139,17 +132,16 @@ fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<us
                 }
             }
         }
-        // All cells collapsed.
         if min_pos.is_none() {
             break;
         }
         let (r, c) = min_pos.unwrap();
 
-        // Randomly pick one possibility.
+        // Collapse the cell and update the progress bar.
         let chosen = *possibilities[r][c].iter().choose(&mut rng)?;
         possibilities[r][c] = [chosen].iter().cloned().collect();
+        pb.inc(1);
 
-        // Enqueue neighbors.
         if r > 0 {
             push_if_valid(&mut queue, r - 1, c, rows, cols);
         }
@@ -163,11 +155,9 @@ fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<us
             push_if_valid(&mut queue, r, c + 1, rows, cols);
         }
 
-        // Propagate constraints.
         while let Some((i, j)) = queue.pop_front() {
             let mut new_set = possibilities[i][j].clone();
 
-            // Above: allowed by the neighbor's south rule.
             if i > 0 {
                 let mut allowed = HashSet::new();
                 for &nbr_tile in &possibilities[i - 1][j] {
@@ -175,7 +165,6 @@ fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<us
                 }
                 new_set = new_set.intersection(&allowed).cloned().collect();
             }
-            // Below: allowed by the neighbor's north rule.
             if i < rows - 1 {
                 let mut allowed = HashSet::new();
                 for &nbr_tile in &possibilities[i + 1][j] {
@@ -183,7 +172,6 @@ fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<us
                 }
                 new_set = new_set.intersection(&allowed).cloned().collect();
             }
-            // Left: allowed by the neighbor's east rule.
             if j > 0 {
                 let mut allowed = HashSet::new();
                 for &nbr_tile in &possibilities[i][j - 1] {
@@ -191,7 +179,6 @@ fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<us
                 }
                 new_set = new_set.intersection(&allowed).cloned().collect();
             }
-            // Right: allowed by the neighbor's west rule.
             if j < cols - 1 {
                 let mut allowed = HashSet::new();
                 for &nbr_tile in &possibilities[i][j + 1] {
@@ -203,7 +190,7 @@ fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<us
             if new_set.len() < possibilities[i][j].len() {
                 possibilities[i][j] = new_set;
                 if possibilities[i][j].is_empty() {
-                    return None; // Contradiction.
+                    return None;
                 }
                 if i > 0 {
                     push_if_valid(&mut queue, i - 1, j, rows, cols);
@@ -221,7 +208,6 @@ fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<us
         }
     }
 
-    // Build final map ensuring every cell is collapsed.
     let mut result = Array2::<usize>::zeros((rows, cols));
     for i in 0..rows {
         for j in 0..cols {
@@ -235,12 +221,11 @@ fn collapse_attempt(rules: &[Rules], resolution: [usize; 2]) -> Option<Array2<us
 }
 
 pub fn render_image(map: &Array2<usize>, tiles: &[(ImageRGBA<u8>, usize)]) -> Array3<u8> {
-    // All tiles are assumed to have the same dimensions.
     let tile_height = tiles[0].0.height();
     let tile_width = tiles[0].0.width();
 
     let (map_rows, map_cols) = map.dim();
-    let channels = 4; // RGBA
+    let channels = 4;
 
     let output_height = map_rows * tile_height;
     let output_width = map_cols * tile_width;
@@ -249,7 +234,6 @@ pub fn render_image(map: &Array2<usize>, tiles: &[(ImageRGBA<u8>, usize)]) -> Ar
     for (i, row) in map.outer_iter().enumerate() {
         for (j, &tile_idx) in row.iter().enumerate() {
             let tile = &tiles[tile_idx].0;
-            // Assumes ImageRGBA provides a method to convert to an ndarray view.
             let tile_data = &tile.data;
             let y_offset = i * tile_height;
             let x_offset = j * tile_width;

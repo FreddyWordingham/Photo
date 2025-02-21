@@ -1,4 +1,4 @@
-use ndarray::{s, Array2, Array3};
+use ndarray::{Array2, Array3, s};
 use photo::ImageRGBA;
 use rand::seq::IteratorRandom;
 use rand::thread_rng;
@@ -6,10 +6,10 @@ use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashSet, VecDeque};
 
 const INPUT_DIR: &str = "input";
-const TILE_SIZE: [usize; 2] = [14, 14];
+const TILE_SIZE: [usize; 2] = [16, 16];
 
 fn main() {
-    let image_name = "tileset2.png";
+    let image_name = "villiage.png";
     let filepath = format!("{}/{}", INPUT_DIR, image_name);
 
     let image = ImageRGBA::<u8>::load(filepath).expect("Failed to load image");
@@ -31,12 +31,12 @@ fn main() {
         println!("{:?}", rule);
     }
 
-    let map = wave_function_collapse_backtracking(&rules, [51, 51]);
+    let map = wave_function_collapse_backtracking(&rules, [11, 31]);
     println!("{:?}", map);
 
     let output = render_image(&map, &unique_tiles);
     let image = ImageRGBA::new(output);
-    println!("{}", image);
+    // println!("{}", image);
     image.save("output/map.png").expect("Failed to save image");
 }
 
