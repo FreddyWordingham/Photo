@@ -1,4 +1,4 @@
-use enterpolation::{linear::Linear, Generator, Identity, Merge, Sorted};
+use enterpolation::{Generator, Identity, Merge, Sorted, linear::Linear};
 use num_traits::{Float, FromPrimitive};
 use palette::{LinSrgb, LinSrgba};
 use std::{
@@ -93,7 +93,7 @@ where
 
     pub fn sample(&self, t: T) -> C {
         debug_assert!(t >= T::zero() && t <= T::one());
-        <Linear<Sorted<Vec<T>>, Vec<C>, Identity> as Generator<T>>::gen(&self.gradient, t)
+        <Linear<Sorted<Vec<T>>, Vec<C>, Identity> as Generator<T>>::r#gen(&self.gradient, t)
     }
 }
 
