@@ -19,6 +19,30 @@ impl<T: Copy + PartialOrd + Zero> ImageRGB<T> {
         Self { data }
     }
 
+    /// Create a new ImageRGB from a mapping.
+    pub fn new_from_mapping(tile_mapping: &Array2<usize>, unique_tiles: &[ImageRGB<T>]) -> Self {
+        debug_assert!(tile_mapping.dim().0 > 0);
+        debug_assert!(tile_mapping.dim().1 > 0);
+        debug_assert!(tile_mapping.iter().all(|&index| index < unique_tiles.len()));
+
+        let tile_size = unique_tiles[0].data.dim();
+        let height = tile_mapping.dim().0 * tile_size.0;
+        let width = tile_mapping.dim().1 * tile_size.1;
+        let mut data = Array3::zeros((height, width, 3));
+
+        for (index, &tile_index) in tile_mapping.iter().enumerate() {
+            let tile = &unique_tiles[tile_index];
+            let row = index / tile_mapping.dim().1;
+            let col = index % tile_mapping.dim().1;
+            let start = [row * tile_size.0, col * tile_size.1];
+            let end = [start[0] + tile_size.0, start[1] + tile_size.1];
+            data.slice_mut(s![start[0]..end[0], start[1]..end[1], ..])
+                .assign(&tile.data);
+        }
+
+        Self { data }
+    }
+
     /// Creates an empty (all zeros) image with the given dimensions.
     pub fn empty(resolution: [usize; 2]) -> Self {
         debug_assert!(resolution.iter().all(|&r| r > 0));

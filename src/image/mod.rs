@@ -1,4 +1,4 @@
-use ndarray::{s, Array2, ArrayView2, ArrayViewMut2, Axis};
+use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis, s};
 use num_traits::Zero;
 use std::{collections::HashMap, hash::Hash};
 
@@ -9,11 +9,35 @@ pub struct Image<T> {
     pub data: Array2<T>,
 }
 
-impl<T: Clone + Default> Image<T> {
+impl<T: Clone + Default + Zero> Image<T> {
     /// Creates a new Image from the provided data.
     pub fn new(data: Array2<T>) -> Self {
         debug_assert!(data.ncols() > 0);
         debug_assert!(data.nrows() > 0);
+        Self { data }
+    }
+
+    /// Create a new Image from a mapping.
+    pub fn new_from_mapping(tile_mapping: &Array2<usize>, unique_tiles: &[Image<T>]) -> Self {
+        debug_assert!(tile_mapping.dim().0 > 0);
+        debug_assert!(tile_mapping.dim().1 > 0);
+        debug_assert!(tile_mapping.iter().all(|&index| index < unique_tiles.len()));
+
+        let tile_size = unique_tiles[0].data.dim();
+        let height = tile_mapping.dim().0 * tile_size.0;
+        let width = tile_mapping.dim().1 * tile_size.1;
+        let mut data = Array2::zeros((height, width));
+
+        for (index, &tile_index) in tile_mapping.iter().enumerate() {
+            let tile = &unique_tiles[tile_index];
+            let row = index / tile_mapping.dim().1;
+            let col = index % tile_mapping.dim().1;
+            let start = [row * tile_size.0, col * tile_size.1];
+            let end = [start[0] + tile_size.0, start[1] + tile_size.1];
+            data.slice_mut(s![start[0]..end[0], start[1]..end[1]])
+                .assign(&tile.data);
+        }
+
         Self { data }
     }
 
