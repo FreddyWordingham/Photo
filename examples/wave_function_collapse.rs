@@ -2,7 +2,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use ndarray::{Array2, Array3, s};
 use photo::ImageRGBA;
 use rand::seq::IteratorRandom;
-use std::collections::{HashSet, VecDeque}; // Added for progress bar
+use std::collections::{HashSet, VecDeque};
 
 const INPUT_DIR: &str = "input";
 const TILE_SIZE: [usize; 2] = [14, 14];
