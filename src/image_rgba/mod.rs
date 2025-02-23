@@ -1,4 +1,4 @@
-use ndarray::{arr1, s, stack, Array2, Array3, ArrayView3, ArrayViewMut3, Axis};
+use ndarray::{Array2, Array3, ArrayView3, ArrayViewMut3, Axis, arr1, s, stack};
 use num_traits::{One, Zero};
 use std::{collections::HashMap, hash::Hash};
 
