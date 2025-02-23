@@ -1,14 +1,14 @@
 use enterpolation::Merge;
-use ndarray::{s, Array2, ArrayView2, ArrayViewMut2, Axis};
+use indexmap::IndexMap;
+use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis, s};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::{
-    collections::HashMap,
     fmt::Debug,
     hash::Hash,
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::{colour_map::ColorFromHex, ColourMap, Image};
+use crate::{ColourMap, Image, colour_map::ColorFromHex};
 
 /// An opaque grayscale image.
 #[derive(Debug, Clone, PartialEq)]
@@ -225,7 +225,7 @@ impl<T: Copy + PartialOrd + Zero + Eq + Hash> ImageG<T> {
     /// Create a list of all unique tiles in the image and their frequency.
     pub fn unique_tiles(&self, tile_size: [usize; 2]) -> Vec<(ImageG<T>, usize)> {
         let tiles = self.tiles(tile_size);
-        let mut freq_map: HashMap<Vec<T>, (ImageG<T>, usize)> = HashMap::new();
+        let mut freq_map: IndexMap<Vec<T>, (ImageG<T>, usize)> = IndexMap::new();
 
         for tile in tiles.iter() {
             let key: Vec<T> = tile.data.iter().copied().collect();

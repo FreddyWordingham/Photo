@@ -1,6 +1,7 @@
-use ndarray::{arr1, s, stack, Array2, Array3, ArrayView3, ArrayViewMut3, Axis};
+use indexmap::IndexMap;
+use ndarray::{Array2, Array3, ArrayView3, ArrayViewMut3, Axis, arr1, s, stack};
 use num_traits::Zero;
-use std::{collections::HashMap, hash::Hash};
+use std::hash::Hash;
 
 /// An opaque colour image.
 #[derive(Debug, Clone, PartialEq)]
@@ -234,7 +235,7 @@ impl<T: Copy + PartialOrd + Zero + Eq + Hash> ImageRGB<T> {
     /// Create a list of all unique tiles in the image and their frequency.
     pub fn unique_tiles(&self, tile_size: [usize; 2]) -> Vec<(ImageRGB<T>, usize)> {
         let tiles = self.tiles(tile_size);
-        let mut freq_map: HashMap<Vec<T>, (ImageRGB<T>, usize)> = HashMap::new();
+        let mut freq_map: IndexMap<Vec<T>, (ImageRGB<T>, usize)> = IndexMap::new();
 
         for tile in tiles.iter() {
             let key: Vec<T> = tile.data.iter().copied().collect();
