@@ -8,6 +8,7 @@ Utility image classes for Rust.
 - Colour maps
 - Image IO
 - Image transformations utilities.
+- Tile manipulation.
 - Generic precision types for image components: `u8`, `f32`, `f64` etc.
 - Print images to the console.
 
@@ -34,6 +35,13 @@ image.save("output/my_colour_image.png").expect("Failed to save image");
 ```rust
 image.flip_horizontal();
 image.rotate_clockwise();
+```
+
+### Tiling
+
+```rust
+let tile_size = (14, 14); // 14x14 pixel tiles
+let tiles: Arrray2<ImageRGB> = image.tiles(tile_size);
 ```
 
 ### Colour maps
