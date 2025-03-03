@@ -1,6 +1,8 @@
-use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis, s};
+use ndarray::{Array2, ArrayView2, ArrayViewMut2, s};
 use num_traits::Zero;
 use std::{collections::HashMap, hash::Hash};
+
+use crate::Transformation;
 
 /// An image with a complete pixel in each element.
 #[derive(Debug, Clone, PartialEq)]
@@ -75,35 +77,20 @@ impl<T: Clone + Default + Zero> Image<T> {
         self.data[coords] = pixel;
     }
 
-    /// Transposes the image.
-    pub fn transpose(&mut self) {
-        self.data = self.data.t().to_owned();
-    }
-
-    /// Flips the image vertically.
-    pub fn flip_vertical(&mut self) {
-        self.data.invert_axis(Axis(0));
-    }
-
-    /// Flips the image horizontally.
-    pub fn flip_horizontal(&mut self) {
-        self.data.invert_axis(Axis(1));
-    }
-
-    /// Rotates the image 90 degrees clockwise (right).
-    pub fn rotate_clockwise(&mut self) {
-        self.data = self.data.t().slice(s![.., ..;-1]).to_owned();
-    }
-
-    /// Rotates the image 90 degrees anticlockwise (left).
-    pub fn rotate_anticlockwise(&mut self) {
-        self.data = self.data.t().slice(s![..;-1, ..]).to_owned();
-    }
-
-    /// Rotates the image 180 degrees.
-    pub fn rotate_180(&mut self) {
-        self.data.invert_axis(Axis(0));
-        self.data.invert_axis(Axis(1));
+    /// Apply a transformation to the image.
+    pub fn transform(&mut self, transform: Transformation) {
+        self.data = match transform {
+            Transformation::Identity => self.data.clone(),
+            Transformation::Rotate90 => self.data.t().to_owned().slice(s![.., ..;-1]).to_owned(),
+            Transformation::Rotate180 => self.data.slice(s![..;-1, ..;-1]).to_owned(),
+            Transformation::Rotate270 => self.data.t().to_owned().slice(s![..;-1, ..]).to_owned(),
+            Transformation::FlipHorizontal => self.data.slice(s![.., ..;-1]).to_owned(),
+            Transformation::FlipVertical => self.data.slice(s![..;-1, ..]).to_owned(),
+            Transformation::FlipDiagonal => self.data.t().to_owned(),
+            Transformation::FlipAntiDiagonal => {
+                self.data.slice(s![..;-1, ..;-1]).to_owned().t().to_owned()
+            }
+        };
     }
 
     /// Extract a portion of the image.
