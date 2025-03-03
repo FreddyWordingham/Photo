@@ -119,33 +119,83 @@ impl<T: Copy + PartialOrd + Zero> ImageRGB<T> {
         self.data.slice(s![.., .., component]).to_owned()
     }
 
+    /// Return a new image with the transformation applied.
+    pub fn transform(&self, transform: Transformation) -> Self {
+        let mut image = self.clone();
+        image.transform_inplace(transform);
+        image
+    }
+
     /// Apply a transformation to the image.
-    pub fn transform(&mut self, transform: Transformation) {
-        self.data = match transform {
-            Transformation::Identity => self.data.clone(),
-            Transformation::Rotate90 => self
-                .data
-                .clone()
-                .permuted_axes([1, 0, 2])
-                .slice(s![.., ..;-1, ..])
-                .to_owned(),
-            Transformation::Rotate180 => self.data.slice(s![..;-1, ..;-1, ..]).to_owned(),
-            Transformation::Rotate270 => self
-                .data
-                .clone()
-                .permuted_axes([1, 0, 2])
-                .slice(s![..;-1, .., ..])
-                .to_owned(),
-            Transformation::FlipHorizontal => self.data.slice(s![.., ..;-1, ..]).to_owned(),
-            Transformation::FlipVertical => self.data.slice(s![..;-1, .., ..]).to_owned(),
-            Transformation::FlipDiagonal => self.data.clone().permuted_axes([1, 0, 2]).to_owned(),
-            Transformation::FlipAntiDiagonal => self
-                .data
-                .slice(s![..;-1, ..;-1, ..])
-                .to_owned()
-                .permuted_axes([1, 0, 2])
-                .to_owned(),
-        };
+    pub fn transform_inplace(&mut self, transform: Transformation) {
+        // Get spatial dimensions (assumes data shape is [rows, cols, channels])
+        let shape = self.data.shape();
+        let (rows, cols) = (shape[0], shape[1]);
+        let is_square = rows == cols;
+
+        match transform {
+            Transformation::Identity => { /* do nothing */ }
+            Transformation::Rotate90 => {
+                if is_square {
+                    self.data.swap_axes(0, 1);
+                    self.data.invert_axis(Axis(1)); // horizontal flip
+                } else {
+                    self.data = self
+                        .data
+                        .view()
+                        .permuted_axes([1, 0, 2])
+                        .to_owned()
+                        .slice(s![.., ..;-1, ..])
+                        .to_owned();
+                }
+            }
+            Transformation::Rotate180 => {
+                self.data.invert_axis(Axis(0));
+                self.data.invert_axis(Axis(1));
+            }
+            Transformation::Rotate270 => {
+                if is_square {
+                    self.data.swap_axes(0, 1);
+                    self.data.invert_axis(Axis(0)); // vertical flip
+                } else {
+                    self.data = self
+                        .data
+                        .view()
+                        .permuted_axes([1, 0, 2])
+                        .to_owned()
+                        .slice(s![..;-1, .., ..])
+                        .to_owned();
+                }
+            }
+            Transformation::FlipHorizontal => {
+                self.data.invert_axis(Axis(1));
+            }
+            Transformation::FlipVertical => {
+                self.data.invert_axis(Axis(0));
+            }
+            Transformation::FlipDiagonal => {
+                if is_square {
+                    self.data.swap_axes(0, 1);
+                } else {
+                    self.data = self.data.view().permuted_axes([1, 0, 2]).to_owned();
+                }
+            }
+            Transformation::FlipAntiDiagonal => {
+                if is_square {
+                    self.data.invert_axis(Axis(0));
+                    self.data.invert_axis(Axis(1));
+                    self.data.swap_axes(0, 1);
+                } else {
+                    self.data = self
+                        .data
+                        .slice(s![..;-1, ..;-1, ..])
+                        .to_owned()
+                        .view()
+                        .permuted_axes([1, 0, 2])
+                        .to_owned();
+                }
+            }
+        }
     }
 
     /// Extract a portion of the image.

@@ -1,6 +1,6 @@
 use enterpolation::Merge;
 use indexmap::IndexMap;
-use ndarray::{Array2, ArrayView2, ArrayViewMut2, s};
+use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis, s};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::{
     fmt::Debug,
@@ -95,20 +95,63 @@ impl<T: Copy + PartialOrd + Zero> ImageG<T> {
         self.data[coords] = pixel[0];
     }
 
+    /// Return a new image with the transformation applied.
+    pub fn transform(&self, transform: Transformation) -> Self {
+        let mut image = self.clone();
+        image.transform_inplace(transform);
+        image
+    }
+
     /// Apply a transformation to the image.
-    pub fn transform(&mut self, transform: Transformation) {
-        self.data = match transform {
-            Transformation::Identity => self.data.clone(),
-            Transformation::Rotate90 => self.data.t().to_owned().slice(s![.., ..;-1]).to_owned(),
-            Transformation::Rotate180 => self.data.slice(s![..;-1, ..;-1]).to_owned(),
-            Transformation::Rotate270 => self.data.t().to_owned().slice(s![..;-1, ..]).to_owned(),
-            Transformation::FlipHorizontal => self.data.slice(s![.., ..;-1]).to_owned(),
-            Transformation::FlipVertical => self.data.slice(s![..;-1, ..]).to_owned(),
-            Transformation::FlipDiagonal => self.data.t().to_owned(),
-            Transformation::FlipAntiDiagonal => {
-                self.data.slice(s![..;-1, ..;-1]).to_owned().t().to_owned()
+    pub fn transform_inplace(&mut self, transform: Transformation) {
+        let (rows, cols) = (self.data.nrows(), self.data.ncols());
+        let is_square = rows == cols;
+
+        match transform {
+            Transformation::Identity => { /* do nothing */ }
+            Transformation::Rotate90 => {
+                if is_square {
+                    self.data.swap_axes(0, 1);
+                    self.data.invert_axis(Axis(1));
+                } else {
+                    self.data = self.data.t().to_owned().slice(s![.., ..;-1]).to_owned();
+                }
             }
-        };
+            Transformation::Rotate180 => {
+                self.data.invert_axis(Axis(0));
+                self.data.invert_axis(Axis(1));
+            }
+            Transformation::Rotate270 => {
+                if is_square {
+                    self.data.swap_axes(0, 1);
+                    self.data.invert_axis(Axis(0));
+                } else {
+                    self.data = self.data.t().to_owned().slice(s![..;-1, ..]).to_owned();
+                }
+            }
+            Transformation::FlipHorizontal => {
+                self.data.invert_axis(Axis(1));
+            }
+            Transformation::FlipVertical => {
+                self.data.invert_axis(Axis(0));
+            }
+            Transformation::FlipDiagonal => {
+                if is_square {
+                    self.data.swap_axes(0, 1);
+                } else {
+                    self.data = self.data.t().to_owned();
+                }
+            }
+            Transformation::FlipAntiDiagonal => {
+                if is_square {
+                    self.data.invert_axis(Axis(0));
+                    self.data.invert_axis(Axis(1));
+                    self.data.swap_axes(0, 1);
+                } else {
+                    self.data = self.data.slice(s![..;-1, ..;-1]).to_owned().t().to_owned();
+                }
+            }
+        }
     }
 
     /// Colourize a grayscale image using a colour map.
