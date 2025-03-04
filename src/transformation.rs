@@ -13,6 +13,21 @@ pub enum Transformation {
 }
 
 impl Transformation {
+    pub fn from_index<T: NumCast>(index: T) -> Self {
+        let i = index.to_usize().unwrap();
+        match i {
+            0 => Transformation::Identity,
+            1 => Transformation::Rotate90,
+            2 => Transformation::Rotate180,
+            3 => Transformation::Rotate270,
+            4 => Transformation::FlipHorizontal,
+            5 => Transformation::FlipVertical,
+            6 => Transformation::FlipDiagonal,
+            7 => Transformation::FlipAntiDiagonal,
+            _ => panic!("Invalid index"),
+        }
+    }
+
     pub fn index<T: NumCast>(self) -> T {
         let i = match self {
             Transformation::Identity => 0,
