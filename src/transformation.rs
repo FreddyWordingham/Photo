@@ -45,6 +45,22 @@ impl Transformation {
 
 impl Transformation {}
 
+impl std::fmt::Display for Transformation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Transformation::Identity => ".",
+            Transformation::Rotate90 => "r",
+            Transformation::Rotate180 => "",
+            Transformation::Rotate270 => "l",
+            Transformation::FlipHorizontal => "-",
+            Transformation::FlipVertical => "|",
+            Transformation::FlipDiagonal => "\\",
+            Transformation::FlipAntiDiagonal => "/",
+        };
+        write!(f, "{}", s)
+    }
+}
+
 pub const ALL_TRANSFORMATIONS: [Transformation; 8] = [
     Transformation::Identity,
     Transformation::Rotate90,
