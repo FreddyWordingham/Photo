@@ -3,7 +3,7 @@ use num_traits::NumCast;
 use png::{ColorType, Decoder, Encoder};
 use std::{
     fmt::{Display, Formatter},
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     io::BufWriter,
     path::Path,
 };

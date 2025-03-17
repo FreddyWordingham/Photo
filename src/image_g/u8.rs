@@ -2,7 +2,7 @@ use ndarray::Array2;
 use png::{ColorType, Decoder, Encoder};
 use std::{
     fmt::{Display, Formatter},
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     io::BufWriter,
     path::Path,
 };
@@ -42,11 +42,10 @@ impl ImageG<u8> {
             ImageError::from_message(format!("Failed to write PNG header: {}", err))
         })?;
 
-        writer
-            .write_image_data(self.data.as_slice().unwrap())
-            .map_err(|err| {
-                ImageError::from_message(format!("Failed to write PNG data: {}", err))
-            })?;
+        let data: Vec<_> = self.data.iter().copied().collect();
+        writer.write_image_data(&data).map_err(|err| {
+            ImageError::from_message(format!("Failed to write PNG data: {}", err))
+        })?;
         Ok(())
     }
 
