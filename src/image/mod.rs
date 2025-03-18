@@ -1,8 +1,7 @@
 use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis, s};
 use num_traits::Zero;
-use std::{collections::HashMap, hash::Hash};
 
-use crate::Transformation;
+use crate::{Direction, Transformation};
 
 /// An image with a complete pixel in each element.
 #[derive(Debug, Clone, PartialEq)]
@@ -149,6 +148,28 @@ impl<T: Clone + Default + Zero> Image<T> {
             start[0]..start[0] + size[0],
             start[1]..start[1] + size[1]
         ])
+    }
+
+    /// Create a view of the images border.
+    pub fn view_border(&self, direction: Direction, size: usize) -> ArrayView2<T> {
+        debug_assert!(size > 0);
+        match direction {
+            Direction::North => self.data.slice(s![0..size, ..]),
+            Direction::East => self.data.slice(s![.., (self.width() - size)..]),
+            Direction::South => self.data.slice(s![(self.height() - size).., ..]),
+            Direction::West => self.data.slice(s![.., 0..size]),
+        }
+    }
+
+    /// Create a mutable view of the images border.
+    pub fn view_border_mut(&mut self, direction: Direction, size: usize) -> ArrayViewMut2<T> {
+        debug_assert!(size > 0);
+        match direction {
+            Direction::North => self.data.slice_mut(s![0..size, ..]),
+            Direction::East => self.data.slice_mut(s![.., (self.width() - size)..]),
+            Direction::South => self.data.slice_mut(s![(self.height() - size).., ..]),
+            Direction::West => self.data.slice_mut(s![.., 0..size]),
+        }
     }
 }
 

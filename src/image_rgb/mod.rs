@@ -1,9 +1,7 @@
-use indexmap::IndexMap;
 use ndarray::{Array2, Array3, ArrayView3, ArrayViewMut3, Axis, arr1, s, stack};
 use num_traits::Zero;
-use std::hash::Hash;
 
-use crate::Transformation;
+use crate::{Direction, Transformation};
 
 /// An opaque colour image.
 #[derive(Debug, Clone, PartialEq)]
@@ -212,6 +210,28 @@ impl<T: Copy + PartialOrd + Zero> ImageRGB<T> {
             start[1]..start[1] + size[1],
             ..
         ])
+    }
+
+    /// Create a view of the images border.
+    pub fn view_border(&self, direction: Direction, size: usize) -> ArrayView3<T> {
+        debug_assert!(size > 0);
+        match direction {
+            Direction::North => self.data.slice(s![0..size, .., ..]),
+            Direction::East => self.data.slice(s![.., (self.width() - size).., ..]),
+            Direction::South => self.data.slice(s![(self.height() - size).., .., ..]),
+            Direction::West => self.data.slice(s![.., 0..size, ..]),
+        }
+    }
+
+    /// Create a mutable view of the images border.
+    pub fn view_border_mut(&mut self, direction: Direction, size: usize) -> ArrayViewMut3<T> {
+        debug_assert!(size > 0);
+        match direction {
+            Direction::North => self.data.slice_mut(s![0..size, .., ..]),
+            Direction::East => self.data.slice_mut(s![.., (self.width() - size).., ..]),
+            Direction::South => self.data.slice_mut(s![(self.height() - size).., .., ..]),
+            Direction::West => self.data.slice_mut(s![.., 0..size, ..]),
+        }
     }
 }
 

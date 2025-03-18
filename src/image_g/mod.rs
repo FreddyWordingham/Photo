@@ -1,14 +1,12 @@
 use enterpolation::Merge;
-use indexmap::IndexMap;
 use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis, s};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::{
     fmt::Debug,
-    hash::Hash,
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::{ColourMap, Image, Transformation, colour_map::ColorFromHex};
+use crate::{ColourMap, Direction, Image, Transformation, colour_map::ColorFromHex};
 
 /// An opaque grayscale image.
 #[derive(Debug, Clone, PartialEq)]
@@ -187,23 +185,27 @@ impl<T: Copy + PartialOrd + Zero> ImageG<T> {
             start[1]..start[1] + size[1]
         ])
     }
-}
 
-impl<T: Copy + PartialOrd + Zero + Eq + Hash> ImageG<T> {
-    /// Create a list of all unique tiles in the image and their frequency.
-    pub fn unique_tiles(&self, tile_size: [usize; 2]) -> Vec<(ImageG<T>, usize)> {
-        let tiles = self.tiles(tile_size);
-        let mut freq_map: IndexMap<Vec<T>, (ImageG<T>, usize)> = IndexMap::new();
-
-        for tile in tiles.iter() {
-            let key: Vec<T> = tile.data.iter().copied().collect();
-            freq_map
-                .entry(key)
-                .and_modify(|(_, count)| *count += 1)
-                .or_insert((tile.clone(), 1));
+    /// Create a view of the images border.
+    pub fn view_border(&self, direction: Direction, size: usize) -> ArrayView2<T> {
+        debug_assert!(size > 0);
+        match direction {
+            Direction::North => self.data.slice(s![0..size, ..]),
+            Direction::East => self.data.slice(s![.., (self.width() - size)..]),
+            Direction::South => self.data.slice(s![(self.height() - size).., ..]),
+            Direction::West => self.data.slice(s![.., 0..size]),
         }
+    }
 
-        freq_map.into_values().collect()
+    /// Create a mutable view of the images border.
+    pub fn view_border_mut(&mut self, direction: Direction, size: usize) -> ArrayViewMut2<T> {
+        debug_assert!(size > 0);
+        match direction {
+            Direction::North => self.data.slice_mut(s![0..size, ..]),
+            Direction::East => self.data.slice_mut(s![.., (self.width() - size)..]),
+            Direction::South => self.data.slice_mut(s![(self.height() - size).., ..]),
+            Direction::West => self.data.slice_mut(s![.., 0..size]),
+        }
     }
 }
 
