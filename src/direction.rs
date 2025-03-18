@@ -9,6 +9,15 @@ pub enum Direction {
 }
 
 impl Direction {
+    pub fn opposite(self) -> Self {
+        match self {
+            Direction::North => Direction::South,
+            Direction::East => Direction::West,
+            Direction::South => Direction::North,
+            Direction::West => Direction::East,
+        }
+    }
+
     pub fn from_index<T: NumCast>(index: T) -> Self {
         let i = index.to_usize().unwrap();
         match i {
