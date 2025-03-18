@@ -43,8 +43,6 @@ impl Transformation {
     }
 }
 
-impl Transformation {}
-
 impl std::fmt::Display for Transformation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {

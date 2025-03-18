@@ -1,4 +1,5 @@
 mod colour_map;
+mod direction;
 mod image;
 mod image_error;
 mod image_g;
@@ -9,6 +10,7 @@ mod norm_float;
 mod transformation;
 
 pub use colour_map::ColourMap;
+pub use direction::{ALL_DIRECTIONS, Direction};
 pub use image::Image;
 pub use image_error::ImageError;
 pub use image_g::ImageG;
