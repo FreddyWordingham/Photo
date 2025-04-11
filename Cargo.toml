@@ -1,6 +1,6 @@
 [package]
 name = "photo"
-version = "2.5.1"
+version = "2.5.2"
 edition = "2024"
 description = "Image utility library"
 license = "MIT"
