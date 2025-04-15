@@ -175,7 +175,7 @@ impl<T: Clone + Default + Zero> Image<T> {
     /// Create an array of sub-tiles in the image.
     pub fn extract_tiles(&self, tile_size: usize, overlap: usize) -> Array2<Self> {
         let (height, width) = (self.height(), self.width());
-        debug_assert!(tile_size < overlap);
+        debug_assert!(overlap < tile_size);
         debug_assert!(height >= tile_size);
         debug_assert!(width >= tile_size);
         debug_assert_eq!(
@@ -203,7 +203,7 @@ impl<T: Clone + Default + Zero> Image<T> {
     /// Create a view of tiles in the image.
     pub fn view_tiles(&self, tile_size: usize, overlap: usize) -> Array2<ArrayView2<T>> {
         let (height, width) = (self.height(), self.width());
-        debug_assert!(tile_size < overlap);
+        debug_assert!(overlap < tile_size);
         debug_assert!(height >= tile_size);
         debug_assert!(width >= tile_size);
         debug_assert_eq!(
