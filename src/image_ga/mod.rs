@@ -231,6 +231,34 @@ impl<T: Copy + PartialOrd + Zero + One> ImageGA<T> {
         }
     }
 
+    /// Create an array of sub-tiles in the image.
+    pub fn extract_tiles(&self, tile_size: usize, overlap: usize) -> Array2<Self> {
+        let (height, width) = (self.height(), self.width());
+        debug_assert!(tile_size < overlap);
+        debug_assert!(height >= tile_size);
+        debug_assert!(width >= tile_size);
+        debug_assert_eq!(
+            (width - overlap) % (tile_size - overlap),
+            0,
+            "Image must contain an integer number of tiles"
+        );
+        debug_assert_eq!(
+            (height - overlap) % (tile_size - overlap),
+            0,
+            "Image must contain an integer number of tiles"
+        );
+
+        let num_horizontal_tiles = (width - overlap) / (tile_size - overlap);
+        let num_vertical_tiles = (height - overlap) / (tile_size - overlap);
+
+        let step_size = tile_size - overlap;
+        Array2::from_shape_fn((num_vertical_tiles, num_horizontal_tiles), |(y, x)| {
+            let start_y = y * step_size;
+            let start_x = x * step_size;
+            self.extract([start_y, start_x], [tile_size, tile_size])
+        })
+    }
+
     /// Create a view of tiles in the image.
     pub fn view_tiles(&self, tile_size: usize, overlap: usize) -> Array2<ArrayView3<T>> {
         let (height, width) = (self.height(), self.width());
