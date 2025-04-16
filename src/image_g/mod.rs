@@ -208,6 +208,46 @@ impl<T: Copy + PartialOrd + Zero> ImageG<T> {
         }
     }
 
+    /// Get a copy of the interior of the image.
+    pub fn interior(&self, border_size: usize) -> ImageG<T> {
+        let height = self.height();
+        let width = self.width();
+        debug_assert!(height > 2 * border_size);
+        debug_assert!(width > 2 * border_size);
+        Self::new(
+            self.data
+                .slice(s![
+                    border_size..(height - border_size),
+                    border_size..(width - border_size)
+                ])
+                .to_owned(),
+        )
+    }
+
+    /// Create a view of the image's interior.
+    pub fn view_interior(&self, border_size: usize) -> ArrayView2<T> {
+        let height = self.height();
+        let width = self.width();
+        debug_assert!(height > 2 * border_size);
+        debug_assert!(width > 2 * border_size);
+        self.data.slice(s![
+            border_size..(height - border_size),
+            border_size..(width - border_size)
+        ])
+    }
+
+    /// Create a mutable view of the image's interior.
+    pub fn view_interior_mut(&mut self, border_size: usize) -> ArrayViewMut2<T> {
+        let height = self.height();
+        let width = self.width();
+        debug_assert!(height > 2 * border_size);
+        debug_assert!(width > 2 * border_size);
+        self.data.slice_mut(s![
+            border_size..(height - border_size),
+            border_size..(width - border_size)
+        ])
+    }
+
     /// Create an array of sub-tiles in the image.
     pub fn extract_tiles(&self, tile_size: usize, overlap: usize) -> Array2<Self> {
         let (height, width) = (self.height(), self.width());
