@@ -10,7 +10,7 @@ use std::{
 
 use crate::{ImageError, ImageRGBA, NormFloat};
 
-impl<T: NormFloat> ImageRGBA<T> {
+impl<T: NormFloat + Display> ImageRGBA<T> {
     /// Save the image in RGBA PNG format.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), ImageError> {
         let width = self.width() as u32;

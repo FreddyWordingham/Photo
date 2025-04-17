@@ -1,4 +1,6 @@
-use ndarray::{Array2, Array3, ArrayView3, ArrayViewMut3, Axis, arr1, s, stack};
+use ndarray::{
+    Array2, Array3, ArrayBase, ArrayView3, ArrayViewMut3, Axis, Data, Ix2, arr1, s, stack,
+};
 use num_traits::{One, Zero};
 
 use crate::{Direction, Transformation};
@@ -37,13 +39,37 @@ impl<T: Copy + PartialOrd + Zero + One> ImageGA<T> {
     }
 
     /// Creates an ImageGA from two grayscale layers.
-    pub fn from_layers(layers: [Array2<T>; 2]) -> Self {
+    pub fn from_component_layers(layers: [Array2<T>; 2]) -> Self {
         debug_assert!(layers.iter().all(|layer| layer.ncols() > 0));
         debug_assert!(layers.iter().all(|layer| layer.nrows() > 0));
         debug_assert!(layers.iter().all(|layer| layer.dim() == layers[0].dim()));
         let data =
             stack(Axis(2), &[layers[0].view(), layers[1].view()]).expect("Failed to stack layers");
         Self { data }
+    }
+
+    /// Creates an ImageRGBA from a 2D grid of tiles.
+    pub fn from_tiles<D>(tiles: &ArrayBase<D, Ix2>) -> Self
+    where
+        D: Data<Elem = Self>,
+    {
+        assert!(!tiles.is_empty(), "tiles must not be empty");
+        let (rows, cols) = tiles.dim();
+        let tile_h = tiles[(0, 0)].height();
+        let tile_w = tiles[(0, 0)].width();
+        assert!(
+            tile_h > 0 && tile_w > 0,
+            "tiles must have positive dimensions"
+        );
+
+        let mut data = Array3::zeros((rows * tile_h, cols * tile_w, 2));
+        for ((r, c), tile) in tiles.indexed_iter() {
+            let sy = r * tile_h;
+            let sx = c * tile_w;
+            data.slice_mut(s![sy..sy + tile_h, sx..sx + tile_w, ..])
+                .assign(&tile.data);
+        }
+        ImageGA::new(data)
     }
 
     /// Returns the height of the image.

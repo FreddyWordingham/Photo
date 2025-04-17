@@ -1,4 +1,4 @@
-use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis, s};
+use ndarray::{Array2, ArrayBase, ArrayView2, ArrayViewMut2, Axis, Data, Ix2, s};
 use num_traits::Zero;
 
 use crate::{Direction, Transformation};
@@ -30,6 +30,30 @@ impl<T: Clone + Default + Zero> Image<T> {
         debug_assert!(resolution.iter().all(|&r| r > 0));
         let data = Array2::from_elem(resolution, value);
         Self { data }
+    }
+
+    /// Creates an ImageRGBA from a 2D grid of tiles.
+    pub fn from_tiles<D>(tiles: &ArrayBase<D, Ix2>) -> Self
+    where
+        D: Data<Elem = Self>,
+    {
+        assert!(!tiles.is_empty(), "tiles must not be empty");
+        let (rows, cols) = tiles.dim();
+        let tile_h = tiles[(0, 0)].height();
+        let tile_w = tiles[(0, 0)].width();
+        assert!(
+            tile_h > 0 && tile_w > 0,
+            "tiles must have positive dimensions"
+        );
+
+        let mut data = Array2::zeros((rows * tile_h, cols * tile_w));
+        for ((r, c), tile) in tiles.indexed_iter() {
+            let sy = r * tile_h;
+            let sx = c * tile_w;
+            data.slice_mut(s![sy..sy + tile_h, sx..sx + tile_w])
+                .assign(&tile.data);
+        }
+        Image::new(data)
     }
 
     /// Returns the height of the image.
