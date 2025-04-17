@@ -121,7 +121,7 @@ impl ImageRGBA<u8> {
         let images_per_row = if term_width < cell_width {
             1
         } else {
-            term_width / (cell_width + (2 * gap))
+            (term_width + (2 * gap)) / (cell_width + (2 * gap))
         };
 
         // Process images by chunks (each chunk forms a row)
@@ -176,10 +176,11 @@ impl ImageRGBA<u8> {
         let cell_width = img_width * 2;
 
         // Calculate images per row considering the gap between each image.
+        println!("term_width: {term_width}");
         let images_per_row = if term_width < cell_width {
             1
         } else {
-            term_width / (cell_width + gap)
+            (term_width + (2 * gap)) / (cell_width + (2 * gap))
         };
 
         // Process each chunk (row) of images with captions.
