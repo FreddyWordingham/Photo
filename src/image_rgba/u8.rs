@@ -106,7 +106,7 @@ impl ImageRGBA<u8> {
         let term_width = if let Some((w, _h)) = term_size::dimensions() {
             w
         } else {
-            60 // Fallback width if terminal size cannot be determined
+            80 // Fallback width if terminal size cannot be determined
         };
 
         // Ensure there's at least one image.
@@ -121,7 +121,7 @@ impl ImageRGBA<u8> {
         let images_per_row = if term_width < cell_width {
             1
         } else {
-            term_width / (cell_width + gap)
+            term_width / (cell_width + (2 * gap))
         };
 
         // Process images by chunks (each chunk forms a row)
