@@ -1,21 +1,20 @@
-mod colour_map;
-mod direction;
-mod image;
-mod image_error;
-mod image_g;
-mod image_ga;
-mod image_rgb;
-mod image_rgba;
-mod norm_float;
-mod transformation;
+//! # `Photo`
+//!
+//! `Photo` is a utility library for manipulating images in Rust.
 
-pub use colour_map::ColourMap;
-pub use direction::{ALL_DIRECTIONS, Direction};
+#![deny(warnings)]
+#![deny(missing_docs)]
+#![deny(unused)]
+#![deny(dead_code)]
+#![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(unreachable_code)]
+
+mod channels;
+mod image;
+
+pub use channels::Channels;
 pub use image::Image;
-pub use image_error::ImageError;
-pub use image_g::ImageG;
-pub use image_ga::ImageGA;
-pub use image_rgb::ImageRGB;
-pub use image_rgba::ImageRGBA;
-use norm_float::NormFloat;
-pub use transformation::{ALL_TRANSFORMATIONS, Transformation};
