@@ -5,6 +5,14 @@ edition = "2024"
 description = "Image utility library"
 license = "MIT"
 repository = "https://github.com/FreddyWordingham/Photo"
+keywords = ["image", "graphics", "processing", "tiles", "transformation"]
+categories = [
+    "graphics",
+    "multimedia",
+    "rendering",
+    "visualization",
+    "data-structures",
+]
 
 [dependencies]
 nav = "0.1.0"
