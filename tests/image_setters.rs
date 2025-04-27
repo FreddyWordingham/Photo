@@ -16,6 +16,22 @@ fn test_set_channel() {
 }
 
 #[test]
+#[should_panic(expected = "Channel index out of bounds")]
+fn test_set_channel_out_of_bounds() {
+    let mut image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let new_channel = Array2::<f32>::from_elem((3, 3), 0.5);
+    image.set_channel(3, &new_channel);
+}
+
+#[test]
+#[should_panic(expected = "Layer dimensions do not match")]
+fn test_set_channel_wrong_size() {
+    let mut image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let new_channel = Array2::<f32>::from_elem((4, 3), 0.5);
+    image.set_channel(1, &new_channel);
+}
+
+#[test]
 fn test_set_pixel() {
     let mut image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
 
@@ -31,6 +47,22 @@ fn test_set_pixel() {
     assert_eq!(other_pixel[0], 0.1);
     assert_eq!(other_pixel[1], 0.2);
     assert_eq!(other_pixel[2], 0.3);
+}
+
+#[test]
+#[should_panic(expected = "Pixel index out of bounds")]
+fn test_set_pixel_out_of_bounds() {
+    let mut image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let new_pixel = arr1(&[0.9, 0.8, 0.7]);
+    image.set_pixel((3, 1), &new_pixel);
+}
+
+#[test]
+#[should_panic(expected = "Pixel length does not match number of channels")]
+fn test_set_pixel_wrong_length() {
+    let mut image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let new_pixel = arr1(&[0.9, 0.8, 0.7, 0.6]);
+    image.set_pixel((1, 1), &new_pixel);
 }
 
 #[test]

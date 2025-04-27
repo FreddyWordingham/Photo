@@ -8,13 +8,41 @@ fn test_view_region() {
 
     let region_view = image.view_region((2, 3), (3, 4));
     assert_eq!(region_view.dim(), (3, 4, 3));
-    for i in 0..3 {
-        for j in 0..4 {
-            for c in 0..3 {
-                assert_eq!(region_view[[i, j, c]], image[(i + 2, j + 3, c)]);
+    for row in 0..3 {
+        for col in 0..4 {
+            for ch in 0..3 {
+                assert_eq!(region_view[[row, col, ch]], image[(row + 2, col + 3, ch)]);
             }
         }
     }
+}
+
+#[test]
+#[should_panic(expected = "Region height must be positive")]
+fn test_view_region_zero_height() {
+    let image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let _ = image.view_region((0, 0), (0, 2));
+}
+
+#[test]
+#[should_panic(expected = "Region width must be positive")]
+fn test_view_region_zero_width() {
+    let image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let _ = image.view_region((0, 0), (2, 0));
+}
+
+#[test]
+#[should_panic(expected = "Region exceeds image height")]
+fn test_view_region_exceeds_height() {
+    let image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let _ = image.view_region((1, 1), (3, 2));
+}
+
+#[test]
+#[should_panic(expected = "Region exceeds image width")]
+fn test_view_region_exceeds_width() {
+    let image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let _ = image.view_region((1, 1), (2, 3));
 }
 
 #[test]
@@ -25,10 +53,10 @@ fn test_view_region_mut() {
     let mut region_view_mut = image.view_region_mut((2, 3), (3, 4));
     assert_eq!(region_view_mut.dim(), (3, 4, 3));
 
-    for i in 0..3 {
-        for j in 0..4 {
-            for c in 0..3 {
-                region_view_mut[[i, j, c]] += 1.0;
+    for row in 0..3 {
+        for col in 0..4 {
+            for ch in 0..3 {
+                region_view_mut[[row, col, ch]] += 1.0;
             }
         }
     }
@@ -55,10 +83,10 @@ fn test_view_copy_region() {
 
     assert_eq!(region_copy.format(), Channels::RGB);
     assert_eq!(region_copy.resolution(), (3, 4));
-    for i in 0..3 {
-        for j in 0..4 {
-            for c in 0..3 {
-                assert_eq!(region_copy[(i, j, c)], image[(i + 2, j + 3, c)]);
+    for row in 0..3 {
+        for col in 0..4 {
+            for ch in 0..3 {
+                assert_eq!(region_copy[(row, col, ch)], image[(row + 2, col + 3, ch)]);
             }
         }
     }

@@ -9,6 +9,13 @@ fn test_get_channel() {
 }
 
 #[test]
+#[should_panic(expected = "Channel index out of bounds")]
+fn test_get_channel_out_of_bounds() {
+    let image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let _ = image.get_channel(3);
+}
+
+#[test]
 fn test_get_pixel() {
     let image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
 
@@ -17,6 +24,13 @@ fn test_get_pixel() {
     assert_eq!(pixel[0], 0.1);
     assert_eq!(pixel[1], 0.2);
     assert_eq!(pixel[2], 0.3);
+}
+
+#[test]
+#[should_panic(expected = "Pixel index out of bounds")]
+fn test_get_pixel_out_of_bounds() {
+    let image = Image::<f32>::filled((3, 3), &[0.1, 0.2, 0.3]);
+    let _ = image.get_pixel((3, 2));
 }
 
 #[test]

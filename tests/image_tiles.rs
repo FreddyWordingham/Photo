@@ -113,6 +113,15 @@ fn test_view_tiles_non_integer_tiles_vertical() {
 }
 
 #[test]
+#[should_panic(expected = "Image must contain an integer number of tiles in the horizontal direction")]
+fn test_view_tiles_non_integer_tiles_horizontal() {
+    let data = Array3::from_shape_fn((4, 5, 1), |(row, col, _)| (row * 4 + col) as u8);
+    let image = Image::new(&data);
+
+    let _ = image.view_tiles((2, 2), (0, 0));
+}
+
+#[test]
 fn test_copy_tiles_separated() {
     let data = Array3::<u8>::from_shape_fn((6, 8, 1), |(row, col, _)| (row * 10 + col) as u8);
     let image = Image::new(&data);
@@ -162,4 +171,46 @@ fn test_copy_tiles_overlapping() {
             assert_eq!(second_tile[(row, col, 0)], image[(row, col + 3, 0)]);
         }
     }
+}
+
+#[test]
+#[should_panic(expected = "Tile height must be positive")]
+fn test_copy_tiles_zero_height() {
+    let image = Image::<f32>::filled((6, 6), &[0.1, 0.2, 0.3]);
+    let _ = image.copy_tiles((0, 3), (0, 0));
+}
+
+#[test]
+#[should_panic(expected = "Tile width must be positive")]
+fn test_copy_tiles_zero_width() {
+    let image = Image::<f32>::filled((6, 6), &[0.1, 0.2, 0.3]);
+    let _ = image.copy_tiles((3, 0), (0, 0));
+}
+
+#[test]
+#[should_panic(expected = "Overlap height must be less than tile height")]
+fn test_copy_tiles_overlap_too_large_height() {
+    let image = Image::<f32>::filled((6, 6), &[0.1, 0.2, 0.3]);
+    let _ = image.copy_tiles((3, 3), (3, 0));
+}
+
+#[test]
+#[should_panic(expected = "Overlap width must be less than tile width")]
+fn test_copy_tiles_overlap_too_large_width() {
+    let image = Image::<f32>::filled((6, 6), &[0.1, 0.2, 0.3]);
+    let _ = image.copy_tiles((3, 3), (0, 3));
+}
+
+#[test]
+#[should_panic(expected = "Image must contain an integer number of tiles in the vertical direction")]
+fn test_copy_tiles_non_integer_tiles_vertical() {
+    let image = Image::<f32>::filled((5, 6), &[0.1, 0.2, 0.3]);
+    let _ = image.copy_tiles((3, 3), (0, 0));
+}
+
+#[test]
+#[should_panic(expected = "Image must contain an integer number of tiles in the horizontal direction")]
+fn test_copy_tiles_non_integer_tiles_horizontal() {
+    let image = Image::<f32>::filled((6, 5), &[0.1, 0.2, 0.3]);
+    let _ = image.copy_tiles((3, 3), (0, 0));
 }

@@ -159,10 +159,6 @@ impl<T> Image<T> {
             images.iter().all(|image| image.width() == width),
             "All images must have the same width"
         );
-        assert!(
-            images.iter().all(|image| image.height() > 0),
-            "All images must have positive height"
-        );
         let format = images[0].format;
         assert!(
             images.iter().all(|image| image.format == format),
