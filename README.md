@@ -2,7 +2,7 @@
     Photo
 </p>
 <p align="center">
-    <img src="./assets/images/image_icon.png" alt="Photo Icon" width="200" style="border-radius: 5%; border: 2px solid #000;">
+    <img src="./assets/images/icon.png" alt="Photo Icon" width="200" style="border-radius: 5%; border: 2px solid #000;">
 </p>
 <p align="center" style="font-size: 1.5em">
     A lightweight, highly-generic Rust library for image manipulation with rich format support and transformation operations.

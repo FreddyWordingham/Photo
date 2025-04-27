@@ -784,8 +784,13 @@ impl<T> Image<T> {
         let iwidth = isize::try_from(width).expect("width exceeds isize::MAX");
         let num_channels = self.format.num_channels();
 
-        let row = usize::try_from(row_off.rem_euclid(iheight)).expect("Index conversion failed");
-        let col = usize::try_from(col_off.rem_euclid(iwidth)).expect("Index conversion failed");
+        // Negate the offsets to make positive values move in the positive direction
+        let neg_row_off = -row_off;
+        let neg_col_off = -col_off;
+
+        // Calculate the actual offsets after wrapping
+        let row = usize::try_from(neg_row_off.rem_euclid(iheight)).expect("Index conversion failed");
+        let col = usize::try_from(neg_col_off.rem_euclid(iwidth)).expect("Index conversion failed");
 
         let mut out = Array3::zeros((height, width, num_channels));
         let src = self.data.view();
