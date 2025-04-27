@@ -1,4 +1,8 @@
-use ndarray::{Array3, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2, Ix3, s, stack};
+use nav::Direction;
+use ndarray::{
+    Array2, Array3, ArrayBase, ArrayView1, ArrayView2, ArrayView3, ArrayViewMut3, Axis, Data, Ix1, Ix2, Ix3, concatenate, s,
+    stack,
+};
 use num_traits::Zero;
 use std::ops::{Index, IndexMut};
 
@@ -21,7 +25,7 @@ impl<T> Image<T> {
     /// Panics if the height or width of the data is not positive.
     /// Panics if the number of channels is not between 1 and 4.
     #[must_use]
-    pub fn new<S>(data: ArrayBase<S, Ix3>) -> Self
+    pub fn new<S>(data: &ArrayBase<S, Ix3>) -> Self
     where
         S: Data<Elem = T>,
         T: Clone,
@@ -105,7 +109,7 @@ impl<T> Image<T> {
         );
 
         // Create views of each layer
-        let views: Vec<_> = layers.iter().map(|layer| layer.view()).collect();
+        let views: Vec<_> = layers.iter().map(ArrayBase::view).collect();
 
         // Stack the views along the channel axis
         let data = stack(Axis(2), &views).expect("Failed to stack layers");
@@ -113,7 +117,73 @@ impl<T> Image<T> {
         Self { format, data }
     }
 
-    /// Creates an `Image` from a 2D grid of tiles.
+    /// Combine images by stacking them vertically.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the there are no images.
+    /// Panics if the images do not all have the same width.
+    /// Panics if the images do not all have the same format.
+    /// Panics if the images do not all have positive height.
+    #[must_use]
+    pub fn vstack(images: &[Image<T>]) -> Self
+    where
+        T: Clone + Zero,
+    {
+        assert!(!images.is_empty(), "At least one image is required");
+        let width = images[0].width();
+        assert!(width > 0, "Image widths must be positive");
+        assert!(
+            images.iter().all(|image| image.width() == width),
+            "All images must have the same width"
+        );
+        assert!(
+            images.iter().all(|image| image.height() > 0),
+            "All images must have positive height"
+        );
+        let format = images[0].format;
+        assert!(
+            images.iter().all(|image| image.format == format),
+            "All images must have the same format"
+        );
+
+        let views: Vec<_> = images.iter().map(|img| img.data.view()).collect();
+        let data = concatenate(Axis(0), &views).expect("concatenate failed");
+        Self { format, data }
+    }
+
+    /// Combine images by stacking them horizontally.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there are no images.  
+    /// Panics if the images do not all have the same height.  
+    /// Panics if the images do not all have the same format.  
+    /// Panics if the images do not all have positive width.
+    #[must_use]
+    pub fn hstack(images: &[Image<T>]) -> Self
+    where
+        T: Clone + Zero,
+    {
+        assert!(!images.is_empty(), "At least one image is required");
+        let height = images[0].height();
+        assert!(height > 0, "Image heights must be positive");
+        assert!(
+            images.iter().all(|img| img.height() == height),
+            "All images must have the same height"
+        );
+        let format = images[0].format;
+        assert!(
+            images.iter().all(|img| img.format == format),
+            "All images must have the same format"
+        );
+
+        let views: Vec<_> = images.iter().map(|img| img.data.view()).collect();
+        let data = concatenate(Axis(1), &views).expect("concatenate failed");
+        Self { format, data }
+    }
+
+    /// Creates an `Image` from a 2D grid of `Image` tiles.
     ///
     /// # Panics
     ///
@@ -121,7 +191,7 @@ impl<T> Image<T> {
     /// Panics if the tiles do not all have the same dimensions.
     /// Panics if the tile width or height is not positive.
     /// Panics if the tiles do not all have the same format.
-    pub fn from_tiles<D>(tiles: &ArrayBase<D, Ix2>) -> Self
+    pub fn stack<D>(tiles: &ArrayBase<D, Ix2>) -> Self
     where
         D: Data<Elem = Self>,
         T: Clone + Zero,
@@ -157,6 +227,21 @@ impl<T> Image<T> {
         Self { format, data }
     }
 
+    /// Helper method to create a default-initialised image with the same format.
+    #[must_use]
+    fn default_like(&self) -> Self
+    where
+        T: Clone + Zero,
+    {
+        let (height, width) = self.resolution();
+        let num_channels = self.format.num_channels();
+
+        Image {
+            format: self.format,
+            data: Array3::zeros((height, width, num_channels)),
+        }
+    }
+
     /// Returns the height of the image.
     #[must_use]
     pub fn height(&self) -> usize {
@@ -182,12 +267,22 @@ impl<T> Image<T> {
     }
 
     /// Get a layer of the image as a 2D view.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the channel index is out of bounds.
+    #[must_use]
     pub fn get_channel(&self, channel: usize) -> ArrayView2<T> {
         assert!(channel < self.data.dim().2, "Channel index out of bounds");
         self.data.slice(s![.., .., channel])
     }
 
     /// Set a layer of the image.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the channel index is out of bounds.
+    /// Panics if the dimensions of the layer do not match the image dimensions.
     pub fn set_channel<S>(&mut self, channel: usize, layer: &ArrayBase<S, Ix2>)
     where
         S: Data<Elem = T>,
@@ -202,13 +297,23 @@ impl<T> Image<T> {
         self.data.slice_mut(s![.., .., channel]).assign(layer);
     }
     /// Get a view of a pixel at the given coordinates.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the pixel index is out of bounds.
+    #[must_use]
     pub fn get_pixel(&self, (row, col): (usize, usize)) -> ArrayView1<T> {
         let (height, width, _) = self.data.dim();
         assert!(row < height && col < width, "Pixel index out of bounds");
         self.data.slice(s![row, col, ..])
     }
 
-    /// Set a pixel at the given coordinates, accepting any type that can be viewed as Array1
+    /// Set a pixel at the given coordinates.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the pixel index is out of bounds.
+    /// Panics if the pixel length does not match the number of channels.
     pub fn set_pixel<S>(&mut self, (row, col): (usize, usize), pixel: &ArrayBase<S, Ix1>)
     where
         S: Data<Elem = T>,
@@ -222,6 +327,427 @@ impl<T> Image<T> {
             "Pixel length does not match number of channels"
         );
         self.data.slice_mut(s![row, col, ..]).assign(pixel);
+    }
+
+    /// Get a view of a region of the `Image`.
+    ///
+    /// This returns a view rather than creating a new `Image`, which is more efficient
+    /// when you only need to read from the region without modifying it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the region exceeds the `Image` dimensions.
+    /// Panics if the region dimensions are not positive.
+    #[must_use]
+    pub fn view_region(&self, (start_row, start_col): (usize, usize), (height, width): (usize, usize)) -> ArrayView3<T> {
+        assert!(height > 0, "Region height must be positive");
+        assert!(width > 0, "Region width must be positive");
+        assert!(start_row + height <= self.height(), "Region exceeds image height");
+        assert!(start_col + width <= self.width(), "Region exceeds image width");
+
+        self.data
+            .slice(s![start_row..(start_row + height), start_col..(start_col + width), ..])
+    }
+
+    /// Get a mutable view of a region of the `Image`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the region exceeds the `Image` dimensions.
+    /// Panics if the region dimensions are not positive.
+    pub fn view_region_mut(
+        &mut self,
+        (start_row, start_col): (usize, usize),
+        (height, width): (usize, usize),
+    ) -> ArrayViewMut3<T> {
+        assert!(height > 0, "Region height must be positive");
+        assert!(width > 0, "Region width must be positive");
+        assert!(start_row + height <= self.height(), "Region exceeds image height");
+        assert!(start_col + width <= self.width(), "Region exceeds image width");
+
+        self.data
+            .slice_mut(s![start_row..(start_row + height), start_col..(start_col + width), ..])
+    }
+
+    /// Copy a region of the `Image` into a new `Image`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the region exceeds the `Image` dimensions.
+    /// Panics if the region dimensions are not positive.
+    #[must_use]
+    pub fn copy_region(&self, (start_row, start_col): (usize, usize), (height, width): (usize, usize)) -> Image<T>
+    where
+        T: Clone,
+    {
+        assert!(height > 0, "Region height must be positive");
+        assert!(width > 0, "Region width must be positive");
+        assert!(start_row + height <= self.height(), "Region exceeds image height");
+        assert!(start_col + width <= self.width(), "Region exceeds image width");
+
+        let region = self
+            .data
+            .slice(s![start_row..(start_row + height), start_col..(start_col + width), ..]);
+        Image::new(&region)
+    }
+
+    /// Copy a region of the `Image` into a new `Image`, with wrapping (toroidal) boundary conditions.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the region dimensions are not positive.
+    #[must_use]
+    pub fn copy_region_wrapped(&self, (start_row, start_col): (isize, isize), (height, width): (usize, usize)) -> Image<T>
+    where
+        T: Clone,
+    {
+        /// Helper function to perform proper modulo for negative numbers
+        #[inline]
+        fn wrap_index(a: isize, b: isize) -> isize {
+            ((a % b) + b) % b
+        }
+
+        assert!(height > 0, "Region height must be positive");
+        assert!(width > 0, "Region width must be positive");
+
+        let (self_height, self_width, channels) = self.data.dim();
+
+        // Pre-calculate wrapped row and column indices for the region
+        let wrapped_rows: Vec<usize> = (0..height)
+            .map(|row| {
+                wrap_index(
+                    start_row + TryInto::<isize>::try_into(row).expect("height exceeds isize::MAX"),
+                    TryInto::<isize>::try_into(self_height).expect("self_height exceeds isize::MAX"),
+                ) as usize
+            })
+            .collect();
+        let wrapped_cols: Vec<usize> = (0..width)
+            .map(|col| {
+                wrap_index(
+                    start_col + TryInto::<isize>::try_into(col).expect("width exceeds isize::MAX"),
+                    TryInto::<isize>::try_into(self_width).expect("self_width exceeds isize::MAX"),
+                ) as usize
+            })
+            .collect();
+
+        Image::new(&Array3::<T>::from_shape_fn(
+            (height, width, channels),
+            |(out_row, out_col, ch)| {
+                let src_row = wrapped_rows[out_row];
+                let src_col = wrapped_cols[out_col];
+                self.data[(src_row, src_col, ch)].clone()
+            },
+        ))
+    }
+
+    /// View the interior region of the image, excluding a border of a given size.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the border size is not positive.
+    /// Panics if the border size is larger than half the image dimensions.
+    #[must_use]
+    pub fn view_interior(&self, border: usize) -> ArrayView3<T> {
+        assert!(border > 0, "Border size must be positive");
+        let (height, width) = self.resolution();
+        assert!((2 * border) < height, "Border size must be less than half the height");
+        assert!((2 * border) < width, "Border size must be less than half the width");
+
+        self.data.slice(s![border..(height - border), border..(width - border), ..])
+    }
+
+    /// Get a mutable view of the interior region of the image, excluding a border of a given size.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the border size is not positive.
+    /// Panics if the border size is larger than half the image dimensions.
+    #[must_use]
+    pub fn view_interior_mut(&mut self, border: usize) -> ArrayViewMut3<T> {
+        assert!(border > 0, "Border size must be positive");
+        let (height, width) = self.resolution();
+        assert!((2 * border) < height, "Border size must be less than half the height");
+        assert!((2 * border) < width, "Border size must be less than half the width");
+
+        self.data
+            .slice_mut(s![border..(height - border), border..(width - border), ..])
+    }
+
+    /// Copy the interior region of the image, excluding a border of a given size.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the border size is not positive.
+    /// Panics if the border size is larger than half the image dimensions.
+    #[must_use]
+    pub fn copy_interior(&self, border: usize) -> Image<T>
+    where
+        T: Clone,
+    {
+        assert!(border > 0, "Border size must be positive");
+        let (height, width) = self.resolution();
+        assert!((2 * border) < height, "Border size must be less than half the height");
+        assert!((2 * border) < width, "Border size must be less than half the width");
+
+        let region = self.data.slice(s![border..(height - border), border..(width - border), ..]);
+        Image::new(&region)
+    }
+
+    /// View a border region of the image.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the border size is not positive.
+    /// Panics if the border size is larger than the respective axis dimension.
+    #[must_use]
+    pub fn view_border(&self, direction: &Direction, border_size: usize) -> ArrayView3<T> {
+        assert!(border_size > 0, "Border size must be positive");
+        let (height, width) = self.resolution();
+        match direction {
+            Direction::North => {
+                assert!(
+                    border_size <= height,
+                    "Border size must be less than or equal to height when viewing northern border"
+                );
+                self.data.slice(s![0..border_size, .., ..])
+            }
+            Direction::East => {
+                assert!(
+                    border_size <= width,
+                    "Border size must be less than or equal to width when viewing eastern border"
+                );
+                self.data.slice(s![.., (width - border_size).., ..])
+            }
+            Direction::South => {
+                assert!(
+                    border_size <= height,
+                    "Border size must be less than or equal to height when viewing southern border"
+                );
+                self.data.slice(s![(height - border_size).., .., ..])
+            }
+            Direction::West => {
+                assert!(
+                    border_size <= width,
+                    "Border size must be less than or equal to width when viewing western border"
+                );
+                self.data.slice(s![.., 0..border_size, ..])
+            }
+        }
+    }
+
+    /// Get a mutable view of a border region of the image.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the border size is not positive.
+    /// Panics if the border size is larger than the respective axis dimension.
+    #[must_use]
+    pub fn view_border_mut(&mut self, direction: &Direction, border_size: usize) -> ArrayViewMut3<T> {
+        assert!(border_size > 0, "Border size must be positive");
+        let (height, width) = self.resolution();
+        match direction {
+            Direction::North => {
+                assert!(
+                    border_size <= height,
+                    "Border size must be less than or equal to height when viewing northern border"
+                );
+                self.data.slice_mut(s![0..border_size, .., ..])
+            }
+            Direction::East => {
+                assert!(
+                    border_size <= width,
+                    "Border size must be less than or equal to width when viewing eastern border"
+                );
+                self.data.slice_mut(s![.., (width - border_size).., ..])
+            }
+            Direction::South => {
+                assert!(
+                    border_size <= height,
+                    "Border size must be less than or equal to height when viewing southern border"
+                );
+                self.data.slice_mut(s![(height - border_size).., .., ..])
+            }
+            Direction::West => {
+                assert!(
+                    border_size <= width,
+                    "Border size must be less than or equal to width when viewing western border"
+                );
+                self.data.slice_mut(s![.., 0..border_size, ..])
+            }
+        }
+    }
+
+    /// Copy a border region of the image.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the border size is not positive.
+    /// Panics if the border size is larger than the respective axis dimension.
+    #[must_use]
+    pub fn copy_border(&self, direction: &Direction, border_size: usize) -> Self
+    where
+        T: Clone,
+    {
+        assert!(border_size > 0, "Border size must be positive");
+        let (height, width) = self.resolution();
+        match direction {
+            Direction::North => {
+                assert!(
+                    border_size <= height,
+                    "Border size must be less than or equal to height when copying northern border"
+                );
+                Self::new(&self.data.slice(s![0..border_size, .., ..]))
+            }
+            Direction::East => {
+                assert!(
+                    border_size <= width,
+                    "Border size must be less than or equal to width when copying eastern border"
+                );
+                Self::new(&self.data.slice(s![.., (width - border_size).., ..]))
+            }
+            Direction::South => {
+                assert!(
+                    border_size <= height,
+                    "Border size must be less than or equal to height when copying southern border"
+                );
+                Self::new(&self.data.slice(s![(height - border_size).., .., ..]))
+            }
+            Direction::West => {
+                assert!(
+                    border_size <= width,
+                    "Border size must be less than or equal to width when copying western border"
+                );
+                Self::new(&self.data.slice(s![.., 0..border_size, ..]))
+            }
+        }
+    }
+
+    /// Split the image into a grid of tile views.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the tile size is not positive.
+    /// Panics if the overlap size is not less than the tile size.
+    /// Panics if the image does not contain an integer number of tiles in either dimension.
+    #[must_use]
+    pub fn view_tiles(&self, tile_size: (usize, usize), overlap: (usize, usize)) -> Array2<ArrayView3<T>>
+    where
+        T: Clone,
+    {
+        let (height, width) = self.resolution();
+        let (tile_height, tile_width) = tile_size;
+        let (overlap_height, overlap_width) = overlap;
+
+        assert!(tile_height > 0, "Tile height must be positive");
+        assert!(tile_width > 0, "Tile width must be positive");
+        assert!(overlap_height < tile_height, "Overlap height must be less than tile height");
+        assert!(overlap_width < tile_width, "Overlap width must be less than tile width");
+        assert!(
+            (height - overlap_height) % (tile_height - overlap_height) == 0,
+            "Image must contain an integer number of tiles in the vertical direction"
+        );
+        assert!(
+            (width - overlap_width) % (tile_width - overlap_width) == 0,
+            "Image must contain an integer number of tiles in the horizontal direction"
+        );
+
+        let num_tiles_height = (height - overlap_height) / (tile_height - overlap_height);
+        let num_tiles_width = (width - overlap_width) / (tile_width - overlap_width);
+
+        let step_size_height = tile_height - overlap_height;
+        let step_size_width = tile_width - overlap_width;
+
+        Array2::from_shape_fn((num_tiles_height, num_tiles_width), |(row, col)| {
+            let start_row = row * step_size_height;
+            let start_col = col * step_size_width;
+            self.view_region((start_row, start_col), tile_size)
+        })
+    }
+
+    /// Split the image into a grid of tiles.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the tile size is not positive.
+    /// Panics if the overlap size is not less than the tile size.
+    /// Panics if the image does not contain an integer number of tiles in either dimension.
+    #[must_use]
+    pub fn copy_tiles(&self, tile_size: (usize, usize), overlap: (usize, usize)) -> Array2<Self>
+    where
+        T: Clone,
+    {
+        let (height, width) = self.resolution();
+        let (tile_height, tile_width) = tile_size;
+        let (overlap_height, overlap_width) = overlap;
+
+        assert!(tile_height > 0, "Tile height must be positive");
+        assert!(tile_width > 0, "Tile width must be positive");
+        assert!(overlap_height < tile_height, "Overlap height must be less than tile height");
+        assert!(overlap_width < tile_width, "Overlap width must be less than tile width");
+        assert!(
+            (height - overlap_height) % (tile_height - overlap_height) == 0,
+            "Image must contain an integer number of tiles in the vertical direction"
+        );
+        assert!(
+            (width - overlap_width) % (tile_width - overlap_width) == 0,
+            "Image must contain an integer number of tiles in the horizontal direction"
+        );
+
+        let num_tiles_height = (height - overlap_height) / (tile_height - overlap_height);
+        let num_tiles_width = (width - overlap_width) / (tile_width - overlap_width);
+
+        let step_size_height = tile_height - overlap_height;
+        let step_size_width = tile_width - overlap_width;
+
+        Array2::from_shape_fn((num_tiles_height, num_tiles_width), |(row, col)| {
+            let start_row = row * step_size_height;
+            let start_col = col * step_size_width;
+            self.copy_region((start_row, start_col), tile_size)
+        })
+    }
+
+    /// Shift the pixels of the image by a given offset, wrapping around the edges toroidally.
+    ///
+    /// # Panics
+    ///
+    /// Panics if a dimension of the image exceeds `isize::MAX`.
+    #[must_use]
+    pub fn copy_slide(&self, (row_off, col_off): (isize, isize)) -> Self
+    where
+        T: Clone + Zero,
+    {
+        let (height, width) = self.resolution();
+        let iheight = isize::try_from(height).expect("height exceeds isize::MAX");
+        let iwidth = isize::try_from(width).expect("width exceeds isize::MAX");
+        let num_channels = self.format.num_channels();
+
+        let row = (((row_off % iheight) + iheight) % iheight) as usize;
+        let col = (((col_off % iwidth) + iwidth) % iwidth) as usize;
+
+        let mut out = Array3::zeros((height, width, num_channels));
+        let src = self.data.view();
+
+        out.slice_mut(s![..height - row, ..width - col, ..])
+            .assign(&src.slice(s![row.., col.., ..]));
+        out.slice_mut(s![..height - row, width - col.., ..])
+            .assign(&src.slice(s![row.., ..col, ..]));
+        out.slice_mut(s![height - row.., ..width - col, ..])
+            .assign(&src.slice(s![..row, col.., ..]));
+        out.slice_mut(s![height - row.., width - col.., ..])
+            .assign(&src.slice(s![..row, ..col, ..]));
+
+        Image {
+            format: self.format,
+            data: out,
+        }
+    }
+
+    /// Shift the pixels of the image by a given offset, wrapping around the edges toroidally.
+    pub fn slide_inplace(&mut self, offset: (isize, isize))
+    where
+        T: Clone + Zero,
+    {
+        *self = std::mem::replace(self, self.default_like()).copy_slide(offset);
     }
 }
 

@@ -7,9 +7,10 @@ license = "MIT"
 repository = "https://github.com/FreddyWordingham/Photo"
 
 [dependencies]
+nav = "0.1.0"
 ndarray = "0.16.1"
 num-traits = "0.2.19"
-png = "0.17.16"
+# png = "0.17.16"
 # enterpolation = "0.2.1"
 # indexmap = "2.7.1"
 # num-traits = "0.2.19"
