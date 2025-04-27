@@ -90,10 +90,12 @@
 #![allow(clippy::arithmetic_side_effects, reason = "Too restrictive for this crate.")]
 #![allow(clippy::blanket_clippy_restriction_lints, reason = "More lints are always better.")]
 #![allow(clippy::implicit_return, reason = "Implicit returns are idiomatic in Rust.")]
+#![allow(clippy::indexing_slicing, reason = "Too restrictive for this crate.")]
 #![allow(
     clippy::integer_division_remainder_used,
     reason = "This crate should not be considered suitable for cryptographic use."
 )]
+#![allow(clippy::integer_division, reason = "Too restrictive for this crate.")]
 #![allow(
     clippy::pub_use,
     reason = "It is intended to expose the `Direction` and `Transform` types at the crate level."

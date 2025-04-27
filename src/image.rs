@@ -1,15 +1,25 @@
+//! ## `image` representation and manipulation.
+//!
+//! The `image` module `Image` struct and related functionality
+//! for working with multi-channel images, including operations like
+//! region copying, tiling, stacking, and border handling.
+
+use core::{
+    mem::replace,
+    ops::{Index, IndexMut},
+};
 use nav::Direction;
 use ndarray::{
     Array2, Array3, ArrayBase, ArrayView1, ArrayView2, ArrayView3, ArrayViewMut3, Axis, Data, Ix1, Ix2, Ix3, concatenate, s,
     stack,
 };
 use num_traits::Zero;
-use std::ops::{Index, IndexMut};
 
 use crate::Channels;
 
 /// Representation of an image.
-#[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Image<T> {
     /// The format of this image.
     pub format: Channels,
@@ -24,6 +34,8 @@ impl<T> Image<T> {
     ///
     /// Panics if the height or width of the data is not positive.
     /// Panics if the number of channels is not between 1 and 4.
+    #[expect(clippy::expect_used, reason = "Number of channels is checked in the function.")]
+    #[inline]
     #[must_use]
     pub fn new<S>(data: &ArrayBase<S, Ix3>) -> Self
     where
@@ -49,6 +61,7 @@ impl<T> Image<T> {
     /// # Panics
     ///
     /// Panics if the height or width is not positive.
+    #[inline]
     #[must_use]
     pub fn empty((height, width): (usize, usize), format: Channels) -> Self
     where
@@ -65,6 +78,8 @@ impl<T> Image<T> {
     /// # Panics
     ///
     /// Panics if the number of channels in `values` is not between 1 and 4.
+    #[expect(clippy::expect_used, reason = "Number of channels is checked in the function.")]
+    #[inline]
     #[must_use]
     pub fn filled((height, width): (usize, usize), values: &[T]) -> Self
     where
@@ -75,8 +90,8 @@ impl<T> Image<T> {
         let format = Channels::from_num_channels(values.len()).expect("Number of channels must be between 1 and 4");
 
         let mut data = Array3::zeros((height, width, format.num_channels()));
-        for (c, v) in values.iter().enumerate().take(format.num_channels()) {
-            data.slice_mut(s![.., .., c]).fill(v.clone());
+        for (channel, value) in values.iter().enumerate().take(format.num_channels()) {
+            data.slice_mut(s![.., .., channel]).fill(value.clone());
         }
 
         Self { format, data }
@@ -89,6 +104,8 @@ impl<T> Image<T> {
     /// Panics if the number of layers is not between 1 and 4.
     /// Panics if the height or width of the layers is not positive.
     /// Panics if the layers do not have the same dimensions.
+    #[expect(clippy::expect_used, reason = "Stacking error would arise from within third party library.")]
+    #[inline]
     #[must_use]
     pub fn from_layers<S>(layers: &[ArrayBase<S, Ix2>]) -> Self
     where
@@ -125,8 +142,13 @@ impl<T> Image<T> {
     /// Panics if the images do not all have the same width.
     /// Panics if the images do not all have the same format.
     /// Panics if the images do not all have positive height.
+    #[expect(
+        clippy::expect_used,
+        reason = "Concatenate error would arise from within third party library."
+    )]
+    #[inline]
     #[must_use]
-    pub fn vstack(images: &[Image<T>]) -> Self
+    pub fn vstack(images: &[Self]) -> Self
     where
         T: Clone + Zero,
     {
@@ -156,12 +178,17 @@ impl<T> Image<T> {
     ///
     /// # Panics
     ///
-    /// Panics if there are no images.  
-    /// Panics if the images do not all have the same height.  
-    /// Panics if the images do not all have the same format.  
+    /// Panics if there are no images.
+    /// Panics if the images do not all have the same height.
+    /// Panics if the images do not all have the same format.
     /// Panics if the images do not all have positive width.
+    #[expect(
+        clippy::expect_used,
+        reason = "Concatenate error would arise from within third party library."
+    )]
+    #[inline]
     #[must_use]
-    pub fn hstack(images: &[Image<T>]) -> Self
+    pub fn hstack(images: &[Self]) -> Self
     where
         T: Clone + Zero,
     {
@@ -191,6 +218,8 @@ impl<T> Image<T> {
     /// Panics if the tiles do not all have the same dimensions.
     /// Panics if the tile width or height is not positive.
     /// Panics if the tiles do not all have the same format.
+    #[expect(clippy::min_ident_chars, reason = "Variables `r` and `c` are very limited in scope.")]
+    #[inline]
     pub fn stack<D>(tiles: &ArrayBase<D, Ix2>) -> Self
     where
         D: Data<Elem = Self>,
@@ -228,6 +257,7 @@ impl<T> Image<T> {
     }
 
     /// Helper method to create a default-initialised image with the same format.
+    #[inline]
     #[must_use]
     fn default_like(&self) -> Self
     where
@@ -236,33 +266,37 @@ impl<T> Image<T> {
         let (height, width) = self.resolution();
         let num_channels = self.format.num_channels();
 
-        Image {
+        Self {
             format: self.format,
             data: Array3::zeros((height, width, num_channels)),
         }
     }
 
     /// Returns the height of the image.
+    #[inline]
     #[must_use]
     pub fn height(&self) -> usize {
         self.data.dim().0
     }
 
     /// Returns the width of the image.
+    #[inline]
     #[must_use]
     pub fn width(&self) -> usize {
         self.data.dim().1
     }
 
     /// Returns the size of the image as (height, width).
+    #[inline]
     #[must_use]
     pub fn resolution(&self) -> (usize, usize) {
         (self.data.dim().0, self.data.dim().1)
     }
 
     /// Returns the format of the image.
+    #[inline]
     #[must_use]
-    pub fn format(&self) -> Channels {
+    pub const fn format(&self) -> Channels {
         self.format
     }
 
@@ -271,6 +305,7 @@ impl<T> Image<T> {
     /// # Panics
     ///
     /// Panics if the channel index is out of bounds.
+    #[inline]
     #[must_use]
     pub fn get_channel(&self, channel: usize) -> ArrayView2<T> {
         assert!(channel < self.data.dim().2, "Channel index out of bounds");
@@ -283,6 +318,7 @@ impl<T> Image<T> {
     ///
     /// Panics if the channel index is out of bounds.
     /// Panics if the dimensions of the layer do not match the image dimensions.
+    #[inline]
     pub fn set_channel<S>(&mut self, channel: usize, layer: &ArrayBase<S, Ix2>)
     where
         S: Data<Elem = T>,
@@ -301,6 +337,7 @@ impl<T> Image<T> {
     /// # Panics
     ///
     /// Panics if the pixel index is out of bounds.
+    #[inline]
     #[must_use]
     pub fn get_pixel(&self, (row, col): (usize, usize)) -> ArrayView1<T> {
         let (height, width, _) = self.data.dim();
@@ -314,6 +351,7 @@ impl<T> Image<T> {
     ///
     /// Panics if the pixel index is out of bounds.
     /// Panics if the pixel length does not match the number of channels.
+    #[inline]
     pub fn set_pixel<S>(&mut self, (row, col): (usize, usize), pixel: &ArrayBase<S, Ix1>)
     where
         S: Data<Elem = T>,
@@ -338,6 +376,7 @@ impl<T> Image<T> {
     ///
     /// Panics if the region exceeds the `Image` dimensions.
     /// Panics if the region dimensions are not positive.
+    #[inline]
     #[must_use]
     pub fn view_region(&self, (start_row, start_col): (usize, usize), (height, width): (usize, usize)) -> ArrayView3<T> {
         assert!(height > 0, "Region height must be positive");
@@ -355,6 +394,8 @@ impl<T> Image<T> {
     ///
     /// Panics if the region exceeds the `Image` dimensions.
     /// Panics if the region dimensions are not positive.
+    #[inline]
+    #[must_use]
     pub fn view_region_mut(
         &mut self,
         (start_row, start_col): (usize, usize),
@@ -375,8 +416,9 @@ impl<T> Image<T> {
     ///
     /// Panics if the region exceeds the `Image` dimensions.
     /// Panics if the region dimensions are not positive.
+    #[inline]
     #[must_use]
-    pub fn copy_region(&self, (start_row, start_col): (usize, usize), (height, width): (usize, usize)) -> Image<T>
+    pub fn copy_region(&self, (start_row, start_col): (usize, usize), (height, width): (usize, usize)) -> Self
     where
         T: Clone,
     {
@@ -388,7 +430,7 @@ impl<T> Image<T> {
         let region = self
             .data
             .slice(s![start_row..(start_row + height), start_col..(start_col + width), ..]);
-        Image::new(&region)
+        Self::new(&region)
     }
 
     /// Copy a region of the `Image` into a new `Image`, with wrapping (toroidal) boundary conditions.
@@ -396,15 +438,21 @@ impl<T> Image<T> {
     /// # Panics
     ///
     /// Panics if the region dimensions are not positive.
+    #[expect(clippy::expect_used, reason = "Wrapping distance is not expected to exceed isize::MAX.")]
+    #[inline]
     #[must_use]
-    pub fn copy_region_wrapped(&self, (start_row, start_col): (isize, isize), (height, width): (usize, usize)) -> Image<T>
+    pub fn copy_region_wrapped(&self, (start_row, start_col): (isize, isize), (height, width): (usize, usize)) -> Self
     where
         T: Clone,
     {
         /// Helper function to perform proper modulo for negative numbers
+        #[expect(
+            clippy::min_ident_chars,
+            reason = "Variables `a` and `b` are used as mathematical variables."
+        )]
         #[inline]
-        fn wrap_index(a: isize, b: isize) -> isize {
-            ((a % b) + b) % b
+        const fn wrap_index(a: isize, b: isize) -> isize {
+            a.rem_euclid(b)
         }
 
         assert!(height > 0, "Region height must be positive");
@@ -415,22 +463,24 @@ impl<T> Image<T> {
         // Pre-calculate wrapped row and column indices for the region
         let wrapped_rows: Vec<usize> = (0..height)
             .map(|row| {
-                wrap_index(
-                    start_row + TryInto::<isize>::try_into(row).expect("height exceeds isize::MAX"),
-                    TryInto::<isize>::try_into(self_height).expect("self_height exceeds isize::MAX"),
-                ) as usize
+                usize::try_from(wrap_index(
+                    start_row + isize::try_from(row).expect("height exceeds isize::MAX"),
+                    isize::try_from(self_height).expect("self_height exceeds isize::MAX"),
+                ))
+                .expect("negative index after wrapping")
             })
             .collect();
         let wrapped_cols: Vec<usize> = (0..width)
             .map(|col| {
-                wrap_index(
-                    start_col + TryInto::<isize>::try_into(col).expect("width exceeds isize::MAX"),
-                    TryInto::<isize>::try_into(self_width).expect("self_width exceeds isize::MAX"),
-                ) as usize
+                usize::try_from(wrap_index(
+                    start_col + isize::try_from(col).expect("width exceeds isize::MAX"),
+                    isize::try_from(self_width).expect("self_width exceeds isize::MAX"),
+                ))
+                .expect("negative index after wrapping")
             })
             .collect();
 
-        Image::new(&Array3::<T>::from_shape_fn(
+        Self::new(&Array3::<T>::from_shape_fn(
             (height, width, channels),
             |(out_row, out_col, ch)| {
                 let src_row = wrapped_rows[out_row];
@@ -446,6 +496,7 @@ impl<T> Image<T> {
     ///
     /// Panics if the border size is not positive.
     /// Panics if the border size is larger than half the image dimensions.
+    #[inline]
     #[must_use]
     pub fn view_interior(&self, border: usize) -> ArrayView3<T> {
         assert!(border > 0, "Border size must be positive");
@@ -462,6 +513,7 @@ impl<T> Image<T> {
     ///
     /// Panics if the border size is not positive.
     /// Panics if the border size is larger than half the image dimensions.
+    #[inline]
     #[must_use]
     pub fn view_interior_mut(&mut self, border: usize) -> ArrayViewMut3<T> {
         assert!(border > 0, "Border size must be positive");
@@ -479,8 +531,9 @@ impl<T> Image<T> {
     ///
     /// Panics if the border size is not positive.
     /// Panics if the border size is larger than half the image dimensions.
+    #[inline]
     #[must_use]
-    pub fn copy_interior(&self, border: usize) -> Image<T>
+    pub fn copy_interior(&self, border: usize) -> Self
     where
         T: Clone,
     {
@@ -490,7 +543,7 @@ impl<T> Image<T> {
         assert!((2 * border) < width, "Border size must be less than half the width");
 
         let region = self.data.slice(s![border..(height - border), border..(width - border), ..]);
-        Image::new(&region)
+        Self::new(&region)
     }
 
     /// View a border region of the image.
@@ -499,11 +552,12 @@ impl<T> Image<T> {
     ///
     /// Panics if the border size is not positive.
     /// Panics if the border size is larger than the respective axis dimension.
+    #[inline]
     #[must_use]
     pub fn view_border(&self, direction: &Direction, border_size: usize) -> ArrayView3<T> {
         assert!(border_size > 0, "Border size must be positive");
         let (height, width) = self.resolution();
-        match direction {
+        match *direction {
             Direction::North => {
                 assert!(
                     border_size <= height,
@@ -541,11 +595,12 @@ impl<T> Image<T> {
     ///
     /// Panics if the border size is not positive.
     /// Panics if the border size is larger than the respective axis dimension.
+    #[inline]
     #[must_use]
     pub fn view_border_mut(&mut self, direction: &Direction, border_size: usize) -> ArrayViewMut3<T> {
         assert!(border_size > 0, "Border size must be positive");
         let (height, width) = self.resolution();
-        match direction {
+        match *direction {
             Direction::North => {
                 assert!(
                     border_size <= height,
@@ -583,6 +638,7 @@ impl<T> Image<T> {
     ///
     /// Panics if the border size is not positive.
     /// Panics if the border size is larger than the respective axis dimension.
+    #[inline]
     #[must_use]
     pub fn copy_border(&self, direction: &Direction, border_size: usize) -> Self
     where
@@ -590,7 +646,7 @@ impl<T> Image<T> {
     {
         assert!(border_size > 0, "Border size must be positive");
         let (height, width) = self.resolution();
-        match direction {
+        match *direction {
             Direction::North => {
                 assert!(
                     border_size <= height,
@@ -629,6 +685,7 @@ impl<T> Image<T> {
     /// Panics if the tile size is not positive.
     /// Panics if the overlap size is not less than the tile size.
     /// Panics if the image does not contain an integer number of tiles in either dimension.
+    #[inline]
     #[must_use]
     pub fn view_tiles(&self, tile_size: (usize, usize), overlap: (usize, usize)) -> Array2<ArrayView3<T>>
     where
@@ -671,6 +728,7 @@ impl<T> Image<T> {
     /// Panics if the tile size is not positive.
     /// Panics if the overlap size is not less than the tile size.
     /// Panics if the image does not contain an integer number of tiles in either dimension.
+    #[inline]
     #[must_use]
     pub fn copy_tiles(&self, tile_size: (usize, usize), overlap: (usize, usize)) -> Array2<Self>
     where
@@ -711,6 +769,11 @@ impl<T> Image<T> {
     /// # Panics
     ///
     /// Panics if a dimension of the image exceeds `isize::MAX`.
+    #[expect(
+        clippy::expect_used,
+        reason = "Index conversion is safe here as offset is not likely to exceed isize::MAX"
+    )]
+    #[inline]
     #[must_use]
     pub fn copy_slide(&self, (row_off, col_off): (isize, isize)) -> Self
     where
@@ -721,8 +784,8 @@ impl<T> Image<T> {
         let iwidth = isize::try_from(width).expect("width exceeds isize::MAX");
         let num_channels = self.format.num_channels();
 
-        let row = (((row_off % iheight) + iheight) % iheight) as usize;
-        let col = (((col_off % iwidth) + iwidth) % iwidth) as usize;
+        let row = usize::try_from(row_off.rem_euclid(iheight)).expect("Index conversion failed");
+        let col = usize::try_from(col_off.rem_euclid(iwidth)).expect("Index conversion failed");
 
         let mut out = Array3::zeros((height, width, num_channels));
         let src = self.data.view();
@@ -736,18 +799,19 @@ impl<T> Image<T> {
         out.slice_mut(s![height - row.., width - col.., ..])
             .assign(&src.slice(s![..row, ..col, ..]));
 
-        Image {
+        Self {
             format: self.format,
             data: out,
         }
     }
 
     /// Shift the pixels of the image by a given offset, wrapping around the edges toroidally.
+    #[inline]
     pub fn slide_inplace(&mut self, offset: (isize, isize))
     where
         T: Clone + Zero,
     {
-        *self = std::mem::replace(self, self.default_like()).copy_slide(offset);
+        *self = replace(self, self.default_like()).copy_slide(offset);
     }
 }
 
@@ -755,13 +819,15 @@ impl<T> Image<T> {
 impl<T> Index<(usize, usize, usize)> for Image<T> {
     type Output = T;
 
-    fn index(&self, (row, col, channel): (usize, usize, usize)) -> &T {
-        &self.data[[row, col, channel]]
+    #[inline]
+    fn index(&self, index: (usize, usize, usize)) -> &T {
+        &self.data[index]
     }
 }
 
 impl<T> IndexMut<(usize, usize, usize)> for Image<T> {
-    fn index_mut(&mut self, (row, col, channel): (usize, usize, usize)) -> &mut T {
-        &mut self.data[[row, col, channel]]
+    #[inline]
+    fn index_mut(&mut self, index: (usize, usize, usize)) -> &mut T {
+        &mut self.data[index]
     }
 }
