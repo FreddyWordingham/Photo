@@ -146,32 +146,31 @@ impl<T> Image<T> {
     ///
     /// Returns an error if the file cannot be created or if there is an error writing to it.
     /// Also returns an error if the image format is not supported.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the image dimensions exceed `u32::MAX`.
+    /// Returns an error if the image dimensions exceed the maximum size for PNG.
     #[inline]
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), ImageIoError>
     where
         T: Clone + Zero + NumCast + ToPrimitive,
     {
         let file = File::create(path)?;
-        let w = BufWriter::new(file);
+        let buf_writer = BufWriter::new(file);
 
         let (height, width) = self.resolution();
-        let color_type = match self.format {
+        let colour_type = match self.format {
             Channels::Grey => ColorType::Grayscale,
             Channels::GreyAlpha => ColorType::GrayscaleAlpha,
             Channels::RGB => ColorType::Rgb,
             Channels::RGBA => ColorType::Rgba,
         };
 
-        let mut encoder = Encoder::new(w, u32::try_from(width)?, u32::try_from(height)?);
-        encoder.set_color(color_type);
+        let width_u32 = u32::try_from(width)?;
+        let height_u32 = u32::try_from(height)?;
+
+        let mut encoder = Encoder::new(buf_writer, width_u32, height_u32);
+        encoder.set_color(colour_type);
         encoder.set_depth(BitDepth::Eight);
         let mut writer = encoder.write_header()?;
 
-        // Flatten image data with correct ordering
         let num_channels = self.format.num_channels();
         let mut buffer = Vec::with_capacity(height * width * num_channels);
 
@@ -207,11 +206,10 @@ impl<T> Image<T> {
 
         let info = png_reader.info();
 
-        // Use safe conversions instead of 'as'
         let width = usize::try_from(info.width).map_err(ImageIoError::IntegerConversionError)?;
         let height = usize::try_from(info.height).map_err(ImageIoError::IntegerConversionError)?;
 
-        // Determine channels based on color type
+        // Determine channels based on colour type
         let format = match info.color_type {
             ColorType::Grayscale => Channels::Grey,
             ColorType::GrayscaleAlpha => Channels::GreyAlpha,
@@ -220,7 +218,6 @@ impl<T> Image<T> {
             ColorType::Indexed => return Err(ImageIoError::UnsupportedColorType(info.color_type)),
         };
 
-        // Check bit depth (only supporting 8-bit for now)
         if info.bit_depth != BitDepth::Eight {
             return Err(ImageIoError::UnsupportedBitDepth(info.bit_depth));
         }
@@ -228,10 +225,8 @@ impl<T> Image<T> {
         let num_channels = format.num_channels();
         let mut buffer = vec![0; png_reader.output_buffer_size()];
 
-        // Fix for "unused result" error - capture the result
         let _frame_info = png_reader.next_frame(&mut buffer)?;
 
-        // Create 3D array with correct dimensions
         let mut data = Array3::<T>::zeros((height, width, num_channels));
         let mut idx = 0;
 

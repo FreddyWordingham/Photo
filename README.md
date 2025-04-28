@@ -43,7 +43,7 @@ use photo::{Channels, Image};
 // Create a new empty RGB image with f32 components
 let mut image = Image::<f32>::empty((100, 100), Channels::RGB);
 
-// Fill an image with a specific color
+// Fill an image with a specific colour
 let red_image = Image::<f32>::filled((50, 50), &[1.0, 0.0, 0.0]);
 
 // Access and modify pixel values
@@ -116,6 +116,22 @@ let vertical_stack = Image::vstack(&[image1, image2, image3]);
 
 // Stack images horizontally
 let horizontal_stack = Image::hstack(&[image1, image2, image3]);
+```
+
+### Reading and Writing PNG Files
+
+```rust
+use photo::Image;
+
+// Load an image from a PNG file
+let image = Image::<u8>::load("image.png").unwrap();
+
+// Save an image to a PNG file
+image.save("output.png").unwrap();
+
+// Extract and save just one channel as a greyscale image
+let red_channel = Image::new(&image.get_channel(0).insert_axis(Axis(2)));
+red_channel.save("red_channel.png").unwrap();
 ```
 
 ## Applications
