@@ -817,7 +817,7 @@ impl<T> Image<T> {
 
     /// Apply a transformation to the `Image` without copying.
     #[inline]
-    fn apply_transform(&mut self, transform: Transform)
+    fn apply_transform_inplace(&mut self, transform: Transform)
     where
         T: Clone,
     {
@@ -891,9 +891,9 @@ where
     type Output = Image<T>;
 
     #[inline]
-    fn mul(self, transform: Transform) -> Self::Output {
+    fn mul(self, rhs: Transform) -> Self::Output {
         let mut result = self.clone();
-        result.apply_transform(transform);
+        result.apply_transform_inplace(rhs);
         result
     }
 }
@@ -905,9 +905,9 @@ where
     type Output = Self;
 
     #[inline]
-    fn mul(self, transform: Transform) -> Self::Output {
+    fn mul(self, rhs: Transform) -> Self::Output {
         let mut result = self;
-        result.apply_transform(transform);
+        result.apply_transform_inplace(rhs);
         result
     }
 }
@@ -917,7 +917,7 @@ where
     T: Clone,
 {
     #[inline]
-    fn mul_assign(&mut self, transform: Transform) {
-        self.apply_transform(transform);
+    fn mul_assign(&mut self, rhs: Transform) {
+        self.apply_transform_inplace(rhs);
     }
 }
