@@ -6,9 +6,9 @@
 
 use core::{
     mem::replace,
-    ops::{Index, IndexMut},
+    ops::{Index, IndexMut, Mul, MulAssign},
 };
-use nav::Direction;
+use nav::{Direction, Transform};
 use ndarray::{
     Array2, Array3, ArrayBase, ArrayView1, ArrayView2, ArrayView3, ArrayViewMut3, Axis, Data, Ix1, Ix2, Ix3, concatenate, s,
     stack,
@@ -814,12 +814,63 @@ impl<T> Image<T> {
     {
         *self = replace(self, self.default_like()).copy_slide(offset);
     }
+
+    /// Apply a transformation to the `Image` without copying.
+    #[inline]
+    fn apply_transform(&mut self, transform: Transform)
+    where
+        T: Clone,
+    {
+        match transform {
+            Transform::Identity => {}
+            Transform::Rotate90 => {
+                self.data = self
+                    .data
+                    .view()
+                    .permuted_axes([1, 0, 2])
+                    .to_owned()
+                    .slice(s![.., ..;-1, ..])
+                    .to_owned();
+            }
+            Transform::Rotate180 => {
+                self.data.invert_axis(Axis(0));
+                self.data.invert_axis(Axis(1));
+            }
+            Transform::Rotate270 => {
+                self.data = self
+                    .data
+                    .view()
+                    .permuted_axes([1, 0, 2])
+                    .to_owned()
+                    .slice(s![..;-1, .., ..])
+                    .to_owned();
+            }
+            Transform::FlipHorizontal => {
+                self.data.invert_axis(Axis(1));
+            }
+            Transform::FlipVertical => {
+                self.data.invert_axis(Axis(0));
+            }
+            Transform::FlipDiagonal => {
+                self.data = self.data.view().permuted_axes([1, 0, 2]).to_owned();
+            }
+            Transform::FlipAntiDiagonal => {
+                self.data = self
+                    .data
+                    .slice(s![..;-1, ..;-1, ..])
+                    .to_owned()
+                    .view()
+                    .permuted_axes([1, 0, 2])
+                    .to_owned();
+            }
+        }
+    }
 }
 
-/// Get a component of a pixel from the image at the given coordinates.
 impl<T> Index<(usize, usize, usize)> for Image<T> {
     type Output = T;
 
+    /// Get a component of a pixel from the image at the given coordinates.
     #[inline]
     fn index(&self, index: (usize, usize, usize)) -> &T {
         &self.data[index]
@@ -830,5 +881,43 @@ impl<T> IndexMut<(usize, usize, usize)> for Image<T> {
     #[inline]
     fn index_mut(&mut self, index: (usize, usize, usize)) -> &mut T {
         &mut self.data[index]
+    }
+}
+
+impl<T> Mul<Transform> for &Image<T>
+where
+    T: Clone,
+{
+    type Output = Image<T>;
+
+    #[inline]
+    fn mul(self, transform: Transform) -> Self::Output {
+        let mut result = self.clone();
+        result.apply_transform(transform);
+        result
+    }
+}
+
+impl<T> Mul<Transform> for Image<T>
+where
+    T: Clone,
+{
+    type Output = Self;
+
+    #[inline]
+    fn mul(self, transform: Transform) -> Self::Output {
+        let mut result = self;
+        result.apply_transform(transform);
+        result
+    }
+}
+
+impl<T> MulAssign<Transform> for Image<T>
+where
+    T: Clone,
+{
+    #[inline]
+    fn mul_assign(&mut self, transform: Transform) {
+        self.apply_transform(transform);
     }
 }

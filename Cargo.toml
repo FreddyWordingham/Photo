@@ -15,7 +15,7 @@ categories = [
 ]
 
 [dependencies]
-nav = "0.1.0"
+nav = "0.1.4"
 ndarray = "0.16.1"
 num-traits = "0.2.19"
 # png = "0.17.16"
