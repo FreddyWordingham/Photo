@@ -13,9 +13,15 @@ use ndarray::{
     Array2, Array3, ArrayBase, ArrayView1, ArrayView2, ArrayView3, ArrayViewMut3, Axis, Data, Ix1, Ix2, Ix3, concatenate, s,
     stack,
 };
-use num_traits::Zero;
+use num_traits::{NumCast, ToPrimitive, Zero};
+use png::{BitDepth, ColorType, Decoder, Encoder};
+use std::{
+    fs::File,
+    io::{BufReader, BufWriter},
+    path::Path,
+};
 
-use crate::Channels;
+use crate::{Channels, ImageIoError};
 
 /// Representation of an image.
 #[non_exhaustive]
@@ -132,6 +138,114 @@ impl<T> Image<T> {
         let data = stack(Axis(2), &views).expect("Failed to stack layers");
 
         Self { format, data }
+    }
+
+    /// Save the image to a PNG file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be created or if there is an error writing to it.
+    /// Also returns an error if the image format is not supported.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the image dimensions exceed `u32::MAX`.
+    #[inline]
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), ImageIoError>
+    where
+        T: Clone + Zero + NumCast + ToPrimitive,
+    {
+        let file = File::create(path)?;
+        let w = BufWriter::new(file);
+
+        let (height, width) = self.resolution();
+        let color_type = match self.format {
+            Channels::Grey => ColorType::Grayscale,
+            Channels::GreyAlpha => ColorType::GrayscaleAlpha,
+            Channels::RGB => ColorType::Rgb,
+            Channels::RGBA => ColorType::Rgba,
+        };
+
+        let mut encoder = Encoder::new(w, u32::try_from(width)?, u32::try_from(height)?);
+        encoder.set_color(color_type);
+        encoder.set_depth(BitDepth::Eight);
+        let mut writer = encoder.write_header()?;
+
+        // Flatten image data with correct ordering
+        let num_channels = self.format.num_channels();
+        let mut buffer = Vec::with_capacity(height * width * num_channels);
+
+        for row in 0..height {
+            for col in 0..width {
+                for ch in 0..num_channels {
+                    let val = self.data[(row, col, ch)].to_u8().ok_or(ImageIoError::ConversionError)?;
+                    buffer.push(val);
+                }
+            }
+        }
+
+        writer.write_image_data(&buffer)?;
+        Ok(())
+    }
+
+    /// Load an image from a PNG file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be read or if there is an error parsing it.
+    /// Also returns an error if the image format is not supported.
+    #[inline]
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ImageIoError>
+    where
+        T: Clone + Zero + NumCast + ToPrimitive,
+    {
+        let file = File::open(path)?;
+        let buf_reader = BufReader::new(file);
+
+        let decoder = Decoder::new(buf_reader);
+        let mut png_reader = decoder.read_info()?;
+
+        let info = png_reader.info();
+
+        // Use safe conversions instead of 'as'
+        let width = usize::try_from(info.width).map_err(ImageIoError::IntegerConversionError)?;
+        let height = usize::try_from(info.height).map_err(ImageIoError::IntegerConversionError)?;
+
+        // Determine channels based on color type
+        let format = match info.color_type {
+            ColorType::Grayscale => Channels::Grey,
+            ColorType::GrayscaleAlpha => Channels::GreyAlpha,
+            ColorType::Rgb => Channels::RGB,
+            ColorType::Rgba => Channels::RGBA,
+            ColorType::Indexed => return Err(ImageIoError::UnsupportedColorType(info.color_type)),
+        };
+
+        // Check bit depth (only supporting 8-bit for now)
+        if info.bit_depth != BitDepth::Eight {
+            return Err(ImageIoError::UnsupportedBitDepth(info.bit_depth));
+        }
+
+        let num_channels = format.num_channels();
+        let mut buffer = vec![0; png_reader.output_buffer_size()];
+
+        // Fix for "unused result" error - capture the result
+        let _frame_info = png_reader.next_frame(&mut buffer)?;
+
+        // Create 3D array with correct dimensions
+        let mut data = Array3::<T>::zeros((height, width, num_channels));
+        let mut idx = 0;
+
+        for row in 0..height {
+            for col in 0..width {
+                for ch in 0..num_channels {
+                    let val = NumCast::from(buffer[idx]).ok_or(ImageIoError::ConversionError)?;
+                    data[(row, col, ch)] = val;
+                    idx += 1;
+                }
+            }
+        }
+
+        Ok(Self { format, data })
     }
 
     /// Combine images by stacking them vertically.

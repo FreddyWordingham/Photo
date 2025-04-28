@@ -100,9 +100,12 @@
     clippy::pub_use,
     reason = "It is intended to expose the `Direction` and `Transform` types at the crate level."
 )]
+#![allow(clippy::question_mark_used, reason = "The question mark operator is idiomatic in Rust.")]
 
 mod channels;
 mod image;
+mod image_io_error;
 
 pub use channels::Channels;
 pub use image::Image;
+pub use image_io_error::ImageIoError;

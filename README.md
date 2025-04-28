@@ -22,6 +22,7 @@
 - **Advanced Indexing**: Access and modify pixels and channels with ease
 - **Comprehensive Testing**: High test coverage ensures library reliability
 - **Minimal Dependencies**: Core functionality relies on few, well-maintained dependencies
+- **PNG Support**: Read from and write to PNG image files
 
 ## Installation
 
