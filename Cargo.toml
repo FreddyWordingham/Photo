@@ -15,15 +15,9 @@ categories = [
 ]
 
 [dependencies]
-nav = "0.1.4"
+chromatic = "0.0.5"
 ndarray = "0.16.1"
 num-traits = "0.2.19"
 png = "0.17.16"
-thiserror = "2.0.12"
-# enterpolation = "0.2.1"
-# indexmap = "2.7.1"
-# num-traits = "0.2.19"
-# palette = "0.7.6"
-# term_size = "0.3.2"
 
 [dev-dependencies]
