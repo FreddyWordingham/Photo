@@ -13,17 +13,19 @@ pub enum PngError {
     UnsupportedColourType(png::ColorType),
     UnsupportedBitDepth(png::BitDepth),
     InvalidChannelCount,
+    InvalidData,
 }
 
 impl fmt::Display for PngError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
-            PngError::IoError(err) => write!(f, "IO error: {}", err),
-            PngError::PngError(err) => write!(f, "PNG decoding error: {}", err),
-            PngError::EncodingError(err) => write!(f, "PNG encoding error: {}", err),
-            PngError::UnsupportedColourType(color_type) => write!(f, "Unsupported color type: {:?}", color_type),
-            PngError::UnsupportedBitDepth(bit_depth) => write!(f, "Unsupported bit depth: {:?}", bit_depth),
+            PngError::IoError(err) => write!(f, "IO error: {err}"),
+            PngError::PngError(err) => write!(f, "PNG decoding error: {err}"),
+            PngError::EncodingError(err) => write!(f, "PNG encoding error: {err}"),
+            PngError::UnsupportedColourType(colour_type) => write!(f, "Unsupported colour type: {colour_type:?}"),
+            PngError::UnsupportedBitDepth(bit_depth) => write!(f, "Unsupported bit depth: {bit_depth:?}"),
             PngError::InvalidChannelCount => write!(f, "Invalid channel count for colour type"),
+            PngError::InvalidData => write!(f, "Invalid data in PNG file"),
         }
     }
 }
