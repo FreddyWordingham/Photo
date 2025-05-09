@@ -8,7 +8,7 @@ use std::{
 
 use crate::PngError;
 
-mod array2;
+mod arr2;
 
 /// Trait for image encoding/decoding operations on `Array2<C>` where `C` is a type implementing the `Colour` trait.
 pub trait Image<C, T, const N: usize>

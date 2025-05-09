@@ -1,6 +1,6 @@
 [package]
 name = "photo"
-version = "3.1.1"
+version = "3.1.2"
 edition = "2024"
 description = "Image utility library"
 license = "MIT"
@@ -21,4 +21,5 @@ num-traits = "0.2.19"
 png = "0.17.16"
 
 [dev-dependencies]
-vista = "0.0.0"
+nav = { version = "0.1.6", features = ["array"] }
+vista = "0.0.2"
